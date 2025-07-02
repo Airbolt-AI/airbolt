@@ -1,5 +1,5 @@
 {
-  "name": "ai-fastify-template",
+  "name": "airbolt",
   "version": "1.0.0",
   "description": "AI-optimized backend template using Fastify + TypeScript with comprehensive guardrails",
   "private": true,

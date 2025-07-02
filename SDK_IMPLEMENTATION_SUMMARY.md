@@ -23,7 +23,7 @@ This implementation delivers a comprehensive SDK generation system using Fern th
 - **Properly configured** Fern workspace pointing to OpenAPI specification
 - **TypeScript SDK generation** to `packages/sdk/` directory
 - **Build pipeline integration** via TurboRepo tasks
-- **Package naming**: `@ai-fastify-template/sdk`
+- **Package naming**: `@airbolt/sdk`
 - **Client class**: `AiFastifyTemplateAPI`
 
 ### 3. Build Pipeline Integration
@@ -95,7 +95,7 @@ pnpm sdk:generate
 ### Use Generated SDK
 
 ```typescript
-import { AiFastifyTemplateAPI } from '@ai-fastify-template/sdk';
+import { AiFastifyTemplateAPI } from '@airbolt/sdk';
 
 const client = new AiFastifyTemplateAPI({
   environment: 'http://localhost:3000',

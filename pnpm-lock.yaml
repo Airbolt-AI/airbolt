@@ -105,7 +105,7 @@ importers:
 
   apps/backend-api:
     dependencies:
-      '@ai-fastify-template/config':
+      '@airbolt/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@fastify/autoload':
@@ -133,7 +133,7 @@ importers:
         specifier: ^3.25.67
         version: 3.25.67
     devDependencies:
-      '@ai-fastify-template/types':
+      '@airbolt/types':
         specifier: workspace:*
         version: link:../../packages/types
       '@stryker-mutator/core':
@@ -178,7 +178,7 @@ importers:
         specifier: ^3.22.4
         version: 3.25.67
     devDependencies:
-      '@ai-fastify-template/config':
+      '@airbolt/config':
         specifier: workspace:*
         version: link:../config
       expect-type:

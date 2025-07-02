@@ -297,7 +297,7 @@ export const testPatterns = {
 export const exampleShoppingCartTest = `
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { cartCommandGenerators, stateInvariants } from '@ai-fastify-template/types';
+import { cartCommandGenerators, stateInvariants } from '@airbolt/types';
 
 class AddItemCommand {
   constructor(private itemId: string, private quantity: number, private price: number) {}
@@ -365,7 +365,7 @@ describe('Shopping Cart State Machine', () => {
 export const exampleAuthTest = `
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { authCommandGenerators, stateInvariants } from '@ai-fastify-template/types';
+import { authCommandGenerators, stateInvariants } from '@airbolt/types';
 
 class RegisterCommand {
   constructor(private email: string, private password: string) {}
@@ -411,7 +411,7 @@ class RegisterCommand {
 export const exampleTransactionTest = `
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { transactionCommandGenerators, stateInvariants } from '@ai-fastify-template/types';
+import { transactionCommandGenerators, stateInvariants } from '@airbolt/types';
 
 class TransferCommand {
   constructor(private from: string, private to: string, private amount: number) {}

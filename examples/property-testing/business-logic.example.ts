@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import {
   propertyTest,
   generators,
-} from '@ai-fastify-template/types/property-testing-simple';
+} from '@airbolt/types/property-testing-simple';
 import fc from 'fast-check';
 
 /**

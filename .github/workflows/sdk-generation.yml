@@ -158,7 +158,7 @@ jobs:
           ### Integration
           The SDK is now available for import:
           \`\`\`typescript
-          import { AiFastifyTemplateAPI } from '@ai-fastify-template/sdk';
+          import { AiFastifyTemplateAPI } from '@airbolt/sdk';
           \`\`\`
 
           EOF

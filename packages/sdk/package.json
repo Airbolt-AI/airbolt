@@ -1,7 +1,7 @@
 {
-  "name": "@ai-fastify-template/sdk",
+  "name": "@airbolt/sdk",
   "version": "1.0.0",
-  "description": "Type-safe TypeScript SDK for the AI Fastify Template API",
+  "description": "Type-safe TypeScript SDK for the Airbolt API",
   "main": "index.js",
   "types": "index.d.ts",
   "type": "module",

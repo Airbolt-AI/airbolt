@@ -185,7 +185,7 @@ export function testFormatterFunction<T>(
  *
  * @example
  * ```typescript
- * import { propertyTest, generators } from '@ai-fastify-template/types/property-testing-simple';
+ * import { propertyTest, generators } from '@airbolt/types/property-testing-simple';
  *
  * describe('calculateTotal - Properties', () => {
  *   it('should satisfy mathematical invariants', () => {

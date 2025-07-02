@@ -506,7 +506,7 @@ import {
   fuzzingTestData,
   apiInvariants,
   securityAttackPayloads
-} from '@ai-fastify-template/types';
+} from '@airbolt/types';
 
 describe('API Fuzzing Tests', () => {
   it('should handle malicious inputs safely', () => {
@@ -559,7 +559,7 @@ describe('API Fuzzing Tests', () => {
  * Example model-based testing template
  */
 export const exampleModelBasedTest = `
-import { runModelBasedTest, shoppingCartStateMachine } from '@ai-fastify-template/types';
+import { runModelBasedTest, shoppingCartStateMachine } from '@airbolt/types';
 
 describe('Shopping Cart State Machine', () => {
   it('should maintain consistency across operations', async () => {

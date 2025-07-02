@@ -17,7 +17,7 @@ Fern automatically generates type-safe client SDKs and documentation from our Fa
 ### SDK Output
 
 - **Location**: `packages/sdk/`
-- **Package Name**: `@ai-fastify-template/sdk`
+- **Package Name**: `@airbolt/sdk`
 - **Client Name**: `AiFastifyTemplateAPI`
 
 ## Usage
@@ -57,7 +57,7 @@ The generated SDK will include:
 ### In Applications
 
 ```typescript
-import { AiFastifyTemplateAPI } from '@ai-fastify-template/sdk';
+import { AiFastifyTemplateAPI } from '@airbolt/sdk';
 
 const client = new AiFastifyTemplateAPI({
   environment: 'http://localhost:3000', // or production URL

@@ -4,7 +4,7 @@ import {
   propertyTest,
   generators,
   testFinancialFunction,
-} from '@ai-fastify-template/types';
+} from '@airbolt/types';
 
 import {
   calculateTotal,

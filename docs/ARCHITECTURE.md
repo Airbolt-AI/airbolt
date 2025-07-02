@@ -87,7 +87,7 @@ Schema    (Pure Fns)   (Shared)     (Serialization)
 ### Directory Organization
 
 ```
-ai-fastify-template/
+airbolt/
 ├── apps/                    # Deployable applications
 │   ├── backend-api/         # Main Fastify API server
 │   └── [future-apps]/       # Additional applications

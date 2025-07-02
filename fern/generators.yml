@@ -9,5 +9,5 @@ groups:
           path: ../packages/sdk
         version: 1.8.1
         config:
-          package-name: '@ai-fastify-template/sdk'
-          client-name: 'AiFastifyTemplateAPI'
+          package-name: '@airbolt/sdk'
+          client-name: 'AirboltAPI'

@@ -1,4 +1,4 @@
-import { getPort, isDevelopment } from '@ai-fastify-template/config';
+import { getPort, isDevelopment } from '@airbolt/config';
 import Fastify from 'fastify';
 
 import app from './app.js';

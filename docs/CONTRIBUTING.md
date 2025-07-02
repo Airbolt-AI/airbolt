@@ -34,8 +34,8 @@ This project follows a professional, inclusive environment. Please:
 1. **Fork and clone the repository**
 
    ```bash
-   git clone https://github.com/your-username/ai-fastify-template.git
-   cd ai-fastify-template
+   git clone https://github.com/your-username/airbolt.git
+   cd airbolt
    ```
 
 2. **Install dependencies**
@@ -60,7 +60,7 @@ This project follows a professional, inclusive environment. Please:
 ### Project Structure
 
 ```
-ai-fastify-template/
+airbolt/
 ├── apps/                    # Deployable applications
 ├── packages/                # Shared libraries
 ├── docs/                    # Documentation

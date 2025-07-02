@@ -1,4 +1,4 @@
-# @ai-fastify-template/sdk
+# @airbolt/sdk
 
 > Type-safe TypeScript SDK for the AI Fastify Template API
 
@@ -7,17 +7,17 @@ This package contains the auto-generated TypeScript SDK for consuming the AI Fas
 ## Installation
 
 ```bash
-npm install @ai-fastify-template/sdk
+npm install @airbolt/sdk
 # or
-yarn add @ai-fastify-template/sdk
+yarn add @airbolt/sdk
 # or
-pnpm add @ai-fastify-template/sdk
+pnpm add @airbolt/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { AiFastifyTemplateAPI } from '@ai-fastify-template/sdk';
+import { AiFastifyTemplateAPI } from '@airbolt/sdk';
 
 // Initialize the client
 const client = new AiFastifyTemplateAPI({
@@ -98,7 +98,7 @@ Returns an example string response.
 The SDK provides structured error handling:
 
 ```typescript
-import { AiFastifyTemplateAPI, ApiError } from '@ai-fastify-template/sdk';
+import { AiFastifyTemplateAPI, ApiError } from '@airbolt/sdk';
 
 try {
   const result = await client.getRootMessage();
@@ -145,11 +145,7 @@ client.setHeaders({
 The SDK is built with TypeScript and provides full type definitions:
 
 ```typescript
-import type {
-  HelloWorldResponse,
-  ApiError,
-  ClientConfig,
-} from '@ai-fastify-template/sdk';
+import type { HelloWorldResponse, ApiError, ClientConfig } from '@airbolt/sdk';
 
 // Use types in your application
 function handleResponse(response: HelloWorldResponse) {

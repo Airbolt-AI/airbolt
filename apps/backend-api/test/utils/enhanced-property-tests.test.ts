@@ -13,7 +13,7 @@ import {
   generators,
   testFinancialFunction,
   testArrayFunction,
-} from '@ai-fastify-template/types';
+} from '@airbolt/types';
 
 /**
  * Enhanced Property-Based Tests using Simplified API

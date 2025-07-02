@@ -1,4 +1,4 @@
-# AI Coding Guidelines for ai-fastify-template
+# AI Coding Guidelines for airbolt
 
 ## 🚨 CRITICAL: Zero CI Failures Guaranteed
 
@@ -402,7 +402,7 @@ fastify.post('/users', async req => {
 Prevent ID mixups at compile time:
 
 ```typescript
-import { UserId, OrderId, ZodBrandedSchemas } from '@ai-fastify-template/types';
+import { UserId, OrderId, ZodBrandedSchemas } from '@airbolt/types';
 
 // ✅ Type-safe ID creation
 const userId = UserId('550e8400-e29b-41d4-a716-446655440000');

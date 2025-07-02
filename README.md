@@ -92,7 +92,7 @@ This eliminates the traditional bottleneck where backend teams must manually wri
 ```bash
 # Clone the repository
 git clone https://github.com/Airbolt-AI/airbolt.git
-cd ai-fastify-template
+cd airbolt
 
 # Setup development environment (includes GitLeaks security scanner)
 pnpm setup:dev
@@ -195,7 +195,7 @@ See [docs/LOCAL_VALIDATION_GUIDE.md](docs/LOCAL_VALIDATION_GUIDE.md) for compreh
 ## Project Structure
 
 ```
-ai-fastify-template/
+airbolt/
 ├── apps/                    # Applications ✅
 │   └── backend-api/         # Fastify backend API ✅
 ├── packages/                # Shared packages ✅

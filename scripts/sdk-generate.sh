@@ -164,7 +164,7 @@ display_sdk_info() {
     echo "📄 OpenAPI specification: apps/backend-api/openapi.json"
     echo ""
     echo "🚀 Usage:"
-    echo "  import { AiFastifyTemplateAPI } from '@ai-fastify-template/sdk';"
+    echo "  import { AirboltAPI } from '@airbolt/sdk';"
     echo ""
     echo "📖 Documentation:"
     echo "  - SDK README: packages/sdk/README.md"

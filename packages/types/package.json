@@ -1,5 +1,5 @@
 {
-  "name": "@ai-fastify-template/types",
+  "name": "@airbolt/types",
   "version": "0.1.0",
   "description": "Branded types for compile-time ID safety",
   "type": "module",
@@ -30,7 +30,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@ai-fastify-template/config": "workspace:*",
+    "@airbolt/config": "workspace:*",
     "expect-type": "^0.17.3",
     "husky": "^9.1.7",
     "vitest": "^3.2.3",

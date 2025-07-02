@@ -95,7 +95,7 @@ git --version     # >= 2.0.0
 
    ```bash
    git clone https://github.com/Airbolt-AI/airbolt.git
-   cd ai-fastify-template
+   cd airbolt
    pnpm install
    ```
 
@@ -289,7 +289,7 @@ When implementing features, AI agents follow this process:
    pnpm add -Dw @types/node
 
    # Package dependency
-   pnpm add --filter @ai-fastify-template/my-package zod
+   pnpm add --filter @airbolt/my-package zod
    ```
 
 ### AI Agent Development Loop

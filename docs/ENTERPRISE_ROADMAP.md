@@ -360,7 +360,7 @@ export default fp(async fastify => {
       winston.format.json()
     ),
     defaultMeta: {
-      service: 'ai-fastify-template',
+      service: 'airbolt',
       version: process.env.npm_package_version,
     },
     transports: [
@@ -463,20 +463,20 @@ CMD ["node", "dist/app.js"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-fastify-template
+  name: airbolt
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: ai-fastify-template
+      app: airbolt
   template:
     metadata:
       labels:
-        app: ai-fastify-template
+        app: airbolt
     spec:
       containers:
         - name: api
-          image: ai-fastify-template:latest
+          image: airbolt:latest
           ports:
             - containerPort: 3000
           env:

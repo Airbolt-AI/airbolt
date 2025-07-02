@@ -52,14 +52,8 @@ export const baseConfig: InlineConfig = {
   // Module resolution for monorepo - MUST be identical
   resolve: {
     alias: {
-      '@ai-fastify-template/config': path.resolve(
-        __dirname,
-        'packages/config/src'
-      ),
-      '@ai-fastify-template/types': path.resolve(
-        __dirname,
-        'packages/types/src'
-      ),
+      '@airbolt/config': path.resolve(__dirname, 'packages/config/src'),
+      '@airbolt/types': path.resolve(__dirname, 'packages/types/src'),
     },
     extensionAlias: {
       '.js': ['.ts', '.js'],

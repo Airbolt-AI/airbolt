@@ -227,7 +227,7 @@ describe('SDK Integration', () => {
       expect(existsSync(fernConfigPath)).toBe(true);
 
       const fernConfig = JSON.parse(readFileSync(fernConfigPath, 'utf8'));
-      expect(fernConfig.organization).toBe('ai-fastify-template');
+      expect(fernConfig.organization).toBe('airbolt');
       expect(fernConfig.version).toBeDefined();
     });
 
@@ -237,8 +237,8 @@ describe('SDK Integration', () => {
 
       const generatorsContent = readFileSync(generatorsPath, 'utf8');
       expect(generatorsContent).toContain('fernapi/fern-typescript-node-sdk');
-      expect(generatorsContent).toContain('@ai-fastify-template/sdk');
-      expect(generatorsContent).toContain('AiFastifyTemplateAPI');
+      expect(generatorsContent).toContain('@airbolt/sdk');
+      expect(generatorsContent).toContain('AirboltAPI');
     });
 
     it('should have API definition pointing to correct OpenAPI spec', () => {
