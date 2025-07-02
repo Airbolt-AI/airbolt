@@ -40,8 +40,13 @@ jobs:
 
       - name: Run CI validation
         run: |
-          echo "🔍 Running CI validation with unified Nx build system..."
-          pnpm ci:check
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "🔍 Running affected validation for PR..."
+            pnpm nx affected -t lint,type-check,test,build --base=origin/main
+          else
+            echo "🔍 Running full CI validation for main branch..."
+            pnpm ci:check
+          fi
 
       # Only run mutation testing if source or test files changed
       - name: Check if mutation testing needed
