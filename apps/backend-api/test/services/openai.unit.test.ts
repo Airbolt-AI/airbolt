@@ -16,6 +16,7 @@ describe('OpenAIService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.resetModules();
 
     // Create mock functions
     mockCreate = vi.fn();
