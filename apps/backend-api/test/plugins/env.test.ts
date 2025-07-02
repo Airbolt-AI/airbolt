@@ -13,15 +13,17 @@ const EnvSchema = z
         }),
       })
       .default('development'),
-    PORT: z
-      .string({
-        required_error: 'PORT environment variable is required',
-        invalid_type_error: 'PORT must be a string',
+
+    PORT: z.coerce
+      .number({
+        required_error: 'PORT must be a valid number',
+        invalid_type_error: 'PORT must be a number',
       })
-      .regex(/^\d+$/, 'PORT must contain only numeric characters')
-      .transform(Number)
-      .refine(n => n > 0 && n < 65536, 'PORT must be between 1-65535')
-      .default('3000'),
+      .int('PORT must be an integer')
+      .min(1, 'PORT must be at least 1')
+      .max(65535, 'PORT must be at most 65535')
+      .default(3000),
+
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'], {
         errorMap: () => ({
@@ -48,7 +50,14 @@ const EnvSchema = z
         invalid_type_error: 'JWT_SECRET must be a string',
       })
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
-      .optional(),
+      .default(() => {
+        // Auto-generate in development mode only
+        if (process.env['NODE_ENV'] === 'development') {
+          return randomBytes(32).toString('hex');
+        }
+        // In production, this will fail validation if not provided due to the refine below
+        return '';
+      }),
 
     ALLOWED_ORIGIN: z
       .string({
@@ -82,26 +91,21 @@ const EnvSchema = z
       .optional()
       .default(''),
 
-    RATE_LIMIT_MAX: z
-      .string({
-        invalid_type_error: 'RATE_LIMIT_MAX must be a string',
+    RATE_LIMIT_MAX: z.coerce
+      .number({
+        invalid_type_error: 'RATE_LIMIT_MAX must be a number',
       })
-      .regex(/^\d+$/, 'RATE_LIMIT_MAX must be a positive integer')
-      .transform(Number)
-      .refine(n => n > 0, 'RATE_LIMIT_MAX must be greater than 0')
-      .default('60'),
+      .int('RATE_LIMIT_MAX must be an integer')
+      .min(1, 'RATE_LIMIT_MAX must be greater than 0')
+      .default(60),
 
-    RATE_LIMIT_TIME_WINDOW: z
-      .string({
-        invalid_type_error: 'RATE_LIMIT_TIME_WINDOW must be a string',
+    RATE_LIMIT_TIME_WINDOW: z.coerce
+      .number({
+        invalid_type_error: 'RATE_LIMIT_TIME_WINDOW must be a number',
       })
-      .regex(
-        /^\d+$/,
-        'RATE_LIMIT_TIME_WINDOW must be a positive integer (milliseconds)'
-      )
-      .transform(Number)
-      .refine(n => n > 0, 'RATE_LIMIT_TIME_WINDOW must be greater than 0')
-      .default('60000'), // 1 minute default
+      .int('RATE_LIMIT_TIME_WINDOW must be an integer')
+      .min(1000, 'RATE_LIMIT_TIME_WINDOW must be at least 1000ms (1 second)')
+      .default(60000), // 1 minute default
   })
   .refine(data => data.NODE_ENV !== 'production' || data.JWT_SECRET, {
     message:
@@ -114,22 +118,36 @@ describe('Environment Schema Validation', () => {
 
   describe('Valid configurations', () => {
     it('should parse with default values and required OPENAI_API_KEY', () => {
-      const result = EnvSchema.parse({
-        OPENAI_API_KEY: validApiKey,
-      });
-      expect(result.NODE_ENV).toBe('development');
-      expect(result.PORT).toBe(3000);
-      expect(result.LOG_LEVEL).toBe('info');
-      expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
-      expect(result.SYSTEM_PROMPT).toBe('');
-      expect(result.RATE_LIMIT_MAX).toBe(60);
-      expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
+
+      try {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+        });
+        expect(result.NODE_ENV).toBe('development');
+        expect(result.PORT).toBe(3000);
+        expect(result.LOG_LEVEL).toBe('info');
+        expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+        expect(result.SYSTEM_PROMPT).toBe('');
+        expect(result.RATE_LIMIT_MAX).toBe(60);
+        expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
+        expect(result.JWT_SECRET).toBeDefined();
+        expect(result.JWT_SECRET.length).toBeGreaterThanOrEqual(64);
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env['NODE_ENV'] = originalEnv;
+        } else {
+          delete process.env['NODE_ENV'];
+        }
+      }
     });
 
     it('should parse custom PORT value', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
-        PORT: '8080',
+        PORT: 8080,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.PORT).toBe(8080);
     });
@@ -150,6 +168,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           PORT: 'invalid',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
@@ -159,6 +178,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           PORT: '80a0',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
@@ -168,6 +188,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           PORT: '0',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
@@ -177,6 +198,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           PORT: '65536',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
@@ -184,7 +206,8 @@ describe('Environment Schema Validation', () => {
     it('should accept PORT = 1', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
-        PORT: '1',
+        PORT: 1,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.PORT).toBe(1);
     });
@@ -192,7 +215,8 @@ describe('Environment Schema Validation', () => {
     it('should accept PORT = 65535', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
-        PORT: '65535',
+        PORT: 65535,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.PORT).toBe(65535);
     });
@@ -204,6 +228,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           NODE_ENV: 'invalid',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
@@ -212,6 +237,7 @@ describe('Environment Schema Validation', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
         NODE_ENV: 'test',
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.NODE_ENV).toBe('test');
     });
@@ -223,17 +249,20 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           LOG_LEVEL: 'invalid',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow();
     });
 
     it('should accept all valid log levels', () => {
       const levels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+      const jwtSecret = randomBytes(32).toString('hex');
 
       for (const level of levels) {
         const result = EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           LOG_LEVEL: level,
+          JWT_SECRET: jwtSecret,
         });
         expect(result.LOG_LEVEL).toBe(level);
       }
@@ -264,21 +293,37 @@ describe('Environment Schema Validation', () => {
         'sk-aBc123_XYZ-789',
         'sk-1234567890abcdefghijklmnopqrstuvwxyz',
       ];
+      const jwtSecret = randomBytes(32).toString('hex');
 
       for (const key of validKeys) {
-        const result = EnvSchema.parse({ OPENAI_API_KEY: key });
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: key,
+          JWT_SECRET: jwtSecret,
+        });
         expect(result.OPENAI_API_KEY).toBe(key);
       }
     });
   });
 
   describe('JWT_SECRET validation', () => {
-    it('should accept missing JWT_SECRET in development', () => {
-      const result = EnvSchema.parse({
-        OPENAI_API_KEY: validApiKey,
-        NODE_ENV: 'development',
-      });
-      expect(result.JWT_SECRET).toBeUndefined();
+    it('should auto-generate JWT_SECRET in development', () => {
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
+
+      try {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          NODE_ENV: 'development',
+        });
+        expect(result.JWT_SECRET).toBeDefined();
+        expect(result.JWT_SECRET.length).toBeGreaterThanOrEqual(64);
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env['NODE_ENV'] = originalEnv;
+        } else {
+          delete process.env['NODE_ENV'];
+        }
+      }
     });
 
     it('should require JWT_SECRET in production', () => {
@@ -316,6 +361,7 @@ describe('Environment Schema Validation', () => {
     it('should use default localhost origin', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
     });
@@ -324,6 +370,7 @@ describe('Environment Schema Validation', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: 'https://example.com',
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.ALLOWED_ORIGIN).toEqual(['https://example.com']);
     });
@@ -333,6 +380,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN:
           'https://example.com, http://localhost:3000, https://app.example.com',
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
@@ -345,6 +393,7 @@ describe('Environment Schema Validation', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: '  https://example.com  ,  http://localhost:3000  ',
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
@@ -357,6 +406,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           ALLOWED_ORIGIN: 'not-a-url',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow('valid HTTP(S) URLs');
     });
@@ -366,6 +416,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           ALLOWED_ORIGIN: 'ftp://example.com',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow('valid HTTP(S) URLs');
     });
@@ -375,6 +426,7 @@ describe('Environment Schema Validation', () => {
     it('should default to empty string', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.SYSTEM_PROMPT).toBe('');
     });
@@ -383,6 +435,7 @@ describe('Environment Schema Validation', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
         SYSTEM_PROMPT: 'You are a helpful assistant.',
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.SYSTEM_PROMPT).toBe('You are a helpful assistant.');
     });
@@ -392,6 +445,7 @@ describe('Environment Schema Validation', () => {
     it('should default to 60', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.RATE_LIMIT_MAX).toBe(60);
     });
@@ -399,7 +453,8 @@ describe('Environment Schema Validation', () => {
     it('should accept custom rate limit', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
-        RATE_LIMIT_MAX: '120',
+        RATE_LIMIT_MAX: 120,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.RATE_LIMIT_MAX).toBe(120);
     });
@@ -409,8 +464,9 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           RATE_LIMIT_MAX: 'abc',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('positive integer');
+      ).toThrow();
     });
 
     it('should reject zero or negative values', () => {
@@ -418,6 +474,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           RATE_LIMIT_MAX: '0',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
       ).toThrow('greater than 0');
     });
@@ -427,6 +484,7 @@ describe('Environment Schema Validation', () => {
     it('should default to 60000 (1 minute)', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
     });
@@ -434,7 +492,8 @@ describe('Environment Schema Validation', () => {
     it('should accept custom time window', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
-        RATE_LIMIT_TIME_WINDOW: '60000',
+        RATE_LIMIT_TIME_WINDOW: 60000,
+        JWT_SECRET: randomBytes(32).toString('hex'),
       });
       expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
     });
@@ -444,8 +503,9 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           RATE_LIMIT_TIME_WINDOW: '1min',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('positive integer');
+      ).toThrow();
     });
   });
 
@@ -455,6 +515,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           PORT: 'invalid',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         });
         expect.fail('Should have thrown an error');
       } catch (error) {
@@ -470,6 +531,7 @@ describe('Environment Schema Validation', () => {
         EnvSchema.parse({
           NODE_ENV: 'invalid',
           PORT: 'also-invalid',
+          JWT_SECRET: randomBytes(32).toString('hex'),
         });
         expect.fail('Should have thrown an error');
       } catch (error) {

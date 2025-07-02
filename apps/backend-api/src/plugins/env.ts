@@ -12,15 +12,15 @@ const EnvSchema = z
       })
       .default('development'),
 
-    PORT: z
-      .string({
-        required_error: 'PORT environment variable is required',
-        invalid_type_error: 'PORT must be a string',
+    PORT: z.coerce
+      .number({
+        required_error: 'PORT must be a valid number',
+        invalid_type_error: 'PORT must be a number',
       })
-      .regex(/^\d+$/, 'PORT must contain only numeric characters')
-      .transform(Number)
-      .refine(n => n > 0 && n < 65536, 'PORT must be between 1-65535')
-      .default('3000'),
+      .int('PORT must be an integer')
+      .min(1, 'PORT must be at least 1')
+      .max(65535, 'PORT must be at most 65535')
+      .default(3000),
 
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'], {
@@ -48,7 +48,14 @@ const EnvSchema = z
         invalid_type_error: 'JWT_SECRET must be a string',
       })
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
-      .optional(),
+      .default(() => {
+        // Auto-generate in development mode only
+        if (process.env['NODE_ENV'] === 'development') {
+          return randomBytes(32).toString('hex');
+        }
+        // In production, this will fail validation if not provided due to the refine below
+        return '';
+      }),
 
     ALLOWED_ORIGIN: z
       .string({
@@ -82,26 +89,21 @@ const EnvSchema = z
       .optional()
       .default(''),
 
-    RATE_LIMIT_MAX: z
-      .string({
-        invalid_type_error: 'RATE_LIMIT_MAX must be a string',
+    RATE_LIMIT_MAX: z.coerce
+      .number({
+        invalid_type_error: 'RATE_LIMIT_MAX must be a number',
       })
-      .regex(/^\d+$/, 'RATE_LIMIT_MAX must be a positive integer')
-      .transform(Number)
-      .refine(n => n > 0, 'RATE_LIMIT_MAX must be greater than 0')
-      .default('60'),
+      .int('RATE_LIMIT_MAX must be an integer')
+      .min(1, 'RATE_LIMIT_MAX must be greater than 0')
+      .default(60),
 
-    RATE_LIMIT_TIME_WINDOW: z
-      .string({
-        invalid_type_error: 'RATE_LIMIT_TIME_WINDOW must be a string',
+    RATE_LIMIT_TIME_WINDOW: z.coerce
+      .number({
+        invalid_type_error: 'RATE_LIMIT_TIME_WINDOW must be a number',
       })
-      .regex(
-        /^\d+$/,
-        'RATE_LIMIT_TIME_WINDOW must be a positive integer (milliseconds)'
-      )
-      .transform(Number)
-      .refine(n => n > 0, 'RATE_LIMIT_TIME_WINDOW must be greater than 0')
-      .default('60000'), // 1 minute default
+      .int('RATE_LIMIT_TIME_WINDOW must be an integer')
+      .min(1000, 'RATE_LIMIT_TIME_WINDOW must be at least 1000ms (1 second)')
+      .default(60000), // 1 minute default
   })
   .refine(data => data.NODE_ENV !== 'production' || data.JWT_SECRET, {
     message:
@@ -145,13 +147,10 @@ declare module 'fastify' {
 export default fp(
   async fastify => {
     try {
-      let config = EnvSchema.parse(process.env);
+      const config = EnvSchema.parse(process.env);
 
-      // Auto-generate JWT_SECRET in development if not provided
-      if (!config.JWT_SECRET && config.NODE_ENV === 'development') {
-        const generatedSecret = randomBytes(32).toString('hex');
-        config = { ...config, JWT_SECRET: generatedSecret };
-
+      // Log if JWT_SECRET was auto-generated (check if it's the expected length and NODE_ENV is development)
+      if (config.NODE_ENV === 'development' && !process.env['JWT_SECRET']) {
         fastify.log.warn(
           { JWT_SECRET: '[REDACTED - auto-generated]' },
           'JWT_SECRET not provided. Auto-generated for development use only. ' +

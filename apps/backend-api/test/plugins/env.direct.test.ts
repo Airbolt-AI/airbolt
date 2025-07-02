@@ -84,11 +84,11 @@ describe('Environment Plugin Direct Tests', () => {
     const originalEnv = process.env;
     process.env = {
       ...originalEnv,
+      NODE_ENV: 'development', // Set explicitly for JWT auto-generation
       OPENAI_API_KEY: validApiKey, // Required
     };
 
     // Remove optional env vars to test defaults
-    delete process.env['NODE_ENV'];
     delete process.env['PORT'];
     delete process.env['LOG_LEVEL'];
     delete process.env['JWT_SECRET'];
@@ -127,8 +127,10 @@ describe('Environment Plugin Direct Tests', () => {
         ...originalEnv,
         NODE_ENV: value,
         OPENAI_API_KEY: validApiKey,
-        JWT_SECRET:
-          value === 'production' ? randomBytes(32).toString('hex') : undefined,
+        // Provide JWT_SECRET for production and test, let development auto-generate
+        ...(value !== 'development' && {
+          JWT_SECRET: randomBytes(32).toString('hex'),
+        }),
       };
 
       try {
@@ -567,8 +569,8 @@ describe('Environment Plugin Direct Tests', () => {
       OPENAI_API_KEY: validApiKey,
       JWT_SECRET: 'a'.repeat(32), // Exactly 32 chars
       ALLOWED_ORIGIN: 'http://localhost', // No port
-      RATE_LIMIT_MAX: '1', // Minimum
-      RATE_LIMIT_TIME_WINDOW: '1', // Minimum
+      RATE_LIMIT_MAX: '1', // Minimum as string (will be coerced)
+      RATE_LIMIT_TIME_WINDOW: '1000', // Minimum (1 second) as string
       SYSTEM_PROMPT: '', // Empty is valid
     };
 
@@ -580,7 +582,7 @@ describe('Environment Plugin Direct Tests', () => {
       expect(app.config?.PORT).toBe(1);
       expect(app.config?.JWT_SECRET).toBe('a'.repeat(32));
       expect(app.config?.RATE_LIMIT_MAX).toBe(1);
-      expect(app.config?.RATE_LIMIT_TIME_WINDOW).toBe(1);
+      expect(app.config?.RATE_LIMIT_TIME_WINDOW).toBe(1000);
     } finally {
       process.env = originalEnv;
       await app.close();
