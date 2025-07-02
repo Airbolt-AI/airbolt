@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$SESSION_WORKING_DIRECTORY\" && { [ -f .claude-last-check ] && [ $(($(date +%s) - $(stat -f %m .claude-last-check 2>/dev/null || echo 0))) -lt 5 ] && exit 0; touch .claude-last-check; timeout 10s pnpm ai:quick --silent 2>&1 | grep -E \"(error|warning|Error|Warning)\" | awk -F: '{if (NF >= 3) print \"💡 \" $1 \":\" $2 \" - \" substr($0, index($0,$3)); else print \"💡 \" $0}' | head -3 || if [ ${PIPESTATUS[0]} -ne 0 ]; then echo '⚠️  Validation issues detected - run: pnpm lint:fix'; else echo '✅ No validation issues'; fi; }"
+            "command": "cd \"$SESSION_WORKING_DIRECTORY\" && { [ -f .claude-last-check ] && [ $(( $(date +%s) - $(stat -f %m .claude-last-check 2>/dev/null || echo 0) )) -lt 5 ] && exit 0; touch .claude-last-check; timeout 10s pnpm ai:quick --silent 2>&1 | awk -F: -v M=3 '/[eE]rror|[wW]arning/ { if (count < M) { if (NF >= 3) print \"💡 \" $1 \":\" $2 \" - \" substr($0, index($0,$3)); else print \"💡 \" $0; count++; } } END { if (count == 0) print \"✅ No validation issues\"; }'; }"
           }
         ]
       },
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "RESOLVED_PATH=$(cd \"$SESSION_WORKING_DIRECTORY\" && realpath -m \"$TOOL_FILE_PATH\" 2>/dev/null || echo \"$TOOL_FILE_PATH\"); if [[ \"$RESOLVED_PATH\" =~ \\.(env|secret) ]] || [[ \"$RESOLVED_PATH\" =~ /(secrets|credentials|private|keys)/ ]] || [[ \"$TOOL_FILE_PATH\" =~ \\.\\. ]]; then echo '🚨 BLOCKED: Direct env/secrets modification - use Zod schemas for env validation' && exit 1; fi"
+            "command": "RESOLVED_PATH=$(cd \"$SESSION_WORKING_DIRECTORY\" && realpath -m \"$TOOL_FILE_PATH\" 2>/dev/null || echo \"$TOOL_FILE_PATH\"); if [[ \"$RESOLVED_PATH\" =~ \\.(env|secret) ]] || [[ \"$RESOLVED_PATH\" =~ /(secrets|credentials|private|keys)/ ]] || [[ \"$TOOL_FILE_PATH\" =~ \\.\\.\\. ]]; then echo '🚨 BLOCKED: Direct env/secrets modification - use Zod schemas for env validation' && exit 1; fi"
           }
         ]
       },
@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$SESSION_WORKING_DIRECTORY\" && echo '📊 Session Summary:' && git status --short 2>/dev/null | head -10 && echo '' && git diff --stat 2>/dev/null | tail -5"
+            "command": "cd \"$SESSION_WORKING_DIRECTORY\" && echo '📊 Session Summary:' && git status --short 2>/dev/null | { cat; } | head -10 && echo '' && git diff --stat 2>/dev/null | { cat; } | tail -5"
           }
         ]
       },
