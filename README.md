@@ -1,4 +1,4 @@
-# 🚀 AI Fastify Template
+# 🚀 Airbolt
 
 > Production-ready Fastify + TypeScript monorepo optimized for AI-assisted development
 
