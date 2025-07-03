@@ -9,4 +9,7 @@ beforeAll(() => {
   process.env['JWT_SECRET'] =
     process.env['JWT_SECRET'] ||
     'test-jwt-secret-for-testing-purposes-only-32chars';
+  process.env['ALLOWED_ORIGIN'] =
+    process.env['ALLOWED_ORIGIN'] ||
+    'http://localhost:3000,http://localhost:3001';
 });
