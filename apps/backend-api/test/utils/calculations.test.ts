@@ -8,6 +8,8 @@ import {
   type Item,
 } from '../../src/utils/calculations.js';
 
+// Trigger test config validation workflow
+
 describe('calculateTotal', () => {
   it('should calculate total for empty array', () => {
     expect(calculateTotal([])).toBe(0);
