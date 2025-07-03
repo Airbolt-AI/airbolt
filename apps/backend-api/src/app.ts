@@ -10,7 +10,6 @@ import corsPlugin from './plugins/cors.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import fastifyJwt from '@fastify/jwt';
 import openaiService from './services/openai.js';
-import authenticatePlugin from './plugins/authenticate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,9 +46,6 @@ const app: FastifyPluginAsync<AppOptions> = async (
     },
   });
 
-  // Register authenticate plugin after JWT
-  await fastify.register(authenticatePlugin);
-
   // Register OpenAI service after env (it depends on OPENAI_API_KEY from env)
   await fastify.register(openaiService);
 
@@ -62,7 +58,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // through your application
   void fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
-    ignorePattern: /.*(env|cors|rate-limit|authenticate)\.(ts|js)$/,
+    ignorePattern: /.*(env|cors|rate-limit)\.(ts|js)$/,
     options: opts,
   });
 
