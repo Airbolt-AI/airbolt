@@ -14,6 +14,18 @@ export default fp(
     const rateLimitOptions: RateLimitPluginOptions = {
       max: fastify.config.RATE_LIMIT_MAX,
       timeWindow: fastify.config.RATE_LIMIT_TIME_WINDOW,
+      // Add rate limit headers to all responses
+      addHeaders: {
+        'x-ratelimit-limit': true,
+        'x-ratelimit-remaining': true,
+        'x-ratelimit-reset': true,
+      },
+      // Add headers when approaching the limit
+      addHeadersOnExceeding: {
+        'x-ratelimit-limit': true,
+        'x-ratelimit-remaining': true,
+        'x-ratelimit-reset': true,
+      },
       errorResponseBuilder: (_request, context) => {
         return {
           error: 'RateLimitExceeded',

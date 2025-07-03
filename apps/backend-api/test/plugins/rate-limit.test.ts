@@ -53,6 +53,22 @@ describe('Rate Limit Plugin Integration', () => {
       await app.close();
     });
 
+    it('should include rate limit headers in responses', async () => {
+      const app = await createApp(5, 60000);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/test',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-ratelimit-limit']).toBe('5');
+      expect(response.headers['x-ratelimit-remaining']).toBe('4');
+      expect(response.headers['x-ratelimit-reset']).toBeDefined();
+
+      await app.close();
+    });
+
     it('should block requests exceeding the limit', async () => {
       const app = await createApp(2, 1000);
 

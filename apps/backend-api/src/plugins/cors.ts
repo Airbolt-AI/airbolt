@@ -10,22 +10,21 @@ export default fp(
     }
 
     const corsOptions: FastifyCorsOptions = {
+      // fastify-cors will do exact matching when given an array
       origin: (origin, callback) => {
-        // Allow requests with no origin (e.g., same-origin requests, Postman, curl)
+        // Allow requests with no origin (same-origin, Postman, mobile apps)
         if (!origin) {
           callback(null, true);
           return;
         }
 
-        // Check if the origin is in our allowed list
+        // Check exact match against allowed origins
         const isAllowed =
           fastify.config?.ALLOWED_ORIGIN.includes(origin) ?? false;
-
-        if (isAllowed) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'), false);
-        }
+        callback(
+          isAllowed ? null : new Error('Not allowed by CORS'),
+          isAllowed
+        );
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
