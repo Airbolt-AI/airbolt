@@ -104,6 +104,12 @@ const EnvSchema = z
       .int('RATE_LIMIT_TIME_WINDOW must be an integer')
       .min(1000, 'RATE_LIMIT_TIME_WINDOW must be at least 1000ms (1 second)')
       .default(60000), // 1 minute default
+
+    TRUST_PROXY: z.coerce
+      .boolean({
+        invalid_type_error: 'TRUST_PROXY must be a boolean',
+      })
+      .default(false),
   })
   .refine(data => data.NODE_ENV !== 'production' || data.JWT_SECRET, {
     message:

@@ -56,6 +56,7 @@ describe('Environment Plugin Direct Tests', () => {
       LOG_LEVEL: 'info',
       OPENAI_API_KEY: validApiKey,
       // JWT_SECRET will be auto-generated in development
+      ALLOWED_ORIGIN: 'http://localhost:5173', // Use explicit value for test
     };
 
     const originalEnv = process.env;
