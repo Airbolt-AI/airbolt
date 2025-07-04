@@ -5,7 +5,7 @@ import { beforeAll } from 'vitest';
 if (typeof globalThis.fetch === 'undefined') {
   // Provide a basic fetch implementation for tests
   // Most tests use vitest mocks anyway, so this is mainly for OpenAI service initialization
-  globalThis.fetch = async (input: any, init?: any) => {
+  globalThis.fetch = async (_input: any, _init?: any) => {
     return {
       ok: true,
       status: 200,
@@ -19,7 +19,7 @@ if (typeof globalThis.fetch === 'undefined') {
   };
   
   globalThis.Request = class MockRequest {
-    constructor(input: any, init?: any) {}
+    constructor(_input: any, _init?: any) {}
   } as any;
   
   globalThis.Response = class MockResponse {
@@ -28,7 +28,7 @@ if (typeof globalThis.fetch === 'undefined') {
     statusText = 'OK';
     headers = new Map();
     
-    constructor(body?: any, init?: any) {
+    constructor(_body?: any, init?: any) {
       if (init?.status) this.status = init.status;
       this.ok = this.status >= 200 && this.status < 300;
     }
@@ -40,7 +40,7 @@ if (typeof globalThis.fetch === 'undefined') {
   } as any;
   
   globalThis.Headers = class MockHeaders extends Map {
-    constructor(init?: any) {
+    constructor(_init?: any) {
       super();
     }
   } as any;
