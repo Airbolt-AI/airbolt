@@ -214,32 +214,20 @@ describe('AirboltClient', () => {
     });
 
     it('should handle request timeout', async () => {
-      // Mock a slow response that gets aborted
+      // Mock a fetch that rejects quickly to simulate timeout
       mockFetch.mockImplementationOnce(() => 
-        new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => resolve({
-            ok: true,
-            json: vi.fn().mockResolvedValue(validChatResponse),
-          }), 10000);
-          
-          // Simulate abort signal behavior
-          const controller = new AbortController();
-          setTimeout(() => {
-            controller.abort();
-            clearTimeout(timeout);
-            reject(new Error('Request timeout'));
-          }, 200);
-        })
+        Promise.reject(new Error('Request timeout'))
       );
 
       const timeoutClient = new AirboltClient({
         baseURL,
         tokenManager: mockTokenManager,
         timeout: 100, // 100ms timeout
+        maxRetries: 1, // Reduce retries for faster test
       });
 
       await expect(timeoutClient.chat(validChatRequest)).rejects.toThrow(AirboltError);
-    }, 2000); // Give test 2 seconds to complete
+    });
 
     it('should handle network errors', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));

@@ -89,7 +89,6 @@ describe('TokenManager', () => {
 
       expect(token).toBe(mockTokenResponse.token);
       // Allow for multiple refresh calls due to expiration and buffer logic
-      expect(mockFetch).toHaveBeenCalledTimes(expect.any(Number));
       expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
 
