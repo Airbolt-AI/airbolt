@@ -13,7 +13,7 @@ if (typeof globalThis.fetch === 'undefined') {
       headers: new Map(),
       json: async () => ({}),
       text: async () => '{}',
-      blob: async () => new Blob(),
+      blob: async () => new Blob([]),
       arrayBuffer: async () => new ArrayBuffer(0),
     } as any;
   };
@@ -35,7 +35,7 @@ if (typeof globalThis.fetch === 'undefined') {
     
     async json() { return {}; }
     async text() { return '{}'; }
-    async blob() { return new Blob(); }
+    async blob() { return new Blob([]); }
     async arrayBuffer() { return new ArrayBuffer(0); }
   } as any;
   
