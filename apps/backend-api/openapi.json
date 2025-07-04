@@ -248,6 +248,79 @@
         }
       }
     },
+    "/api/tokens": {
+      "post": {
+        "summary": "Generate JWT token",
+        "tags": ["Authentication"],
+        "description": "Generate a JWT token for API authentication (development endpoint)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "User identifier (optional for development)",
+                    "default": "dev-user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Token generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Token generated successfully",
+                  "type": "object",
+                  "required": ["token", "expiresIn", "tokenType"],
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    },
+                    "expiresIn": {
+                      "type": "string",
+                      "description": "Token expiration time"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token type"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/example/": {
       "get": {
         "summary": "Get example message",
@@ -313,6 +386,10 @@
     {
       "name": "Example",
       "description": "Example endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints"
     },
     {
       "name": "Chat",

@@ -110,7 +110,7 @@ describe('Swagger Plugin', () => {
     it('should include proper tags for organization', async () => {
       const spec = getOpenAPIV3Document(() => app.swagger());
 
-      expect(spec.tags).toHaveLength(3);
+      expect(spec.tags).toHaveLength(4);
       expect(spec.tags).toContainEqual({
         name: 'Root',
         description: 'Root endpoints',
@@ -120,6 +120,10 @@ describe('Swagger Plugin', () => {
         description: 'Example endpoints',
       });
       expect(spec.tags).toContainEqual({
+        name: 'Authentication',
+        description: 'Authentication endpoints',
+      });
+      expect(spec.tags).toContainEqual({
         name: 'Chat',
         description: 'AI Chat endpoints',
       });
@@ -127,6 +131,7 @@ describe('Swagger Plugin', () => {
       // Check that routes are properly tagged
       expect(spec.paths['/']?.get?.tags).toContain('Root');
       expect(spec.paths['/example/']?.get?.tags).toContain('Example');
+      expect(spec.paths['/api/tokens']?.post?.tags).toContain('Authentication');
       expect(spec.paths['/api/chat']?.post?.tags).toContain('Chat');
     });
 

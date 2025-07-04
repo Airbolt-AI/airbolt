@@ -65,7 +65,11 @@ describe('SDK Integration', () => {
             expect(operation.description).toBeDefined();
             expect(operation.tags).toBeDefined();
             expect(operation.responses).toBeDefined();
-            expect(operation.responses['200']).toBeDefined();
+            // Should have at least one success response (200, 201, etc.)
+            const successResponses = Object.keys(operation.responses).filter(
+              code => code.startsWith('2')
+            );
+            expect(successResponses.length).toBeGreaterThan(0);
           }
         }
       }
