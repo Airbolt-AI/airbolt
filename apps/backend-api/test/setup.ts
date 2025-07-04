@@ -1,5 +1,22 @@
 import { beforeAll } from 'vitest';
 
+// Polyfill fetch for Node.js test environment
+// Use Node.js built-in fetch (available in Node 18+)
+if (!globalThis.fetch) {
+  try {
+    // Import from node:undici if available (Node 18+)
+    const undici = await import('node:undici');
+    globalThis.fetch = undici.fetch;
+    globalThis.Request = undici.Request;
+    globalThis.Response = undici.Response;
+    globalThis.Headers = undici.Headers;
+  } catch {
+    console.warn('Node.js fetch not available - using mock fetch for tests');
+    // Provide a basic mock fetch for tests that don't need real network
+    globalThis.fetch = async () => new Response('{}', { status: 200 });
+  }
+}
+
 // Set up test environment variables
 beforeAll(() => {
   // Ensure test environment variables are set
