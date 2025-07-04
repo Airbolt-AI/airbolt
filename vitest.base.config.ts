@@ -54,6 +54,7 @@ export const baseConfig: InlineConfig = {
     alias: {
       '@airbolt/config': path.resolve(__dirname, 'packages/config/src'),
       '@airbolt/types': path.resolve(__dirname, 'packages/types/src'),
+      '@airbolt/sdk': path.resolve(__dirname, 'packages/sdk/src'),
     },
     extensionAlias: {
       '.js': ['.ts', '.js'],

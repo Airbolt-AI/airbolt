@@ -29,8 +29,10 @@
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "clean": "rm -rf dist/ generated/",
-    "test": "echo 'SDK tests are in the main project'",
+    "test": "echo 'SDK tests are run from the main project root'",
+    "test:watch": "echo 'SDK tests are run from the main project root'",
     "type-check": "tsc --noEmit",
+    "lint": "echo 'SDK linting is done from the main project root'",
     "generate": "pnpm run clean && fern generate --group browser && fern generate --group node && pnpm run build",
     "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'"
   },

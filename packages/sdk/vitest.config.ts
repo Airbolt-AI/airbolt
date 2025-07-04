@@ -1,5 +1,9 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
@@ -34,8 +38,9 @@ export default defineConfig({
     hookTimeout: 10000,
   },
   resolve: {
-    alias: {
-      '../../src': new URL('./src', import.meta.url).pathname,
+    extensionAlias: {
+      '.js': ['.ts', '.js'],
+      '.jsx': ['.tsx', '.jsx'],
     },
   },
 });

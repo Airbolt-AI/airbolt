@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { AirboltClient, TokenManager, AirboltError, TokenError } from '../../src/core/index.js';
+import { AirboltClient, TokenManager, AirboltError, TokenError } from '../../src/core/index';
 
 /**
  * Integration tests for the SDK

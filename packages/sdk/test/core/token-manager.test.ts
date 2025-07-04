@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { TokenManager, TokenError } from '../../src/core/token-manager.js';
+import { TokenManager, TokenError } from '../../src/core/token-manager';
 
 // Mock fetch for testing
 const mockFetch = vi.fn();

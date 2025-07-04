@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { AirboltClient, AirboltError } from '../../src/core/client.js';
-import { TokenManager, TokenError } from '../../src/core/token-manager.js';
+import { AirboltClient, AirboltError } from '../../src/core/client';
+import { TokenManager, TokenError } from '../../src/core/token-manager';
 
 // Mock fetch for testing
 const mockFetch = vi.fn();
