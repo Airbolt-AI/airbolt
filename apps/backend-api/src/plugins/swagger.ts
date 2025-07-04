@@ -30,7 +30,7 @@ const swaggerPlugin: FastifyPluginAsync = async fastify => {
       ],
       components: {
         securitySchemes: {
-          bearerAuth: {
+          BearerAuth: {
             type: 'http',
             scheme: 'bearer',
             bearerFormat: 'JWT',
@@ -45,6 +45,10 @@ const swaggerPlugin: FastifyPluginAsync = async fastify => {
         {
           name: 'Example',
           description: 'Example endpoints',
+        },
+        {
+          name: 'Chat',
+          description: 'AI Chat endpoints',
         },
       ],
     },
