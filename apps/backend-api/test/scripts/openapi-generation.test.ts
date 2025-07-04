@@ -101,7 +101,8 @@ describe('OpenAPI Generation Scripts', () => {
       // Should have paths
       expect(spec.paths).toBeDefined();
       expect(spec.paths['/']).toBeDefined();
-      expect(spec.paths['/example/']).toBeDefined();
+      expect(spec.paths['/api/tokens']).toBeDefined();
+      expect(spec.paths['/api/chat']).toBeDefined();
 
       // Should have components
       expect(spec.components).toBeDefined();
@@ -254,21 +255,6 @@ process.exit(1);`;
         }
       }
 
-      const examplePath = spec.paths?.['/example/'];
-      const exampleGet = examplePath?.get;
-      const exampleResponse = exampleGet?.responses?.['200'];
-
-      if (
-        exampleResponse &&
-        typeof exampleResponse === 'object' &&
-        !('$ref' in exampleResponse)
-      ) {
-        const jsonContent = exampleResponse.content?.['application/json'];
-        const schema = jsonContent?.schema;
-        if (schema && 'example' in schema) {
-          expect(schema['example']).toBe('this is an example');
-        }
-      }
     });
 
     it('should be suitable for SDK generation', () => {

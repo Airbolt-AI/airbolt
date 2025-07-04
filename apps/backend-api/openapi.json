@@ -27,7 +27,9 @@
     "/": {
       "get": {
         "summary": "Get welcome message",
-        "tags": ["Root"],
+        "tags": [
+          "Root"
+        ],
         "description": "Returns a hello world message for API health check",
         "responses": {
           "200": {
@@ -44,7 +46,9 @@
                       "example": "Hello World!"
                     }
                   },
-                  "required": ["message"]
+                  "required": [
+                    "message"
+                  ]
                 }
               }
             }
@@ -73,7 +77,11 @@
                       "example": 400
                     }
                   },
-                  "required": ["error", "message", "statusCode"]
+                  "required": [
+                    "error",
+                    "message",
+                    "statusCode"
+                  ]
                 }
               }
             }
@@ -84,14 +92,18 @@
     "/api/chat": {
       "post": {
         "summary": "Send chat messages to AI",
-        "tags": ["Chat"],
+        "tags": [
+          "Chat"
+        ],
         "description": "Proxies chat messages to OpenAI and returns the assistant response",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["messages"],
+                "required": [
+                  "messages"
+                ],
                 "properties": {
                   "messages": {
                     "type": "array",
@@ -99,11 +111,18 @@
                     "maxItems": 50,
                     "items": {
                       "type": "object",
-                      "required": ["role", "content"],
+                      "required": [
+                        "role",
+                        "content"
+                      ],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": ["user", "assistant", "system"],
+                          "enum": [
+                            "user",
+                            "assistant",
+                            "system"
+                          ],
                           "description": "The role of the message sender"
                         },
                         "content": {
@@ -137,7 +156,9 @@
                 "schema": {
                   "description": "Successful chat response",
                   "type": "object",
-                  "required": ["content"],
+                  "required": [
+                    "content"
+                  ],
                   "properties": {
                     "content": {
                       "type": "string",
@@ -251,7 +272,9 @@
     "/api/tokens": {
       "post": {
         "summary": "Generate JWT token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Generate a JWT token for API authentication (development endpoint)",
         "requestBody": {
           "content": {
@@ -277,7 +300,11 @@
                 "schema": {
                   "description": "Token generated successfully",
                   "type": "object",
-                  "required": ["token", "expiresIn", "tokenType"],
+                  "required": [
+                    "token",
+                    "expiresIn",
+                    "tokenType"
+                  ],
                   "properties": {
                     "token": {
                       "type": "string",
@@ -320,56 +347,6 @@
           }
         }
       }
-    },
-    "/example/": {
-      "get": {
-        "summary": "Get example message",
-        "tags": ["Example"],
-        "description": "Returns an example string response",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Successful response",
-                  "type": "string",
-                  "example": "this is an example"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Internal Server Error",
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error type",
-                      "example": "Bad Request"
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Error message",
-                      "example": "Invalid request parameters"
-                    },
-                    "statusCode": {
-                      "type": "number",
-                      "description": "HTTP status code",
-                      "example": 400
-                    }
-                  },
-                  "required": ["error", "message", "statusCode"]
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "servers": [
@@ -382,10 +359,6 @@
     {
       "name": "Root",
       "description": "Root endpoints"
-    },
-    {
-      "name": "Example",
-      "description": "Example endpoints"
     },
     {
       "name": "Authentication",

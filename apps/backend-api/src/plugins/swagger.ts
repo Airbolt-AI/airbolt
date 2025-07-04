@@ -43,10 +43,6 @@ const swaggerPlugin: FastifyPluginAsync = async fastify => {
           description: 'Root endpoints',
         },
         {
-          name: 'Example',
-          description: 'Example endpoints',
-        },
-        {
           name: 'Authentication',
           description: 'Authentication endpoints',
         },

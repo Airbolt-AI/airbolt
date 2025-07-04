@@ -80,16 +80,12 @@ describe('SDK Integration', () => {
 
       // Check that routes include error responses
       const rootPath = spec.paths['/'];
-      const examplePath = spec.paths['/example/'];
 
       expect(rootPath).toBeDefined();
-      expect(examplePath).toBeDefined();
 
-      if (rootPath && examplePath) {
+      if (rootPath) {
         expect(rootPath.get).toBeDefined();
-        expect(examplePath.get).toBeDefined();
         expect(rootPath.get?.responses?.['500']).toBeDefined();
-        expect(examplePath.get?.responses?.['500']).toBeDefined();
 
         // Validate error response structure
         const errorResponse = rootPath.get?.responses?.['500'];
@@ -156,19 +152,6 @@ describe('SDK Integration', () => {
           return JSON.parse(response.payload);
         }
 
-        async getExampleMessage(): Promise<string> {
-          const response = await app.inject({
-            method: 'GET',
-            url: '/example/',
-          });
-          if (response.statusCode !== 200) {
-            throw new Error(
-              `HTTP ${response.statusCode}: ${response.statusMessage}`
-            );
-          }
-          // The response is JSON-serialized, so parse it
-          return JSON.parse(response.payload);
-        }
       }
 
       // Test SDK usage pattern
@@ -179,10 +162,6 @@ describe('SDK Integration', () => {
       // Test root endpoint
       const rootResponse = await client.getRootMessage();
       expect(rootResponse).toEqual({ message: 'Hello World!' });
-
-      // Test example endpoint
-      const exampleResponse = await client.getExampleMessage();
-      expect(exampleResponse).toBe('this is an example');
     });
 
     it('should handle errors appropriately in SDK pattern', async () => {
@@ -297,7 +276,7 @@ describe('SDK Integration', () => {
 
       // Should have proper structure for SDK generation
       const pathCount = Object.keys(spec.paths).length;
-      expect(pathCount).toBeGreaterThanOrEqual(2); // At least root and example endpoints
+      expect(pathCount).toBeGreaterThanOrEqual(3); // At least root, tokens, and chat endpoints
 
       // Each path should have operations
       for (const pathItem of Object.values(spec.paths)) {
@@ -370,16 +349,6 @@ describe('SDK Integration', () => {
       expect(rootResponse.statusCode).toBe(200);
       const rootData = JSON.parse(rootResponse.payload);
       expect(rootData).toEqual({ message: 'Hello World!' });
-
-      // Test example endpoint
-      const exampleResponse = await app.inject({
-        method: 'GET',
-        url: '/example/',
-      });
-
-      expect(exampleResponse.statusCode).toBe(200);
-      // Example endpoint returns JSON-serialized string
-      expect(exampleResponse.payload).toBe('"this is an example"');
     });
 
     it('should return consistent response types for SDK generation', async () => {
@@ -391,16 +360,6 @@ describe('SDK Integration', () => {
       );
       expect(() => JSON.parse(rootResponse.payload)).not.toThrow();
 
-      const exampleResponse = await app.inject({
-        method: 'GET',
-        url: '/example/',
-      });
-      expect(exampleResponse.statusCode).toBe(200);
-      expect(exampleResponse.headers['content-type']).toContain(
-        'application/json'
-      );
-      // The response should be valid JSON
-      expect(() => JSON.parse(exampleResponse.payload)).not.toThrow();
     });
   });
 });

@@ -49,13 +49,15 @@ describe('Swagger Plugin', () => {
     it('should include all defined routes', async () => {
       const spec = getOpenAPIV3Document(() => app.swagger());
 
-      // Check that both routes are documented
+      // Check that routes are documented
       expect(spec.paths['/']).toBeDefined();
-      expect(spec.paths['/example/']).toBeDefined();
+      expect(spec.paths['/api/tokens']).toBeDefined();
+      expect(spec.paths['/api/chat']).toBeDefined();
 
       // Check HTTP methods
       expect(spec.paths['/']?.get).toBeDefined();
-      expect(spec.paths['/example/']?.get).toBeDefined();
+      expect(spec.paths['/api/tokens']?.post).toBeDefined();
+      expect(spec.paths['/api/chat']?.post).toBeDefined();
     });
 
     it('should include proper response schemas', async () => {
@@ -86,38 +88,15 @@ describe('Swagger Plugin', () => {
         }
       }
 
-      // Example endpoint response schema
-      const examplePath = spec.paths['/example/'];
-      expect(examplePath).toBeDefined();
-      const exampleGet = examplePath?.get;
-      expect(exampleGet).toBeDefined();
-      const exampleResponse = exampleGet?.responses?.['200'];
-
-      if (exampleResponse && isResponseObject(exampleResponse)) {
-        const jsonContent = exampleResponse.content?.['application/json'];
-        expect(jsonContent).toBeDefined();
-        if (jsonContent && 'schema' in jsonContent && jsonContent.schema) {
-          if ('type' in jsonContent.schema) {
-            expect(jsonContent.schema.type).toBe('string');
-          }
-          if ('example' in jsonContent.schema) {
-            expect(jsonContent.schema.example).toBe('this is an example');
-          }
-        }
-      }
     });
 
     it('should include proper tags for organization', async () => {
       const spec = getOpenAPIV3Document(() => app.swagger());
 
-      expect(spec.tags).toHaveLength(4);
+      expect(spec.tags).toHaveLength(3);
       expect(spec.tags).toContainEqual({
         name: 'Root',
         description: 'Root endpoints',
-      });
-      expect(spec.tags).toContainEqual({
-        name: 'Example',
-        description: 'Example endpoints',
       });
       expect(spec.tags).toContainEqual({
         name: 'Authentication',
@@ -130,7 +109,6 @@ describe('Swagger Plugin', () => {
 
       // Check that routes are properly tagged
       expect(spec.paths['/']?.get?.tags).toContain('Root');
-      expect(spec.paths['/example/']?.get?.tags).toContain('Example');
       expect(spec.paths['/api/tokens']?.post?.tags).toContain('Authentication');
       expect(spec.paths['/api/chat']?.post?.tags).toContain('Chat');
     });
@@ -168,12 +146,6 @@ describe('Swagger Plugin', () => {
         'Returns a hello world message for API health check'
       );
 
-      // Example endpoint
-      const exampleGet = spec.paths['/example/']?.get;
-      expect(exampleGet?.summary).toBe('Get example message');
-      expect(exampleGet?.description).toBe(
-        'Returns an example string response'
-      );
     });
   });
 
