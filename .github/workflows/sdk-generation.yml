@@ -90,8 +90,14 @@ jobs:
       - name: Validate Fern configuration
         run: pnpm fern:check
 
-      - name: Generate SDK
-        run: fern generate --local
+      - name: Generate SDK (Browser and Node.js)
+        run: |
+          echo "🌐 Generating browser SDK..."
+          fern generate --group browser --local
+          echo "🟢 Generating Node.js SDK..."
+          fern generate --group node --local
+          echo "🔧 Building core infrastructure..."
+          cd packages/sdk && pnpm build
         env:
           # Ensure we have access to Docker for Fern generation
           DOCKER_HOST: unix:///var/run/docker.sock
@@ -110,34 +116,64 @@ jobs:
             exit 1
           fi
 
-          echo "✅ SDK generated successfully"
+          # Check for dual environment structure
+          if [ ! -d "packages/sdk/generated/browser" ]; then
+            echo "❌ Browser SDK not found"
+            exit 1
+          fi
+
+          if [ ! -d "packages/sdk/generated/node" ]; then
+            echo "❌ Node.js SDK not found"
+            exit 1
+          fi
+
+          # Check for core infrastructure
+          if [ ! -d "packages/sdk/dist" ]; then
+            echo "❌ Built core infrastructure not found"
+            exit 1
+          fi
+
+          echo "✅ SDK generated successfully with dual environment support"
 
           # Show SDK structure
           echo "📁 Generated SDK structure:"
-          find packages/sdk -type f -name "*.ts" -o -name "*.js" -o -name "*.json" | head -20
+          echo "Core infrastructure:"
+          find packages/sdk/dist -type f -name "*.js" -o -name "*.d.ts" | head -10
+          echo "Browser SDK:"
+          find packages/sdk/generated/browser -type f -name "*.ts" -o -name "*.js" | head -5
+          echo "Node.js SDK:"
+          find packages/sdk/generated/node -type f -name "*.ts" -o -name "*.js" | head -5
 
-      - name: Test SDK compilation
+      - name: Test SDK compilation and functionality
         run: |
           cd packages/sdk
-          if [ -f "package.json" ]; then
-            # Install SDK dependencies if package.json exists
-            pnpm install
+          
+          # Install SDK dependencies
+          echo "📦 Installing SDK dependencies..."
+          pnpm install
 
-            # Check if there's a build script
-            if pnpm run --if-present build; then
-              echo "✅ SDK builds successfully"
-            else
-              echo "ℹ️ No build script found, checking TypeScript compilation"
+          # Run type checking
+          echo "🔍 Type checking SDK..."
+          pnpm type-check
 
-              # Try TypeScript compilation if available
-              if command -v tsc &> /dev/null && [ -f "tsconfig.json" ]; then
-                tsc --noEmit
-                echo "✅ SDK TypeScript compilation successful"
-              else
-                echo "ℹ️ TypeScript not available for compilation check"
-              fi
-            fi
-          fi
+          # Run SDK tests
+          echo "🧪 Running SDK tests..."
+          pnpm test
+
+          # Test SDK imports
+          echo "🔗 Testing SDK imports..."
+          node -e "
+            console.log('Testing Node.js import...');
+            try {
+              const { AirboltClient } = require('./dist/index.js');
+              console.log('✅ Node.js import successful');
+            } catch (error) {
+              console.error('❌ Node.js import failed:', error.message);
+              process.exit(1);
+            }
+          "
+
+          echo "✅ SDK compilation and functionality tests completed"
 
       - name: Create SDK changelog entry
         run: |

@@ -1,12 +1,34 @@
 # yaml-language-server: $schema=https://schema.buildwithfern.dev/generators-yml.json
 default-group: local
 groups:
+  browser:
+    generators:
+      - name: fernapi/fern-typescript-browser-sdk
+        version: 1.8.1
+        output:
+          location: local-file-system
+          path: ../packages/sdk/generated/browser
+        config:
+          package-name: '@airbolt/sdk'
+          client-name: 'AirboltAPI'
+          outputEsm: true
+          mode: "browser-and-node"
+  node:
+    generators:
+      - name: fernapi/fern-typescript-node-sdk
+        version: 1.8.1
+        output:
+          location: local-file-system
+          path: ../packages/sdk/generated/node
+        config:
+          package-name: '@airbolt/sdk'
+          client-name: 'AirboltAPI'
   local:
     generators:
       - name: fernapi/fern-typescript-node-sdk
         output:
           location: local-file-system
-          path: ../packages/sdk
+          path: ../packages/sdk/generated/node
         version: 1.8.1
         config:
           package-name: '@airbolt/sdk'
