@@ -1,20 +1,49 @@
 import { beforeAll } from 'vitest';
 
 // Polyfill fetch for Node.js test environment
-// Use Node.js built-in fetch (available in Node 18+)
-if (!globalThis.fetch) {
-  try {
-    // Import from node:undici if available (Node 18+)
-    const undici = await import('node:undici');
-    globalThis.fetch = undici.fetch;
-    globalThis.Request = undici.Request;
-    globalThis.Response = undici.Response;
-    globalThis.Headers = undici.Headers;
-  } catch {
-    console.warn('Node.js fetch not available - using mock fetch for tests');
-    // Provide a basic mock fetch for tests that don't need real network
-    globalThis.fetch = async () => new Response('{}', { status: 200 });
-  }
+// Note: Node.js 18+ includes fetch globally, but it may not be available in test environments
+if (typeof globalThis.fetch === 'undefined') {
+  // Provide a basic fetch implementation for tests
+  // Most tests use vitest mocks anyway, so this is mainly for OpenAI service initialization
+  globalThis.fetch = async (input: any, init?: any) => {
+    return {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Map(),
+      json: async () => ({}),
+      text: async () => '{}',
+      blob: async () => new Blob(),
+      arrayBuffer: async () => new ArrayBuffer(0),
+    } as any;
+  };
+  
+  globalThis.Request = class MockRequest {
+    constructor(input: any, init?: any) {}
+  } as any;
+  
+  globalThis.Response = class MockResponse {
+    ok = true;
+    status = 200;
+    statusText = 'OK';
+    headers = new Map();
+    
+    constructor(body?: any, init?: any) {
+      if (init?.status) this.status = init.status;
+      this.ok = this.status >= 200 && this.status < 300;
+    }
+    
+    async json() { return {}; }
+    async text() { return '{}'; }
+    async blob() { return new Blob(); }
+    async arrayBuffer() { return new ArrayBuffer(0); }
+  } as any;
+  
+  globalThis.Headers = class MockHeaders extends Map {
+    constructor(init?: any) {
+      super();
+    }
+  } as any;
 }
 
 // Set up test environment variables
