@@ -101,9 +101,9 @@
     
     <script type="text/babel">
         // Import the SDK components (in real usage, these would be imported from the package)
-        // For demo purposes, we'll define them inline
+        // For demo purposes, we'll implement a real API-calling version
         
-        // Mock useChat hook
+        // Real API-calling useChat hook
         function useChat(options = {}) {
             const [messages, setMessages] = React.useState(options.initialMessages || []);
             const [input, setInput] = React.useState('');
@@ -120,19 +120,35 @@
                 setError(null);
 
                 try {
-                    // Simulate API call
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Make real API call
+                    const baseURL = options.baseURL || 'http://localhost:3000';
+                    const allMessages = [...messages, userMessage];
                     
-                    // Mock response
-                    const responses = [
-                        "I'm a mock AI assistant. The real API would provide actual responses!",
-                        "This is a demo of the ChatWidget component.",
-                        "You can customize the theme, position, and many other aspects.",
-                        "Try changing the settings above to see different configurations!"
-                    ];
+                    const requestBody = {
+                        messages: allMessages.map(msg => ({
+                            role: msg.role,
+                            content: msg.content
+                        }))
+                    };
                     
-                    const response = responses[Math.floor(Math.random() * responses.length)];
-                    setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+                    if (options.system) {
+                        requestBody.system = options.system;
+                    }
+                    
+                    const response = await fetch(`${baseURL}/api/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
                 } catch (err) {
                     setError(err);
                     setMessages(prev => prev.slice(0, -1));
@@ -140,7 +156,7 @@
                 } finally {
                     setIsLoading(false);
                 }
-            }, [input, isLoading]);
+            }, [input, isLoading, messages, options]);
 
             const clear = React.useCallback(() => {
                 setMessages([]);
@@ -380,9 +396,17 @@
                     <h1>ChatWidget Component Demo</h1>
                     
                     <div className="info-banner">
-                        <strong>Note:</strong> This is a demo of the ChatWidget component. In production, 
-                        it would connect to your Airbolt API. Here, we're using mock responses to demonstrate 
-                        the UI and customization options.
+                        <strong>Note:</strong> This demo connects to the Airbolt API at http://localhost:3000. 
+                        Make sure your API server is running with:
+                        <pre style={{ 
+                            background: 'rgba(0,0,0,0.1)', 
+                            padding: '8px 12px', 
+                            borderRadius: '4px', 
+                            marginTop: '8px',
+                            fontFamily: 'monospace' 
+                        }}>
+                            cd apps/backend-api && pnpm dev
+                        </pre>
                     </div>
 
                     <div className="example-section">
