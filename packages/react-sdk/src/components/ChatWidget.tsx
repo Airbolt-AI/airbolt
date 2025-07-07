@@ -229,7 +229,7 @@ export function ChatWidget({
           ref={inputRef}
           type="text"
           value={input}
-          onChange={e => setInput(e.currentTarget.value)}
+          onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
