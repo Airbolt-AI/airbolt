@@ -4,17 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airbolt ChatWidget Demo</title>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18",
-        "react-dom": "https://esm.sh/react-dom@18",
-        "react-dom/client": "https://esm.sh/react-dom@18/client",
-        "@airbolt/sdk": "../dist/index.js",
-        "@airbolt/react-sdk": "../dist/index.js"
-      }
-    }
-    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -108,6 +100,18 @@
     <div id="root"></div>
     
     <script type="text/babel">
+        // Add error handling
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+        });
+        
+        try {
+            console.log('React version:', React.version);
+            console.log('ReactDOM available:', typeof ReactDOM !== 'undefined');
+        } catch (e) {
+            console.error('Initial check error:', e);
+        }
+        
         // Import the SDK components (in real usage, these would be imported from the package)
         // For demo purposes, we'll implement a version with authentication
         
@@ -627,8 +631,29 @@
         }
 
         // Render the app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // Use setTimeout to ensure Babel has processed everything
+        setTimeout(() => {
+            try {
+                console.log('Rendering app...');
+                const rootElement = document.getElementById('root');
+                if (!rootElement) {
+                    console.error('Root element not found');
+                    return;
+                }
+                const root = ReactDOM.createRoot(rootElement);
+                root.render(React.createElement(App));
+                console.log('App rendered successfully');
+            } catch (error) {
+                console.error('Error rendering app:', error);
+                document.getElementById('root').innerHTML = `
+                    <div style="color: red; padding: 20px;">
+                        <h2>Error loading demo</h2>
+                        <pre>${error.message}</pre>
+                        <p>Check the browser console for more details.</p>
+                    </div>
+                `;
+            }
+        }, 100);
     </script>
 </body>
 </html>
