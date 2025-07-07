@@ -2,13 +2,14 @@ name: Test Configuration Validation
 
 on:
   pull_request:
-    paths:
-      - 'vitest.config.ts'
-      - 'vitest.mutation.config.ts'
-      - 'vitest.base.config.ts'
-      - 'vitest.workspace.ts'
-      - 'apps/*/test/**'
-      - '.github/workflows/test-config-validation.yml'
+    # Remove path filters - run on all PRs to prevent pending checks
+    # paths:
+    #   - 'vitest.config.ts'
+    #   - 'vitest.mutation.config.ts'
+    #   - 'vitest.base.config.ts'
+    #   - 'vitest.workspace.ts'
+    #   - 'apps/*/test/**'
+    #   - '.github/workflows/test-config-validation.yml'
   workflow_dispatch:
 
 permissions:
