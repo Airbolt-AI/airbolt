@@ -19,6 +19,18 @@ pnpm add @airbolt/react-sdk
 
 ## Quick Start
 
+### Option 1: Use the Pre-built ChatWidget (Zero Configuration)
+
+```tsx
+import { ChatWidget } from '@airbolt/react-sdk';
+
+function App() {
+  return <ChatWidget />;
+}
+```
+
+### Option 2: Build Your Own with useChat Hook
+
 ```tsx
 import { useChat } from '@airbolt/react-sdk';
 
@@ -52,6 +64,51 @@ function ChatComponent() {
 ```
 
 ## API Reference
+
+### ChatWidget
+
+A pre-built, customizable chat component with zero configuration required.
+
+```typescript
+function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
+```
+
+#### Props
+
+| Prop           | Type                               | Default               | Description                                        |
+| -------------- | ---------------------------------- | --------------------- | -------------------------------------------------- |
+| `baseURL`      | `string`                           | -                     | Optional. Base URL for the Airbolt API             |
+| `system`       | `string`                           | -                     | Optional. System prompt to guide the AI's behavior |
+| `placeholder`  | `string`                           | `"Type a message..."` | Placeholder text for the input field               |
+| `title`        | `string`                           | `"AI Assistant"`      | Title displayed in the widget header               |
+| `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)        |
+| `position`     | `'inline' \| 'fixed-bottom-right'` | `'inline'`            | Widget positioning mode                            |
+| `className`    | `string`                           | -                     | Additional CSS class for custom styling            |
+| `customTheme`  | `Partial<ThemeColors>`             | -                     | Custom theme colors to override defaults           |
+| `customStyles` | `object`                           | -                     | Custom styles for widget elements                  |
+
+#### Example Usage
+
+```tsx
+// Zero configuration
+<ChatWidget />
+
+// With custom configuration
+<ChatWidget
+  title="Support Chat"
+  theme="dark"
+  position="fixed-bottom-right"
+  system="You are a helpful support agent"
+/>
+
+// With custom theme colors
+<ChatWidget
+  customTheme={{
+    userMessage: '#FF6B6B',
+    assistantMessage: '#4ECDC4'
+  }}
+/>
+```
 
 ### useChat
 

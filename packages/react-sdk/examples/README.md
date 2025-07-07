@@ -24,29 +24,66 @@ An advanced chat application with additional features:
 - Keyboard shortcuts (Enter to send)
 - Retry on error
 
+### 3. Standalone Demo (`standalone-demo.html`)
+
+A self-contained HTML file that demonstrates the SDK without any build process:
+
+- Works directly in the browser
+- No bundler or transpiler needed
+- Perfect for quick testing
+- Includes a mock implementation for offline testing
+
+### 4. ChatWidget Demo (`chatwidget-demo.html`)
+
+An interactive demonstration of the pre-built ChatWidget component:
+
+- Zero-configuration usage examples
+- Live theme switching (light/dark/auto)
+- Position modes (inline vs fixed bottom-right)
+- Custom color theming
+- Interactive configuration panel
+- Code snippets for each configuration
+
 ## Running the Examples
 
-To run these examples in your React application:
+### For HTML Examples (Standalone & ChatWidget demos)
+
+1. From the package directory, run:
+
+   ```bash
+   pnpm demo
+   ```
+
+   This will start a local server and open the standalone demo in your browser.
+
+2. To view the ChatWidget demo, navigate to:
+   ```
+   http://localhost:8080/chatwidget-demo.html
+   ```
+
+### For React Application Examples
 
 1. Install the SDK:
 
-```bash
-npm install @airbolt/react-sdk
-```
+   ```bash
+   npm install @airbolt/react-sdk
+   ```
 
 2. Copy the example code into your React application
 
 3. Import and use the component:
 
-```tsx
-import { SimpleChatApp } from './simple-chat';
-// or
-import { AdvancedChatApp } from './advanced-chat';
+   ```tsx
+   import { SimpleChatApp } from './simple-chat';
+   // or
+   import { AdvancedChatApp } from './advanced-chat';
+   // or use the pre-built widget
+   import { ChatWidget } from '@airbolt/react-sdk';
 
-function App() {
-  return <SimpleChatApp />;
-}
-```
+   function App() {
+     return <ChatWidget />;
+   }
+   ```
 
 4. Make sure your Airbolt API is running at `http://localhost:3000` (or configure the `baseURL`)
 
