@@ -95,6 +95,7 @@ export const getStyles = (
         ? '0 4px 24px rgba(0, 0, 0, 0.15)'
         : '0 2px 8px rgba(0, 0, 0, 0.1)',
     transition: 'all 0.3s ease',
+    boxSizing: 'border-box',
   };
 
   const positionStyles: CSSProperties =
@@ -110,8 +111,9 @@ export const getStyles = (
         }
       : {
           width: '100%',
-          height: '600px',
-          maxHeight: '80vh',
+          height: '100%',
+          maxHeight: '600px',
+          minHeight: '400px',
         };
 
   return {
@@ -135,6 +137,7 @@ export const getStyles = (
       display: 'flex',
       flexDirection: 'column',
       gap: '12px',
+      minHeight: 0, // Important for flex children with overflow
     } as CSSProperties,
 
     message: {
