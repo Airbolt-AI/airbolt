@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbolt ChatWidget Demo (ESM)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+        }
+        .example-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .example-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .example-description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+        .control-group select,
+        .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .widget-wrapper {
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            height: 600px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .code-snippet {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .info-banner {
+            background-color: #e3f2fd;
+            border: 1px solid #64b5f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #1565c0;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background-color: #ffebee;
+            border: 1px solid #ef5350;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">Loading demo...</div>
+    </div>
+    
+    <script type="module">
+        // For development, we'll load the SDK from the local build
+        // In production, you would use: import { ChatWidget } from '@airbolt/react-sdk';
+        
+        // First, let's create a simple demo that shows how to use the real SDK
+        const rootElement = document.getElementById('root');
+        
+        // Since we're using ES modules, we need to handle the loading differently
+        // For now, let's create a working demo with the actual SDK integration
+        
+        async function loadDemo() {
+            try {
+                // Load React from CDN as ES modules
+                const React = await import('https://esm.sh/react@18');
+                const ReactDOM = await import('https://esm.sh/react-dom@18/client');
+                
+                // Note: In a real application, you would import from the installed package:
+                // import { ChatWidget } from '@airbolt/react-sdk';
+                
+                // For this demo, we'll need to ensure the SDK is built first
+                // Then we can import from the local build
+                
+                // Since the SDK uses ES modules, we need to serve this file from a web server
+                // Run: cd examples && npx http-server -p 8080 --cors
+                
+                rootElement.innerHTML = `
+                    <div class="demo-container">
+                        <h1>Airbolt ChatWidget Demo (ESM)</h1>
+                        
+                        <div class="info-banner">
+                            <strong>Important:</strong> This demo requires:
+                            <ol>
+                                <li>The SDK to be built: <code>pnpm build</code></li>
+                                <li>The API server running: <code>cd apps/backend-api && pnpm dev</code></li>
+                                <li>Serve this file from a web server: <code>cd examples && npx http-server -p 8080 --cors</code></li>
+                            </ol>
+                        </div>
+                        
+                        <div class="example-section">
+                            <div class="example-title">Using the Real SDK</div>
+                            <div class="example-description">
+                                This demo shows how to use the actual @airbolt/react-sdk with proper authentication.
+                            </div>
+                            
+                            <div class="code-snippet">
+import { ChatWidget } from '@airbolt/react-sdk';
+
+function App() {
+    return (
+        &lt;ChatWidget 
+            baseURL="http://localhost:3000"
+            title="AI Assistant"
+            theme="auto"
+            position="inline"
+        /&gt;
+    );
+}</div>
+                            
+                            <p style="margin-top: 20px; color: #666;">
+                                To see the working demo, import the ChatWidget from the built SDK and create a proper React application.
+                                The SDK includes automatic JWT token management, so authentication is handled for you.
+                            </p>
+                        </div>
+                        
+                        <div class="example-section">
+                            <div class="example-title">How Authentication Works</div>
+                            <div class="example-description">
+                                The ChatWidget uses the SDK's built-in authentication:
+                            </div>
+                            
+                            <div class="code-snippet">
+// The SDK automatically:
+// 1. Fetches a JWT token from /api/tokens
+// 2. Includes it in the Authorization header
+// 3. Refreshes the token before it expires
+// 4. Retries failed requests with a new token
+
+// You don't need to handle any of this manually!
+&lt;ChatWidget baseURL="http://localhost:3000" /&gt;</div>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                rootElement.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading demo:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        loadDemo();
+    </script>
+</body>
+</html>

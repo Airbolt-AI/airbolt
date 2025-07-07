@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airbolt ChatWidget Demo</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18",
+        "react-dom": "https://esm.sh/react-dom@18",
+        "react-dom/client": "https://esm.sh/react-dom@18/client",
+        "@airbolt/sdk": "../dist/index.js",
+        "@airbolt/react-sdk": "../dist/index.js"
+      }
+    }
+    </script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -101,9 +109,46 @@
     
     <script type="text/babel">
         // Import the SDK components (in real usage, these would be imported from the package)
-        // For demo purposes, we'll implement a real API-calling version
+        // For demo purposes, we'll implement a version with authentication
         
-        // Real API-calling useChat hook
+        // Token management for the demo
+        let tokenCache = null;
+        let tokenExpiry = null;
+        
+        async function getToken(baseURL) {
+            // Check if we have a valid cached token
+            if (tokenCache && tokenExpiry && new Date() < tokenExpiry) {
+                return tokenCache;
+            }
+            
+            try {
+                const response = await fetch(`${baseURL}/api/tokens`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: 'dev-user' }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Token fetch failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                tokenCache = data.token;
+                
+                // Parse expiry time (assuming "15m" format)
+                const expiryMinutes = parseInt(data.expiresIn) || 15;
+                tokenExpiry = new Date(Date.now() + (expiryMinutes - 1) * 60 * 1000); // Refresh 1 minute early
+                
+                return tokenCache;
+            } catch (error) {
+                console.error('Failed to fetch token:', error);
+                throw error;
+            }
+        }
+        
+        // Real API-calling useChat hook with authentication
         function useChat(options = {}) {
             const [messages, setMessages] = React.useState(options.initialMessages || []);
             const [input, setInput] = React.useState('');
@@ -120,8 +165,10 @@
                 setError(null);
 
                 try {
-                    // Make real API call
+                    // Get authentication token
                     const baseURL = options.baseURL || 'http://localhost:3000';
+                    const token = await getToken(baseURL);
+                    
                     const allMessages = [...messages, userMessage];
                     
                     const requestBody = {
@@ -139,16 +186,42 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
                         },
                         body: JSON.stringify(requestBody),
                     });
                     
                     if (!response.ok) {
+                        // If we get a 401, clear the token cache and retry once
+                        if (response.status === 401 && tokenCache) {
+                            tokenCache = null;
+                            tokenExpiry = null;
+                            
+                            // Retry with a fresh token
+                            const newToken = await getToken(baseURL);
+                            const retryResponse = await fetch(`${baseURL}/api/chat`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${newToken}`,
+                                },
+                                body: JSON.stringify(requestBody),
+                            });
+                            
+                            if (!retryResponse.ok) {
+                                throw new Error(`API error: ${retryResponse.status} ${retryResponse.statusText}`);
+                            }
+                            
+                            const retryData = await retryResponse.json();
+                            setMessages(prev => [...prev, { role: 'assistant', content: retryData.content }]);
+                            return;
+                        }
+                        
                         throw new Error(`API error: ${response.status} ${response.statusText}`);
                     }
                     
                     const data = await response.json();
-                    setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
                 } catch (err) {
                     setError(err);
                     setMessages(prev => prev.slice(0, -1));
@@ -396,7 +469,7 @@
                     <h1>ChatWidget Component Demo</h1>
                     
                     <div className="info-banner">
-                        <strong>Note:</strong> This demo connects to the Airbolt API at http://localhost:3000. 
+                        <strong>Note:</strong> This demo connects to the Airbolt API at http://localhost:3000 with automatic JWT authentication. 
                         Make sure your API server is running with:
                         <pre style={{ 
                             background: 'rgba(0,0,0,0.1)', 
@@ -407,6 +480,9 @@
                         }}>
                             cd apps/backend-api && pnpm dev
                         </pre>
+                        <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                            ✅ Authentication is handled automatically - tokens are fetched and refreshed as needed.
+                        </div>
                     </div>
 
                     <div className="example-section">
