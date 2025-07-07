@@ -8,7 +8,7 @@ const API_URL = process.env.AIRBOLT_API_URL || 'http://localhost:3000';
 
 console.log(`Checking if API is running at ${API_URL}...`);
 
-fetch(`${API_URL}/health`)
+fetch(`${API_URL}/`)
   .then(response => {
     if (response.ok) {
       console.log('✅ API is running! You can now run the examples.');
