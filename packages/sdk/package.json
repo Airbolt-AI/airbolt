@@ -34,7 +34,11 @@
     "type-check": "tsc --noEmit",
     "lint": "echo 'SDK linting is done from the main project root'",
     "generate": "pnpm run clean && fern generate --group browser && fern generate --group node && pnpm run build",
-    "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'"
+    "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'",
+    "example:check": "node examples/check-api.js",
+    "example": "pnpm run example:check && node examples/vanilla-chat-demo.js",
+    "example:ts": "pnpm run example:check && tsx examples/vanilla-chat-demo.ts",
+    "examples": "pnpm run example && echo '\n\n' && pnpm run example:ts"
   },
   "keywords": [
     "sdk",
