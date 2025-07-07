@@ -308,7 +308,7 @@ describe('useChat', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.messages[0].content).toBe('Hello world');
+      expect(result.current.messages[0]?.content).toBe('Hello world');
     });
 
     expect(mockChat).toHaveBeenCalledWith(

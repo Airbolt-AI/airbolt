@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbolt React SDK Demo</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .messages {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            margin-bottom: 16px;
+            background-color: #fafafa;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .message.user {
+            background-color: #e3f2fd;
+            margin-left: 60px;
+            text-align: right;
+        }
+        .message.assistant {
+            background-color: #f3e5f5;
+            margin-right: 60px;
+        }
+        .role {
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .user .role {
+            color: #1976d2;
+        }
+        .assistant .role {
+            color: #7b1fa2;
+        }
+        .input-area {
+            display: flex;
+            gap: 8px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .send-btn {
+            background-color: #1976d2;
+            color: white;
+        }
+        .clear-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+        .info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Mock the useChat hook for this demo
+        // In a real app, you would import { useChat } from '@airbolt/react-sdk'
+        function useChat(options = {}) {
+            const [messages, setMessages] = React.useState(options.initialMessages || []);
+            const [input, setInput] = React.useState('');
+            const [isLoading, setIsLoading] = React.useState(false);
+            const [error, setError] = React.useState(null);
+            const [token, setToken] = React.useState(null);
+
+            // Get JWT token on first load
+            React.useEffect(() => {
+                async function getToken() {
+                    try {
+                        const response = await fetch('http://localhost:3000/api/tokens', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: 'demo-user' })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to get authentication token');
+                        }
+                        
+                        const data = await response.json();
+                        setToken(data.token);
+                    } catch (err) {
+                        setError(err);
+                    }
+                }
+                getToken();
+            }, []);
+
+            const send = React.useCallback(async () => {
+                if (!input.trim() || isLoading || !token) return;
+
+                const userMessage = { role: 'user', content: input.trim() };
+                setMessages(prev => [...prev, userMessage]);
+                setInput('');
+                setIsLoading(true);
+                setError(null);
+
+                try {
+                    // Now includes authentication
+                    const response = await fetch('http://localhost:3000/api/chat', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            messages: [...messages, userMessage],
+                            system: options.system
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    setMessages(prev => [...prev, { 
+                        role: 'assistant', 
+                        content: data.content || data.message || 'Hello! I received your message.'
+                    }]);
+                } catch (err) {
+                    setError(err);
+                    // Remove the user message on error
+                    setMessages(prev => prev.slice(0, -1));
+                    // Restore input
+                    setInput(userMessage.content);
+                } finally {
+                    setIsLoading(false);
+                }
+            }, [input, isLoading, messages, options.system, token]);
+
+            const clear = React.useCallback(() => {
+                setMessages([]);
+                setInput('');
+                setError(null);
+                setIsLoading(false);
+            }, []);
+
+            return { messages, input, setInput, send, clear, isLoading, error };
+        }
+
+        // Demo Chat Component
+        function ChatDemo() {
+            const { messages, input, setInput, send, clear, isLoading, error } = useChat({
+                system: 'You are a helpful assistant',
+                initialMessages: [
+                    { role: 'assistant', content: 'Hello! I\'m your AI assistant. How can I help you today?' }
+                ]
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                send();
+            };
+
+            return (
+                <div className="container">
+                    <h1>Airbolt React SDK Demo</h1>
+                    
+                    <div className="info">
+                        <strong>Note:</strong> Make sure your Airbolt API is running at http://localhost:3000. 
+                        If the API is not running, you'll see connection errors when trying to send messages.
+                    </div>
+
+                    <div className="messages">
+                        {messages.length === 0 && (
+                            <div className="empty-state">
+                                Start a conversation by typing a message below...
+                            </div>
+                        )}
+                        
+                        {messages.map((message, index) => (
+                            <div key={index} className={`message ${message.role}`}>
+                                <div className="role">{message.role}</div>
+                                <div>{message.content}</div>
+                            </div>
+                        ))}
+                        
+                        {isLoading && (
+                            <div className="loading">AI is thinking...</div>
+                        )}
+                    </div>
+
+                    {error && (
+                        <div className="error">
+                            Error: {error.message}
+                            {error.message.includes('Failed to fetch') && (
+                                <div style={{ marginTop: '8px', fontSize: '14px' }}>
+                                    Make sure the API server is running at http://localhost:3000
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="input-area">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Type your message..."
+                            disabled={isLoading}
+                        />
+                        <button 
+                            type="submit" 
+                            className="send-btn"
+                            disabled={isLoading || !input.trim()}
+                        >
+                            {isLoading ? 'Sending...' : 'Send'}
+                        </button>
+                        <button 
+                            type="button"
+                            className="clear-btn"
+                            onClick={clear}
+                            disabled={messages.length === 0}
+                        >
+                            Clear
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatDemo />);
+    </script>
+</body>
+</html>
