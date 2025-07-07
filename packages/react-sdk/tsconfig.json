@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "types": ["node", "react"]
+  },
+  "include": ["src/**/*", "test/**/*", "vitest.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}

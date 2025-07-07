@@ -1,0 +1,80 @@
+{
+  "name": "@airbolt/react-sdk",
+  "version": "1.0.0",
+  "description": "React hooks and utilities for the Airbolt API with built-in state management",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "clean": "rm -rf dist/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "prepublishOnly": "pnpm run build && echo 'React SDK package ready for publishing'"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "sdk",
+    "typescript",
+    "chat",
+    "ai",
+    "airbolt"
+  ],
+  "author": {
+    "name": "Mark Watson",
+    "email": "mark@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Airbolt-AI/airbolt.git",
+    "directory": "packages/react-sdk"
+  },
+  "homepage": "https://github.com/Airbolt-AI/airbolt#readme",
+  "bugs": {
+    "url": "https://github.com/Airbolt-AI/airbolt/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "dependencies": {
+    "@airbolt/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/react-hooks": "^8.0.1",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "happy-dom": "^12.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-test-renderer": "^18.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "name": "react-sdk",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/react-sdk/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --build",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --coverage",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm lint",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "packages/react-sdk"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run clean",
+        "cwd": "packages/react-sdk"
+      }
+    }
+  },
+  "tags": ["type:package", "scope:react", "scope:sdk"]
+}

@@ -46,6 +46,7 @@ export const baseConfig: InlineConfig = {
       '**/*.config.*',
       '**/coverage/**',
       '.stryker-tmp/**',
+      'packages/react-sdk/test/**',
     ],
   },
 
