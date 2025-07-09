@@ -55,20 +55,25 @@ Analyze **$ARGUMENTS** deeply:
 ## 5. Documentation Review
 
 - Review existing documentation for context
+- **Keep documentation minimal, clear, and focused on value**
 - Identify documentation that will need updates:
-  - Code comments and inline docs
-  - API documentation
-  - README or setup guides
-  - Architecture documentation
-  - User-facing documentation
+  - Code comments (only for complex logic)
+  - API documentation (only if endpoints change)
+  - README (only if setup/usage changes)
+  - Architecture docs (only if patterns change)
+- Remember: The best documentation is code that doesn't need explanation
 
 ## 6. Testing Strategy
 
 - Define unit test scenarios covering all business logic
 - Plan integration tests for API changes
-- Consider mutation testing targets (85% threshold)
-- Identify any manual testing needs
+- **Aim for zero manual testing through comprehensive automation**
+- **Mutation testing (85% threshold)**: Ensures tests detect meaningful logic errors, not just achieve coverage
+  - Required for business logic in `utils/` directories
+  - Not needed for: routes, plugins, config, simple getters/setters
+  - Ask: "If I break this logic, will my tests fail?"
 - Plan for edge cases and error scenarios
+- If manual testing seems necessary, ask: "How can we automate this?"
 
 ## 7. Implementation Plan
 
