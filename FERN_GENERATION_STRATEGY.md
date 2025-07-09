@@ -74,7 +74,7 @@ pnpm sdk:check  # Validate generation without regenerating
 ### Generated Code Location
 
 - **Target**: `packages/sdk/generated/browser/`
-- **Generator**: `fernapi/fern-typescript-browser-sdk` v1.8.1
+- **Generator**: `fernapi/fern-typescript-sdk` v2.4.3 (Universal TypeScript SDK)
 - **Client Name**: `AirboltAPI`
 - **Output Format**: ESM with TypeScript declarations
 
