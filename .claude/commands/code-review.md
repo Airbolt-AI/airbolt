@@ -1,6 +1,39 @@
 Ultrathink about what makes an exceptional code review—one that elevates both the code and the developer. Consider technical excellence, business impact, maintainability, and team growth.
 
-Read the Linear ticket, comments, and PR information thoroughly.
+## 0. Gather Context (You're a Fresh Agent!)
+
+Since you're starting fresh, gather comprehensive context:
+
+1. **Get PR Information**:
+
+   ```bash
+   gh pr view --json title,body,state,files,commits,url
+   ```
+
+2. **Read the Linear Ticket**:
+   - Extract ticket ID from PR title/body
+   - Use Linear MCP tools to read full ticket details
+   - Check comments for additional context
+
+3. **Understand the Changes**:
+
+   ```bash
+   git fetch origin
+   git diff origin/main...HEAD --stat
+   ```
+
+   - Review list of changed files
+   - Identify patterns: new features vs modifications
+
+4. **Examine Code Changes**:
+   - Use `git diff` to see actual changes
+   - Read modified files to understand context
+   - Check related files that might be affected
+
+5. **Review Codebase Context**:
+   - Look at existing patterns in similar files
+   - Check architecture docs if available
+   - Understand the project's quality standards
 
 ## Quality Gates Verification
 
@@ -46,4 +79,21 @@ Then Ultrathink about the specific context of the open PR:
    - Opportunities for broader improvements
    - Missing abstractions or over-engineering
 
-Provide that level of thoughtful, constructive review — balancing praise for good decisions with actionable suggestions for improvements. Focus on teaching, not just critiquing.
+## Review Output Format
+
+Provide that level of thoughtful, constructive review:
+
+1. **Summary**: Brief overview of what the PR accomplishes
+2. **Positive Observations**: What's done well (be specific)
+3. **Required Changes**: Must-fix issues blocking merge
+4. **Suggestions**: Optional improvements for consideration
+5. **Questions**: Clarifications needed for understanding
+
+Format your review to be:
+
+- **Constructive**: Focus on teaching, not just critiquing
+- **Specific**: Reference exact files and line numbers
+- **Actionable**: Provide clear guidance on fixes
+- **Balanced**: Acknowledge good decisions alongside improvements
+
+Remember: A great review elevates both the code and the developer.
