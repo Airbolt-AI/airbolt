@@ -151,7 +151,6 @@ describe('SDK Integration', () => {
           }
           return JSON.parse(response.payload);
         }
-
       }
 
       // Test SDK usage pattern
@@ -226,7 +225,7 @@ describe('SDK Integration', () => {
 
       const generatorsContent = readFileSync(generatorsPath, 'utf8');
       expect(generatorsContent).toContain('fernapi/fern-typescript-node-sdk');
-      expect(generatorsContent).toContain('@airbolt/sdk');
+      expect(generatorsContent).toContain('fernapi/fern-typescript-sdk');
       expect(generatorsContent).toContain('AirboltAPI');
     });
 
@@ -359,7 +358,6 @@ describe('SDK Integration', () => {
         'application/json'
       );
       expect(() => JSON.parse(rootResponse.payload)).not.toThrow();
-
     });
   });
 });
