@@ -34,10 +34,14 @@ The commands are designed to be used in a specific sequence for optimal developm
   - Applies senior architect standards
   - Provides constructive feedback
 
-### 4. Post-Review (Coming Soon)
+### 4. Post-Review & Discovery
 
+- **`/create-ticket`** - Create new tickets for discovered work
+  - Interactive ticket creation
+  - Templates for bugs, features, tasks, investigations
+  - Automatic project assignment to Airbolt MVP
+  - Duplicate checking before creation
 - **`/respond-to-pr`** - Address PR feedback systematically (planned)
-- **`/create-ticket`** - Create new tickets for discovered work (planned)
 
 ## Supporting Commands
 
@@ -73,6 +77,9 @@ These commands can be used at any time:
 
 # If you need to check current work
 /get-in-progress-ticket
+
+# Discovered something that needs a ticket?
+/create-ticket
 ```
 
 ## Command Details
@@ -96,5 +103,4 @@ The commands use:
 Planned commands to complete the workflow:
 
 - `/respond-to-pr` - Handle PR feedback and make requested changes
-- `/create-ticket` - Create new Linear tickets when discovering work
 - Dedicated bot accounts for clearer automation attribution
