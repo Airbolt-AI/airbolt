@@ -9,11 +9,23 @@ If it can't be inferred, ask the user to supply one and stop.
 
 Ultrathink about the comprehensive discovery needed before implementation. What context, risks, and unknowns must be uncovered to ensure a successful implementation that passes review on the first attempt?
 
+## 0. Prepare Fresh Environment
+
+Ensure you're starting from a clean, up-to-date state:
+
+```bash
+git checkout main
+git pull origin main
+```
+
 Analyze **$ARGUMENTS** deeply:
 
 ## 1. Requirements Analysis
 
 - Parse the ticket description and acceptance criteria
+- **Compare ticket requirements against current codebase state**
+- **Is the ticket outdated? Have requirements changed since creation?**
+- **Do any requirements need modification based on current implementation?**
 - Identify explicit and implicit requirements
 - Clarify any ambiguities or missing information
 - Define success metrics and validation criteria
@@ -70,7 +82,10 @@ Present a concise summary with:
 
 - Key insights discovered
 - Critical risks to watch
+- **Ticket updates needed (if any)**
 - Recommended implementation approach
 - Documentation updates needed
 - Testing strategy highlights
 - Go/No-Go recommendation with reasoning
+
+If the ticket needs updates based on current codebase state, suggest specific changes to the Linear ticket before proceeding with implementation.
