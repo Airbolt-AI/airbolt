@@ -40,6 +40,11 @@ pnpm lint:fix          # Auto-fix formatting
 pnpm test              # Run tests
 pnpm build             # Production build
 
+# SDK Generation (Fern)
+pnpm generate          # Generate TypeScript SDK from OpenAPI spec (requires Docker)
+pnpm sdk:check         # Validate generation without regenerating
+pnpm fern:check        # Validate Fern configuration
+
 # Environment check
 pnpm doctor            # Check Node/pnpm versions
 ```
@@ -49,14 +54,17 @@ pnpm doctor            # Check Node/pnpm versions
 **ALWAYS run local validation before pushing:**
 
 ```bash
-# 1. Before every commit/push
+# 1. If working on SDK or API changes, generate first
+pnpm generate          # Only if OpenAPI spec or Fern config changed
+
+# 2. Before every commit/push
 pnpm ci:check          # Matches GitHub Actions exactly
 
-# 2. If you see errors, fix them locally
+# 3. If you see errors, fix them locally
 pnpm lint:fix          # Auto-fix linting issues
 pnpm type-check        # Verify TypeScript
 
-# 3. Then commit and push
+# 4. Then commit and push
 git add . && git commit -m "your message"
 git push
 ```

@@ -3,33 +3,31 @@ default-group: local
 groups:
   browser:
     generators:
-      - name: fernapi/fern-typescript-browser-sdk
-        version: 1.8.1
+      - name: fernapi/fern-typescript-sdk
+        version: 2.4.3
         output:
           location: local-file-system
           path: ../packages/sdk/generated/browser
         config:
-          package-name: '@airbolt/sdk'
-          client-name: 'AirboltAPI'
+          namespaceExport: 'AirboltAPI'
           outputEsm: true
-          mode: "browser-and-node"
+          includeCredentialsOnCrossOriginRequests: true
+          allowCustomFetcher: true
   node:
     generators:
       - name: fernapi/fern-typescript-node-sdk
-        version: 1.8.1
+        version: 2.4.3
         output:
           location: local-file-system
           path: ../packages/sdk/generated/node
         config:
-          package-name: '@airbolt/sdk'
-          client-name: 'AirboltAPI'
+          namespaceExport: 'AirboltAPI'
   local:
     generators:
       - name: fernapi/fern-typescript-node-sdk
+        version: 2.4.3
         output:
           location: local-file-system
           path: ../packages/sdk/generated/node
-        version: 1.8.1
         config:
-          package-name: '@airbolt/sdk'
-          client-name: 'AirboltAPI'
+          namespaceExport: 'AirboltAPI'
