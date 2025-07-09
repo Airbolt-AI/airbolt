@@ -96,8 +96,8 @@ generate_sdk() {
     # Create SDK directory if it doesn't exist
     mkdir -p packages/sdk
 
-    # Run Fern generation with local Docker
-    if fern generate --local; then
+    # Run Fern generation with local Docker (browser SDK for JavaScript/TypeScript)
+    if fern generate --group browser --local; then
         log_success "SDK generated successfully"
         return 0
     else

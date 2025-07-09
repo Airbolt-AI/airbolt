@@ -5,7 +5,18 @@ description: Start and implement a Linear ticket — pass a ticket ID or leave b
 <!--
 If $ARGUMENTS is blank, infer the ticket ID.
 If it can’t be inferred, ask the user to supply one and stop.
+
+Always begin work from a fresh branch based on the latest main:
+
+  git checkout main
+  git pull origin main
+  git checkout -B feature/$ARGUMENTS   # recreates branch if it exists
+
+Abort (notify the user) if any command fails.
 -->
+
+!`git checkout main && git pull origin main`
+!`[ -n "$ARGUMENTS" ] && git checkout -B feature/$ARGUMENTS`
 
 Ultrathink about what makes an exceptional implementation that passes strict code review on the first attempt—one that demonstrates true software craftsmanship within our established architecture and quality standards.
 
