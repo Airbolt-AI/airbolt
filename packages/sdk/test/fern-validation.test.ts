@@ -50,7 +50,7 @@ describe('Fern SDK Generation Validation', () => {
   });
 
   describe('Code Quality Analysis', () => {
-    it('should have minimal any/unknown types', () => {
+    it('should have minimal any/unknown types', async () => {
       const generatedDir = join(__dirname, '../generated/browser');
 
       // This is a snapshot test - if the count changes significantly, investigate
@@ -88,8 +88,8 @@ describe('Fern SDK Generation Validation', () => {
         encoding: 'utf-8',
       });
 
-      const generatedKb = parseInt(generatedSize.split('\t')[0]);
-      const currentKb = parseInt(currentSize.split('\t')[0]);
+      const generatedKb = parseInt(generatedSize.split('\t')[0] || '0');
+      const currentKb = parseInt(currentSize.split('\t')[0] || '0');
 
       console.log(
         `Generated size: ${generatedKb}KB, Current size: ${currentKb}KB`

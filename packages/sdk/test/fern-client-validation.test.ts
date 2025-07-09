@@ -47,7 +47,7 @@ describe('Fern Generated Client Usage', () => {
         await import('../generated/browser/Client.js');
         throw new Error('Unexpected client found');
       } catch (error) {
-        expect(error.message).toContain('Cannot find module');
+        expect((error as Error).message).toContain('Cannot find module');
       }
     });
 
