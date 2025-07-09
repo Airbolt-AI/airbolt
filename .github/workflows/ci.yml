@@ -38,6 +38,9 @@ jobs:
       - name: Setup project
         uses: ./.github/actions/setup-project
 
+      - name: Generate Fern SDK
+        run: pnpm generate
+
       - name: Run CI validation
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
