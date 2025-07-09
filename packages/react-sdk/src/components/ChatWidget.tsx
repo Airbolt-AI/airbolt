@@ -9,6 +9,21 @@ import {
   type ThemeColors,
 } from './ChatWidget.styles.js';
 
+/**
+ * Escapes HTML entities to prevent XSS attacks
+ * Converts potentially dangerous characters to safe HTML entities
+ */
+function escapeHtml(text: string): string {
+  const htmlEntities: Record<string, string> = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[<>&"']/g, char => htmlEntities[char] ?? char);
+}
+
 export interface ChatWidgetProps {
   /**
    * Base URL for the Airbolt API
@@ -203,7 +218,7 @@ export function ChatWidget({
             role="article"
             aria-label={`${message.role} message`}
           >
-            {message.content}
+            {escapeHtml(message.content)}
           </div>
         ))}
 
