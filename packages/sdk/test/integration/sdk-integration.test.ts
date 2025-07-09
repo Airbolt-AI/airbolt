@@ -1,14 +1,20 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { AirboltClient, TokenManager, AirboltError, TokenError } from '../../src/core/index';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import {
+  AirboltClient,
+  TokenManager,
+  AirboltError,
+  TokenError,
+} from '../../src/core/index';
 
 /**
  * Integration tests for the SDK
- * 
+ *
  * These tests can be run against a real backend or a mock server.
  * Set AIRBOLT_TEST_BASE_URL environment variable to test against a real backend.
  */
 
-const BASE_URL = process.env.AIRBOLT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL =
+  process.env['AIRBOLT_TEST_BASE_URL'] || 'http://localhost:3000';
 const TEST_USER_ID = 'sdk-integration-test-user';
 
 // Helper to check if backend is available
@@ -22,7 +28,7 @@ async function isBackendAvailable(): Promise<boolean> {
 }
 
 // Skip integration tests if backend is not available
-const maybeDescribe = await isBackendAvailable() ? describe : describe.skip;
+const maybeDescribe = (await isBackendAvailable()) ? describe : describe.skip;
 
 maybeDescribe('SDK Integration Tests', () => {
   let client: AirboltClient;
@@ -32,7 +38,9 @@ maybeDescribe('SDK Integration Tests', () => {
     // Verify backend is available
     const available = await isBackendAvailable();
     if (!available) {
-      console.warn(`Backend not available at ${BASE_URL}, skipping integration tests`);
+      console.warn(
+        `Backend not available at ${BASE_URL}, skipping integration tests`
+      );
       return;
     }
 
@@ -117,9 +125,7 @@ maybeDescribe('SDK Integration Tests', () => {
   describe('Chat API Integration', () => {
     it('should successfully send a chat message', async () => {
       const response = await client.chat({
-        messages: [
-          { role: 'user', content: 'Hello, this is a test message' },
-        ],
+        messages: [{ role: 'user', content: 'Hello, this is a test message' }],
       });
 
       expect(response).toHaveProperty('content');
@@ -146,10 +152,9 @@ maybeDescribe('SDK Integration Tests', () => {
 
     it('should handle system prompt', async () => {
       const response = await client.chat({
-        messages: [
-          { role: 'user', content: 'Hello' },
-        ],
-        system: 'You are a helpful assistant that always responds with "Test successful"',
+        messages: [{ role: 'user', content: 'Hello' }],
+        system:
+          'You are a helpful assistant that always responds with "Test successful"',
       });
 
       expect(response.content).toBeTruthy();
@@ -157,30 +162,32 @@ maybeDescribe('SDK Integration Tests', () => {
     });
 
     it('should handle empty user message gracefully', async () => {
-      await expect(client.chat({
-        messages: [
-          { role: 'user', content: ' ' }, // Whitespace only
-        ],
-      })).rejects.toThrow();
+      await expect(
+        client.chat({
+          messages: [
+            { role: 'user', content: ' ' }, // Whitespace only
+          ],
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle very long message', async () => {
       const longMessage = 'This is a test message. '.repeat(100);
-      
+
       const response = await client.chat({
-        messages: [
-          { role: 'user', content: longMessage },
-        ],
+        messages: [{ role: 'user', content: longMessage }],
       });
 
       expect(response.content).toBeTruthy();
     });
 
     it('should handle maximum number of messages', async () => {
-      const messages = Array(50).fill(null).map((_, i) => ({
-        role: i % 2 === 0 ? 'user' as const : 'assistant' as const,
-        content: `Message ${i + 1}`,
-      }));
+      const messages = Array(50)
+        .fill(null)
+        .map((_, i) => ({
+          role: i % 2 === 0 ? ('user' as const) : ('assistant' as const),
+          content: `Message ${i + 1}`,
+        }));
 
       const response = await client.chat({ messages });
       expect(response.content).toBeTruthy();
@@ -206,9 +213,11 @@ maybeDescribe('SDK Integration Tests', () => {
         retryDelay: 100,
       });
 
-      await expect(invalidClient.chat({
-        messages: [{ role: 'user', content: 'Hello' }],
-      })).rejects.toThrow();
+      await expect(
+        invalidClient.chat({
+          messages: [{ role: 'user', content: 'Hello' }],
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle token expiration during request', async () => {
@@ -245,11 +254,15 @@ maybeDescribe('SDK Integration Tests', () => {
 
   describe('Performance and Reliability', () => {
     it('should handle multiple concurrent chat requests', async () => {
-      const requests = Array(5).fill(null).map((_, i) => 
-        client.chat({
-          messages: [{ role: 'user', content: `Concurrent request ${i + 1}` }],
-        })
-      );
+      const requests = Array(5)
+        .fill(null)
+        .map((_, i) =>
+          client.chat({
+            messages: [
+              { role: 'user', content: `Concurrent request ${i + 1}` },
+            ],
+          })
+        );
 
       const responses = await Promise.all(requests);
 
@@ -261,7 +274,7 @@ maybeDescribe('SDK Integration Tests', () => {
 
     it('should maintain performance with rapid sequential requests', async () => {
       const startTime = Date.now();
-      
+
       for (let i = 0; i < 3; i++) {
         const response = await client.chat({
           messages: [{ role: 'user', content: `Sequential request ${i + 1}` }],
@@ -271,7 +284,7 @@ maybeDescribe('SDK Integration Tests', () => {
 
       const duration = Date.now() - startTime;
       console.log(`Sequential requests completed in ${duration}ms`);
-      
+
       // This is mainly to ensure requests don't hang indefinitely
       expect(duration).toBeLessThan(30000); // 30 seconds max
     });
@@ -283,9 +296,11 @@ maybeDescribe('SDK Integration Tests', () => {
           messages: [{ role: 'user', content: 'Valid request' }],
         }),
         // Invalid request
-        client.chat({
-          messages: [], // Invalid: empty messages
-        }).catch(error => ({ error })),
+        client
+          .chat({
+            messages: [], // Invalid: empty messages
+          })
+          .catch(error => ({ error })),
         // Another valid request
         client.chat({
           messages: [{ role: 'user', content: 'Another valid request' }],

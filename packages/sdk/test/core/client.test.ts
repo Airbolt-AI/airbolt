@@ -10,11 +10,9 @@ describe('AirboltClient', () => {
   let client: AirboltClient;
   let mockTokenManager: TokenManager;
   const baseURL = 'https://api.example.com';
-  
+
   const validChatRequest = {
-    messages: [
-      { role: 'user' as const, content: 'Hello' },
-    ],
+    messages: [{ role: 'user' as const, content: 'Hello' }],
   };
 
   const validChatResponse = {
@@ -24,7 +22,7 @@ describe('AirboltClient', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Create a mock token manager
     mockTokenManager = {
       getToken: vi.fn().mockResolvedValue('mock-jwt-token'),
@@ -67,7 +65,7 @@ describe('AirboltClient', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-jwt-token',
+            Authorization: 'Bearer mock-jwt-token',
           },
           body: JSON.stringify(validChatRequest),
         })
@@ -215,7 +213,7 @@ describe('AirboltClient', () => {
 
     it('should handle request timeout', async () => {
       // Mock a fetch that rejects quickly to simulate timeout
-      mockFetch.mockImplementationOnce(() => 
+      mockFetch.mockImplementationOnce(() =>
         Promise.reject(new Error('Request timeout'))
       );
 
@@ -226,7 +224,9 @@ describe('AirboltClient', () => {
         maxRetries: 1, // Reduce retries for faster test
       });
 
-      await expect(timeoutClient.chat(validChatRequest)).rejects.toThrow(AirboltError);
+      await expect(timeoutClient.chat(validChatRequest)).rejects.toThrow(
+        AirboltError
+      );
     });
 
     it('should handle network errors', async () => {
@@ -236,7 +236,9 @@ describe('AirboltClient', () => {
     });
 
     it('should handle token manager errors', async () => {
-      mockTokenManager.getToken = vi.fn().mockRejectedValue(new TokenError('Token fetch failed'));
+      mockTokenManager.getToken = vi
+        .fn()
+        .mockRejectedValue(new TokenError('Token fetch failed'));
 
       // The client retries token errors and wraps final error in AirboltError
       await expect(client.chat(validChatRequest)).rejects.toThrow(AirboltError);
@@ -277,7 +279,7 @@ describe('AirboltClient', () => {
 
     it('should accept valid message roles', async () => {
       const validRoles = ['user', 'assistant', 'system'] as const;
-      
+
       for (const role of validRoles) {
         const request = {
           messages: [{ role, content: 'Test message' }],
@@ -345,8 +347,9 @@ describe('AirboltClient', () => {
         tokenManager: mockTokenManager,
       });
 
-      await expect(clientWithoutFetch.chat(validChatRequest))
-        .rejects.toThrow(AirboltError);
+      await expect(clientWithoutFetch.chat(validChatRequest)).rejects.toThrow(
+        AirboltError
+      );
 
       // Restore fetch
       global.fetch = originalFetch;
@@ -414,9 +417,9 @@ describe('AirboltClient', () => {
 
       const results = await Promise.allSettled(promises);
 
-      expect(results[0].status).toBe('fulfilled');
-      expect(results[1].status).toBe('rejected');
-      expect(results[2].status).toBe('fulfilled');
+      expect(results[0]?.status).toBe('fulfilled');
+      expect(results[1]?.status).toBe('rejected');
+      expect(results[2]?.status).toBe('fulfilled');
     });
   });
 });
