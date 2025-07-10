@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: airbolt
+    runtime: node
+    plan: free
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    startCommand: node apps/backend-api/dist/server.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: OPENAI_API_KEY
+        sync: false # Prompts user to enter value during deployment
+      - key: JWT_SECRET
+        generateValue: true # Render generates a secure random value
+      - key: ALLOWED_ORIGIN
+        value: '*' # Users can update this later for production
+      - key: TRUST_PROXY
+        value: 'true'
+      - key: LOG_LEVEL
+        value: info
+      - key: RATE_LIMIT_MAX
+        value: '60'
+      - key: RATE_LIMIT_TIME_WINDOW
+        value: '60000'
