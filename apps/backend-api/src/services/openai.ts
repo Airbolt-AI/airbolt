@@ -167,6 +167,17 @@ export class OpenAIService {
             'INVALID_API_KEY'
           );
         case 429:
+          // Check if it's a quota issue vs rate limit
+          if (
+            apiError.message?.includes('quota') ||
+            apiError.message?.includes('billing')
+          ) {
+            throw new OpenAIServiceError(
+              'OpenAI quota exceeded. Please check your OpenAI account billing.',
+              402,
+              'INSUFFICIENT_QUOTA'
+            );
+          }
           throw new OpenAIServiceError(
             'Rate limit exceeded. Please try again later.',
             429,

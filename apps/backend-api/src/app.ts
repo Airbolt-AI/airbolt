@@ -60,6 +60,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
     dir: join(__dirname, 'plugins'),
     ignorePattern: /.*(env|cors|rate-limit)\.(ts|js)$/,
     options: opts,
+    forceESM: true,
   });
 
   // This loads all plugins defined in routes
@@ -67,6 +68,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   void fastify.register(AutoLoad, {
     dir: join(__dirname, 'routes'),
     options: opts,
+    forceESM: true,
   });
 };
 
