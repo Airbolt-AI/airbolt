@@ -80,6 +80,22 @@ Built for **fully autonomous AI development workflows** where AI agents generate
 
 This eliminates the traditional bottleneck where backend teams must manually write and maintain client SDKs, documentation, and coordinate API changes with frontend teams.
 
+## 🚀 Deploy to Render
+
+Deploy your own instance of Airbolt in seconds:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt)
+
+### Setup (< 60 seconds)
+
+1. **Click the button above**
+2. **Enter your OpenAI API key** when prompted
+3. **Click "Create Web Service"**
+
+That's it! Your API will be live at `https://your-service-name.onrender.com` 🎉
+
+> **Note**: Free tier services spin down after 15 minutes of inactivity. First request after sleep takes ~1 minute.
+
 ## Quick Start
 
 ### Prerequisites

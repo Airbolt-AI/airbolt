@@ -23,8 +23,8 @@ const start = async (): Promise<void> => {
   try {
     const port: number = getPort();
 
-    await server.listen({ port });
-    server.log.info(`Server listening on port ${String(port)}`);
+    await server.listen({ port, host: '0.0.0.0' });
+    server.log.info(`Server listening on http://0.0.0.0:${String(port)}`);
   } catch (err) {
     server.log.error(err);
     throw new Error('Failed to start server');
