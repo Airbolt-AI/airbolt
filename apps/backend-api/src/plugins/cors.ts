@@ -18,9 +18,10 @@ export default fp(
           return;
         }
 
-        // Check exact match against allowed origins
+        // Check if wildcard or exact match against allowed origins
+        const allowedOrigins = fastify.config?.ALLOWED_ORIGIN ?? [];
         const isAllowed =
-          fastify.config?.ALLOWED_ORIGIN.includes(origin) ?? false;
+          allowedOrigins.includes('*') || allowedOrigins.includes(origin);
         callback(
           isAllowed ? null : new Error('Not allowed by CORS'),
           isAllowed
