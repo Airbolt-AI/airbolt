@@ -88,6 +88,13 @@
     "node": "20.15.0",
     "pnpm": "10.8.0"
   },
+  "pnpm": {
+    "overrides": {
+      "underscore": "^1.13.6",
+      "happy-dom": "^15.10.2",
+      "esbuild": "^0.25.0"
+    }
+  },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",

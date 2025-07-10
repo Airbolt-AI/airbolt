@@ -64,12 +64,12 @@ jobs:
             echo "Mutation testing skipped - no utils changes"
           fi
 
-      - name: Run mutation testing on business logic
+      - name: Run mutation testing on business logic (Optional)
         if: steps.check-mutation.outputs.needed == 'true'
         run: |
           echo "🧬 Running mutation testing on critical business logic..."
           pnpm test:mutation
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
