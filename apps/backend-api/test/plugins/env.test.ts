@@ -23,7 +23,7 @@ describe('Environment Schema Validation', () => {
         expect(result.RATE_LIMIT_MAX).toBe(60);
         expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET.length).toBeGreaterThanOrEqual(64);
+        expect(result.JWT_SECRET!.length).toBeGreaterThanOrEqual(64);
       } finally {
         if (originalEnv !== undefined) {
           process.env['NODE_ENV'] = originalEnv;
@@ -196,54 +196,94 @@ describe('Environment Schema Validation', () => {
   });
 
   describe('JWT_SECRET validation', () => {
-    it('should auto-generate JWT_SECRET in development', () => {
-      const originalEnv = process.env['NODE_ENV'];
-      process.env['NODE_ENV'] = 'development';
-
-      try {
+    describe('auto-generation in non-production', () => {
+      it('should auto-generate JWT_SECRET in development', () => {
         const result = EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           NODE_ENV: 'development',
         });
+
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET.length).toBeGreaterThanOrEqual(64);
-      } finally {
-        if (originalEnv !== undefined) {
-          process.env['NODE_ENV'] = originalEnv;
-        } else {
-          delete process.env['NODE_ENV'];
-        }
-      }
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+      });
+
+      it('should auto-generate JWT_SECRET when NODE_ENV is undefined', () => {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          // NODE_ENV will default to 'development'
+        });
+
+        expect(result.JWT_SECRET).toBeDefined();
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+        expect(result.NODE_ENV).toBe('development');
+      });
+
+      it('should auto-generate JWT_SECRET in test environment', () => {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          NODE_ENV: 'test',
+        });
+
+        expect(result.JWT_SECRET).toBeDefined();
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+      });
     });
 
-    it('should require JWT_SECRET in production', () => {
-      expect(() =>
-        EnvSchema.parse({
+    describe('production requirements', () => {
+      it('should require JWT_SECRET in production', () => {
+        expect(() =>
+          EnvSchema.parse({
+            OPENAI_API_KEY: validApiKey,
+            NODE_ENV: 'production',
+            // No JWT_SECRET provided
+          })
+        ).toThrow(
+          'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32'
+        );
+      });
+
+      it('should accept valid JWT_SECRET in production', () => {
+        const validSecret = randomBytes(32).toString('hex');
+        const result = EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           NODE_ENV: 'production',
-          // No JWT_SECRET provided
-        })
-      ).toThrow(
-        'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32'
-      );
-    });
+          JWT_SECRET: validSecret,
+        });
 
-    it('should reject JWT_SECRET shorter than 32 characters', () => {
-      expect(() =>
-        EnvSchema.parse({
-          OPENAI_API_KEY: validApiKey,
-          JWT_SECRET: 'too-short',
-        })
-      ).toThrow('JWT_SECRET must be at least 32 characters');
-    });
-
-    it('should accept valid JWT_SECRET', () => {
-      const validSecret = randomBytes(32).toString('hex');
-      const result = EnvSchema.parse({
-        OPENAI_API_KEY: validApiKey,
-        JWT_SECRET: validSecret,
+        expect(result.JWT_SECRET).toBe(validSecret);
       });
-      expect(result.JWT_SECRET).toBe(validSecret);
+    });
+
+    describe('validation rules', () => {
+      it('should reject JWT_SECRET shorter than 32 characters', () => {
+        expect(() =>
+          EnvSchema.parse({
+            OPENAI_API_KEY: validApiKey,
+            JWT_SECRET: 'too-short',
+          })
+        ).toThrow('JWT_SECRET must be at least 32 characters');
+      });
+
+      it('should accept exactly 32 characters', () => {
+        const secret32 = 'a'.repeat(32);
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          JWT_SECRET: secret32,
+        });
+
+        expect(result.JWT_SECRET).toBe(secret32);
+      });
+
+      it('should use provided JWT_SECRET over auto-generation', () => {
+        const providedSecret = randomBytes(32).toString('hex');
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          NODE_ENV: 'development',
+          JWT_SECRET: providedSecret,
+        });
+
+        expect(result.JWT_SECRET).toBe(providedSecret);
+      });
     });
   });
 
