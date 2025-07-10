@@ -62,9 +62,9 @@ describe('ChatWidget XSS Protection', () => {
 
       const { container } = render(<ChatWidget />);
 
-      // Verify dangerous content is escaped
+      // Verify dangerous content is escaped (double-escaped in innerHTML)
       expect(container.innerHTML).toContain(
-        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
+        '&amp;lt;script&amp;gt;alert(&amp;quot;XSS&amp;quot;)&amp;lt;/script&amp;gt;'
       );
       // Ensure no actual script tag exists
       expect(container.querySelector('script')).toBeNull();
@@ -85,9 +85,9 @@ describe('ChatWidget XSS Protection', () => {
 
       const { container } = render(<ChatWidget />);
 
-      // Verify img tag is escaped
+      // Verify img tag is escaped (double-escaped in innerHTML)
       expect(container.innerHTML).toContain(
-        '&lt;img src=&quot;x&quot; onerror=&quot;alert(&#39;XSS&#39;)&quot;&gt;'
+        '&amp;lt;img src=&amp;quot;x&amp;quot; onerror=&amp;quot;alert(&amp;#39;XSS&amp;#39;)&amp;quot;&amp;gt;'
       );
       // Ensure no actual img tag with onerror exists
       expect(container.querySelector('img[onerror]')).toBeNull();
@@ -108,9 +108,9 @@ describe('ChatWidget XSS Protection', () => {
 
       const { container } = render(<ChatWidget />);
 
-      // Verify all characters are properly escaped
+      // Verify all characters are properly escaped (double-escaped in innerHTML)
       expect(container.innerHTML).toContain(
-        'Test &amp; check &lt;tag&gt; &quot;quotes&quot; &#39;apostrophes&#39;'
+        'Test &amp;amp; check &amp;lt;tag&amp;gt; &amp;quot;quotes&amp;quot; &amp;#39;apostrophes&amp;#39;'
       );
     });
 
@@ -149,9 +149,9 @@ describe('ChatWidget XSS Protection', () => {
 
       const { container } = render(<ChatWidget />);
 
-      // Verify complex payload is fully escaped
+      // Verify complex payload is fully escaped (double-escaped in innerHTML)
       expect(container.innerHTML).toContain(
-        '&lt;svg onload=&quot;alert(1)&quot;&gt;&lt;iframe src=&quot;javascript:alert(2)&quot;&gt;&lt;/iframe&gt;&lt;/svg&gt;'
+        '&amp;lt;svg onload=&amp;quot;alert(1)&amp;quot;&amp;gt;&amp;lt;iframe src=&amp;quot;javascript:alert(2)&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;&amp;lt;/svg&amp;gt;'
       );
       // Ensure no dangerous elements exist
       expect(container.querySelector('svg')).toBeNull();
