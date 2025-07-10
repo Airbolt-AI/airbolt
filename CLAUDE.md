@@ -90,6 +90,15 @@ pnpm ci:simulate       # Runs build first (like CI does), then full validation
 - Pre-push hook uses `ci:simulate` to catch errors before they reach CI
 - This prevents the disconnect between local and CI validation
 
+**⚠️ SDK Generation Gotcha:**
+
+```bash
+# ALWAYS run after OpenAPI/Fern changes
+pnpm ci:simulate       # Regenerates SDK + full validation (matches CI exactly)
+```
+
+CI runs `pnpm generate` first, potentially causing fresh-generation TypeScript errors that don't appear locally with cached files.
+
 ## 🚨 **Test Configuration Management**
 
 **CRITICAL: We maintain two Vitest configurations for workspace vs mutation testing:**

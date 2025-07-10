@@ -1,16 +1,31 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import fc from 'fast-check';
 import { useChat } from '../../src/hooks/useChat.js';
 import type { Message } from '@airbolt/sdk';
 
-// Mock the SDK chat function
+// Mock the SDK functions
 vi.mock('@airbolt/sdk', () => ({
   chat: vi.fn(),
+  clearAuthToken: vi.fn(),
+  hasValidToken: vi.fn(() => true),
+  getTokenInfo: vi.fn(() => ({
+    hasToken: true,
+    expiresAt: new Date(Date.now() + 3600000),
+    tokenType: 'Bearer',
+  })),
 }));
 
-import { chat } from '@airbolt/sdk';
+import {
+  chat,
+  clearAuthToken,
+  hasValidToken,
+  getTokenInfo,
+} from '@airbolt/sdk';
 const mockChat = vi.mocked(chat);
+const mockClearAuthToken = vi.mocked(clearAuthToken);
+const mockHasValidToken = vi.mocked(hasValidToken);
+const mockGetTokenInfo = vi.mocked(getTokenInfo);
 
 describe('useChat property-based tests', () => {
   // Property: Any non-empty string input should create a user message
@@ -224,5 +239,200 @@ describe('useChat property-based tests', () => {
       ),
       { numRuns: 10 }
     );
+  });
+
+  describe('Token management property-based tests', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      // Reset to default behavior
+      mockHasValidToken.mockReturnValue(true);
+      mockGetTokenInfo.mockReturnValue({
+        hasToken: true,
+        expiresAt: new Date(Date.now() + 3600000),
+        tokenType: 'Bearer',
+      });
+      mockClearAuthToken.mockImplementation(() => {});
+    });
+    // Property: Token operations should work with any valid URL
+    it('should handle token operations with arbitrary URLs', () => {
+      fc.assert(
+        fc.property(fc.webUrl(), (baseURL: string) => {
+          vi.clearAllMocks();
+          const { result } = renderHook(() => useChat({ baseURL }));
+
+          // All token operations should work without throwing
+          expect(() => {
+            act(() => {
+              result.current.clearToken();
+              result.current.hasValidToken();
+              result.current.getTokenInfo();
+            });
+          }).not.toThrow();
+
+          // SDK functions should be called with the provided URL
+          expect(mockClearAuthToken).toHaveBeenCalledWith(baseURL);
+          expect(mockHasValidToken).toHaveBeenCalledWith(baseURL);
+          expect(mockGetTokenInfo).toHaveBeenCalledWith(baseURL);
+        }),
+        { numRuns: 30 }
+      );
+    });
+
+    // Property: Token state isolation per baseURL
+    it('should maintain token isolation per baseURL', () => {
+      fc.assert(
+        fc.property(fc.webUrl(), fc.webUrl(), (url1: string, url2: string) => {
+          fc.pre(url1 !== url2); // Ensure URLs are different
+
+          vi.clearAllMocks();
+
+          const hook1 = renderHook(() => useChat({ baseURL: url1 }));
+          const hook2 = renderHook(() => useChat({ baseURL: url2 }));
+
+          // Clear token for URL1
+          act(() => {
+            hook1.result.current.clearToken();
+          });
+
+          // URL2 operations should use different URL
+          act(() => {
+            hook2.result.current.hasValidToken();
+          });
+
+          // Each hook should call with its own URL
+          expect(mockClearAuthToken).toHaveBeenCalledWith(url1);
+          expect(mockHasValidToken).toHaveBeenCalledWith(url2);
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    // Property: Function stability with identical baseURLs
+    it('should reuse function references for identical baseURLs', () => {
+      fc.assert(
+        fc.property(fc.webUrl(), (baseURL: string) => {
+          const { result, rerender } = renderHook(
+            ({ url }) => useChat({ baseURL: url }),
+            { initialProps: { url: baseURL } }
+          );
+
+          const clearToken1 = result.current.clearToken;
+          const hasValidToken1 = result.current.hasValidToken;
+          const getTokenInfo1 = result.current.getTokenInfo;
+
+          // Rerender with same URL - functions should be stable
+          rerender({ url: baseURL });
+
+          expect(result.current.clearToken).toBe(clearToken1);
+          expect(result.current.hasValidToken).toBe(hasValidToken1);
+          expect(result.current.getTokenInfo).toBe(getTokenInfo1);
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    // Property: Token info structure consistency
+    it('should handle arbitrary token info structures', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            hasToken: fc.boolean(),
+            expiresAt: fc.option(fc.date(), { nil: undefined }),
+            tokenType: fc.option(fc.string(), { nil: undefined }),
+          }),
+          tokenInfo => {
+            vi.clearAllMocks();
+            // Cast to TokenInfo to handle exactOptionalPropertyTypes
+            mockGetTokenInfo.mockReturnValue(tokenInfo as any);
+
+            const { result } = renderHook(() => useChat());
+
+            const returnedInfo = result.current.getTokenInfo();
+
+            // Should return exactly what the SDK returns
+            expect(returnedInfo).toEqual(tokenInfo);
+          }
+        ),
+        { numRuns: 30 }
+      );
+    });
+
+    // Property: Error resilience for token operations
+    it('should handle token operation errors consistently', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom('clearToken', 'hasValidToken', 'getTokenInfo'),
+          fc.string({ minLength: 1 }),
+          (operation: string, errorMessage: string) => {
+            vi.clearAllMocks();
+
+            // Mock the operation to throw
+            switch (operation) {
+              case 'clearToken':
+                mockClearAuthToken.mockImplementation(() => {
+                  throw new Error(errorMessage);
+                });
+                break;
+              case 'hasValidToken':
+                mockHasValidToken.mockImplementation(() => {
+                  throw new Error(errorMessage);
+                });
+                break;
+              case 'getTokenInfo':
+                mockGetTokenInfo.mockImplementation(() => {
+                  throw new Error(errorMessage);
+                });
+                break;
+            }
+
+            const { result } = renderHook(() => useChat());
+
+            // Error should be propagated consistently
+            expect(() => {
+              switch (operation) {
+                case 'clearToken':
+                  result.current.clearToken();
+                  break;
+                case 'hasValidToken':
+                  result.current.hasValidToken();
+                  break;
+                case 'getTokenInfo':
+                  result.current.getTokenInfo();
+                  break;
+              }
+            }).toThrow(errorMessage);
+          }
+        ),
+        { numRuns: 20 }
+      );
+    });
+
+    // Property: baseURL parameter consistency
+    it('should pass baseURL consistently to all token operations', () => {
+      fc.assert(
+        fc.property(
+          fc.option(fc.webUrl(), { nil: undefined }),
+          (baseURL: string | undefined) => {
+            vi.clearAllMocks();
+            const { result } = renderHook(() =>
+              useChat(baseURL ? { baseURL } : {})
+            );
+
+            // Perform all token operations
+            act(() => {
+              result.current.clearToken();
+              result.current.hasValidToken();
+              result.current.getTokenInfo();
+            });
+
+            // All operations should receive the same baseURL parameter
+            expect(mockClearAuthToken).toHaveBeenCalledWith(baseURL);
+            expect(mockHasValidToken).toHaveBeenCalledWith(baseURL);
+            expect(mockGetTokenInfo).toHaveBeenCalledWith(baseURL);
+          }
+        ),
+        { numRuns: 25 }
+      );
+    });
   });
 });
