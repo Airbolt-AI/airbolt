@@ -1,4 +1,4 @@
-import type { Message } from '@airbolt/sdk';
+import type { Message, TokenInfo } from '@airbolt/sdk';
 
 /**
  * Options for the useChat hook
@@ -50,9 +50,21 @@ export interface UseChatReturn {
    * Clear all messages and reset the conversation
    */
   clear: () => void;
+  /**
+   * Clear the authentication token (useful for logout)
+   */
+  clearToken: () => void;
+  /**
+   * Check if there's a valid authentication token
+   */
+  hasValidToken: () => boolean;
+  /**
+   * Get token information for debugging
+   */
+  getTokenInfo: () => TokenInfo;
 }
 
 /**
- * Re-export Message type from SDK for convenience
+ * Re-export types from SDK for convenience
  */
-export type { Message } from '@airbolt/sdk';
+export type { Message, TokenInfo } from '@airbolt/sdk';

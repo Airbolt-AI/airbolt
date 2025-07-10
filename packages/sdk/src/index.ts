@@ -20,8 +20,19 @@ export * from './core/index.js';
 // export * from './generated/node/index.js';
 
 // Export API functions
-export { chat, createChatSession } from './api/index.js';
-export type { Message, ChatOptions, ChatSession } from './api/index.js';
+export {
+  chat,
+  createChatSession,
+  clearAuthToken,
+  hasValidToken,
+  getTokenInfo,
+} from './api/index.js';
+export type {
+  Message,
+  ChatOptions,
+  ChatSession,
+  TokenInfo,
+} from './api/index.js';
 
 // Default export for convenience
 export { AirboltClient as default } from './core/fern-client.js';

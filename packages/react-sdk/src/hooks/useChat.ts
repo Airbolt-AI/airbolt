@@ -1,5 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { chat } from '@airbolt/sdk';
+import {
+  chat,
+  clearAuthToken,
+  hasValidToken,
+  getTokenInfo,
+} from '@airbolt/sdk';
 import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
 
 /**
@@ -8,12 +13,22 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  * @example
  * ```tsx
  * function ChatComponent() {
- *   const { messages, input, setInput, send, isLoading } = useChat({
+ *   const {
+ *     messages,
+ *     input,
+ *     setInput,
+ *     send,
+ *     isLoading,
+ *     clearToken,
+ *     hasValidToken,
+ *     getTokenInfo
+ *   } = useChat({
  *     system: 'You are a helpful assistant'
  *   });
  *
  *   return (
  *     <div>
+ *       <div>Auth Status: {hasValidToken() ? 'Authenticated' : 'Not authenticated'}</div>
  *       {messages.map((m, i) => (
  *         <div key={i}>
  *           <b>{m.role}:</b> {m.content}
@@ -26,6 +41,9 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  *       />
  *       <button onClick={send} disabled={isLoading}>
  *         Send
+ *       </button>
+ *       <button onClick={clearToken}>
+ *         Logout
  *       </button>
  *     </div>
  *   );
@@ -124,6 +142,19 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     abortControllerRef.current?.abort();
   }, []);
 
+  // Token management functions using the baseURL from options
+  const clearToken = useCallback(() => {
+    clearAuthToken(options?.baseURL);
+  }, [options?.baseURL]);
+
+  const checkValidToken = useCallback(() => {
+    return hasValidToken(options?.baseURL);
+  }, [options?.baseURL]);
+
+  const getTokenInfoCallback = useCallback(() => {
+    return getTokenInfo(options?.baseURL);
+  }, [options?.baseURL]);
+
   return {
     messages,
     input,
@@ -132,5 +163,8 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     error,
     send,
     clear,
+    clearToken,
+    hasValidToken: checkValidToken,
+    getTokenInfo: getTokenInfoCallback,
   };
 }
