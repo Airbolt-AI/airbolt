@@ -1,11 +1,11 @@
 /**
  * @airbolt/sdk - TypeScript SDK for the Airbolt API
- * 
+ *
  * This SDK provides three levels of abstraction:
  * 1. Core infrastructure (TokenManager, AirboltClient)
  * 2. Generated clients (from Fern)
  * 3. High-level utilities (vanilla JS API, React hooks)
- * 
+ *
  * @version 1.0.0
  * @author Mark Watson
  * @license MIT
@@ -19,9 +19,9 @@ export * from './core/index.js';
 // export * from './generated/browser/index.js';
 // export * from './generated/node/index.js';
 
-// Export vanilla API
-export { chat, createChatSession } from './vanilla/index.js';
-export type { Message, ChatOptions, ChatSession } from './vanilla/index.js';
+// Export API functions
+export { chat, createChatSession } from './api/index.js';
+export type { Message, ChatOptions, ChatSession } from './api/index.js';
 
 // Default export for convenience
-export { AirboltClient as default } from './core/client.js';
+export { AirboltClient as default } from './core/fern-client.js';

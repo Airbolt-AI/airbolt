@@ -40,21 +40,24 @@ describe('Fern Generated Client Usage', () => {
     });
   });
 
-  describe('Critical Gap: Missing Client', () => {
-    // Note: Direct import test commented out due to TypeScript module resolution
-    // The absence of client is already validated by the export analysis below
-
-    it('should confirm no API methods were generated', async () => {
+  describe('Generated Client Validation', () => {
+    it('should have all expected exports from Fern generation', async () => {
       const mainExports = await import('../generated/browser/index.js');
 
-      // Only errors should be exported, no client or API methods
+      // Should have the complete set of exports from Fern
       const exportKeys = Object.keys(mainExports);
-      expect(exportKeys).toEqual(['AirboltAPIError', 'AirboltAPITimeoutError']);
+      expect(exportKeys).toContain('AirboltAPI'); // Namespace with types
+      expect(exportKeys).toContain('AirboltAPIError');
+      expect(exportKeys).toContain('AirboltAPITimeoutError');
+      expect(exportKeys).toContain('AirboltAPIClient'); // The generated client
+      expect(exportKeys).toContain('AirboltAPIEnvironment');
 
-      // No chat, token, or client exports
-      expect(exportKeys.find(key => key.includes('chat'))).toBeUndefined();
-      expect(exportKeys.find(key => key.includes('token'))).toBeUndefined();
-      expect(exportKeys.find(key => key.includes('Client'))).toBeUndefined();
+      // Verify the client has the expected methods
+      const { AirboltAPIClient } = mainExports;
+      const client = new AirboltAPIClient({ baseUrl: 'http://localhost:3000' });
+      expect(client.chat).toBeDefined();
+      expect(client.authentication).toBeDefined();
+      expect(client.root).toBeDefined();
     });
   });
 

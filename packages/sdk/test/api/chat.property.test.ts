@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { chat } from '../../src/vanilla/chat';
-import { AirboltClient } from '../../src/core/client';
-import type { Message } from '../../src/vanilla/types';
+import { chat } from '../../src/api/chat';
+import { AirboltClient } from '../../src/core/fern-client';
+import type { Message } from '../../src/api/types';
 
 // Mock the AirboltClient
-vi.mock('../../src/core/client');
+vi.mock('../../src/core/fern-client');
 
 describe('chat - property-based tests', () => {
   const mockChat = vi.fn();
@@ -13,11 +13,14 @@ describe('chat - property-based tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup mock client instance
-    mockClientConstructor.mockImplementation(() => ({
-      chat: mockChat,
-    } as any));
+    mockClientConstructor.mockImplementation(
+      () =>
+        ({
+          chat: mockChat,
+        }) as any
+    );
   });
 
   it('should handle any valid message content', async () => {
@@ -26,23 +29,20 @@ describe('chat - property-based tests', () => {
         fc.array(
           fc.record({
             role: fc.constantFrom('user' as const, 'assistant' as const),
-            content: fc.string({ minLength: 0, maxLength: 10000 })
+            content: fc.string({ minLength: 0, maxLength: 10000 }),
           })
         ),
-        async (messages) => {
+        async messages => {
           const expectedResponse = 'Test response';
           mockChat.mockResolvedValue({
             content: expectedResponse,
-            usage: { total_tokens: 10 }
+            usage: { total_tokens: 10 },
           });
 
           const result = await chat(messages as Message[]);
-          
+
           expect(result).toBe(expectedResponse);
-          expect(mockChat).toHaveBeenCalledWith({
-            messages,
-            system: undefined
-          });
+          expect(mockChat).toHaveBeenCalledWith(messages);
         }
       )
     );
@@ -50,21 +50,18 @@ describe('chat - property-based tests', () => {
 
   it('should handle any valid baseURL format', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.webUrl(),
-        async (baseURL) => {
-          const messages: Message[] = [{ role: 'user', content: 'Test' }];
-          
-          mockChat.mockResolvedValue({
-            content: 'Response',
-            usage: { total_tokens: 5 }
-          });
+      fc.asyncProperty(fc.webUrl(), async baseURL => {
+        const messages: Message[] = [{ role: 'user', content: 'Test' }];
 
-          await chat(messages, { baseURL });
-          
-          expect(mockClientConstructor).toHaveBeenCalledWith({ baseURL });
-        }
-      )
+        mockChat.mockResolvedValue({
+          content: 'Response',
+          usage: { total_tokens: 5 },
+        });
+
+        await chat(messages, { baseURL });
+
+        expect(mockClientConstructor).toHaveBeenCalledWith({ baseURL });
+      })
     );
   });
 
@@ -72,18 +69,20 @@ describe('chat - property-based tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.string({ minLength: 0, maxLength: 5000 }),
-        async (system) => {
+        async system => {
           const messages: Message[] = [{ role: 'user', content: 'Test' }];
-          
+
           mockChat.mockResolvedValue({
             content: 'Response',
-            usage: { total_tokens: 5 }
+            usage: { total_tokens: 5 },
           });
 
           await chat(messages, { system });
-          
-          // When system is empty string, it shouldn't be included
-          const expectedCall = system ? { messages, system } : { messages };
+
+          // When system is provided, it's prepended as a system message
+          const expectedCall = system
+            ? [{ role: 'system' as const, content: system }, ...messages]
+            : messages;
           expect(mockChat).toHaveBeenCalledWith(expectedCall);
         }
       )
@@ -93,29 +92,26 @@ describe('chat - property-based tests', () => {
   it('should maintain message order in conversations', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(
-          fc.string({ minLength: 1, maxLength: 100 }),
-          { minLength: 1, maxLength: 20 }
-        ),
-        async (contents) => {
+        fc.array(fc.string({ minLength: 1, maxLength: 100 }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        async contents => {
           // Build alternating user/assistant messages
           const messages: Message[] = contents.map((content, index) => ({
             role: index % 2 === 0 ? 'user' : 'assistant',
-            content
+            content,
           }));
-          
+
           mockChat.mockResolvedValue({
             content: 'Final response',
-            usage: { total_tokens: 50 }
+            usage: { total_tokens: 50 },
           });
 
           await chat(messages);
-          
+
           // Verify the exact message array was passed
-          expect(mockChat).toHaveBeenCalledWith({
-            messages,
-            system: undefined
-          });
+          expect(mockChat).toHaveBeenCalledWith(messages);
         }
       )
     );
@@ -123,33 +119,30 @@ describe('chat - property-based tests', () => {
 
   it('should handle edge cases for message content', async () => {
     const edgeCases = [
-      '',  // empty string
-      ' ',  // whitespace
-      '\n\n\n',  // newlines
-      '🎉🎊🎈',  // emojis
-      '\\n\\t\\r',  // escape sequences
-      '<script>alert("xss")</script>',  // HTML
-      '${injection}',  // template literals
-      'null',  // string "null"
-      'undefined',  // string "undefined"
-      JSON.stringify({ nested: 'object' }),  // JSON string
+      '', // empty string
+      ' ', // whitespace
+      '\n\n\n', // newlines
+      '🎉🎊🎈', // emojis
+      '\\n\\t\\r', // escape sequences
+      '<script>alert("xss")</script>', // HTML
+      '${injection}', // template literals
+      'null', // string "null"
+      'undefined', // string "undefined"
+      JSON.stringify({ nested: 'object' }), // JSON string
     ];
 
     for (const content of edgeCases) {
       const messages: Message[] = [{ role: 'user', content }];
-      
+
       mockChat.mockResolvedValue({
         content: 'Safe response',
-        usage: { total_tokens: 10 }
+        usage: { total_tokens: 10 },
       });
 
       const result = await chat(messages);
-      
+
       expect(result).toBe('Safe response');
-      expect(mockChat).toHaveBeenCalledWith({
-        messages: [{ role: 'user', content }],
-        system: undefined
-      });
+      expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content }]);
     }
   });
 
@@ -164,18 +157,18 @@ describe('chat - property-based tests', () => {
 
     for (const system of specialPrompts) {
       const messages: Message[] = [{ role: 'user', content: 'Test' }];
-      
+
       mockChat.mockResolvedValue({
         content: 'Response',
-        usage: { total_tokens: 5 }
+        usage: { total_tokens: 5 },
       });
 
       await chat(messages, { system });
-      
-      expect(mockChat).toHaveBeenCalledWith({
-        messages,
-        system
-      });
+
+      expect(mockChat).toHaveBeenCalledWith([
+        { role: 'system', content: system },
+        ...messages,
+      ]);
     }
   });
 });

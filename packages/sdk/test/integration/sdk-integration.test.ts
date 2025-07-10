@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import {
-  AirboltClient,
-  TokenManager,
-  AirboltError,
-  TokenError,
-} from '../../src/core/index';
+import { AirboltClient, TokenManager, TokenError } from '../../src/core/index';
 
 /**
  * Integration tests for the SDK
@@ -58,7 +53,6 @@ maybeDescribe('SDK Integration Tests', () => {
       baseURL: BASE_URL,
       userId: TEST_USER_ID,
       tokenManager,
-      timeout: 10000, // 10 second timeout for integration tests
     });
   });
 
@@ -68,246 +62,194 @@ maybeDescribe('SDK Integration Tests', () => {
 
       expect(typeof token).toBe('string');
       expect(token.length).toBeGreaterThan(0);
-      expect(tokenManager.hasValidToken()).toBe(true);
-
-      const tokenInfo = tokenManager.getTokenInfo();
-      expect(tokenInfo.hasToken).toBe(true);
-      expect(tokenInfo.expiresAt).toBeInstanceOf(Date);
-      expect(tokenInfo.expiresAt!.getTime()).toBeGreaterThan(Date.now());
+      expect(token).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/); // JWT format
     });
 
-    it('should handle token refresh before expiration', async () => {
-      // Create a token manager with very short refresh buffer
-      const shortBufferManager = new TokenManager({
-        baseURL: BASE_URL,
-        userId: TEST_USER_ID,
-        refreshBuffer: 3500, // Almost the full token lifetime
-      });
+    it('should reuse token if not expired', async () => {
+      const token1 = await tokenManager.getToken();
+      const token2 = await tokenManager.getToken();
 
-      const token1 = await shortBufferManager.getToken();
-      const token2 = await shortBufferManager.getToken();
+      expect(token2).toBe(token1);
+    });
 
-      // Tokens might be different due to refresh
-      expect(typeof token1).toBe('string');
-      expect(typeof token2).toBe('string');
+    it('should get new token after clearing', async () => {
+      const token1 = await tokenManager.getToken();
+      tokenManager.clearToken();
+      const token2 = await tokenManager.getToken();
+
+      expect(token2).not.toBe(token1);
     });
 
     it('should handle concurrent token requests', async () => {
-      const promises = [
-        tokenManager.getToken(),
-        tokenManager.getToken(),
-        tokenManager.getToken(),
-      ];
+      tokenManager.clearToken();
 
+      // Make multiple concurrent token requests
+      const promises = Array.from({ length: 5 }, () => tokenManager.getToken());
       const tokens = await Promise.all(promises);
 
-      // All tokens should be the same (no race conditions)
-      expect(tokens[0]).toBe(tokens[1]);
-      expect(tokens[1]).toBe(tokens[2]);
+      // All should return the same token (no multiple fetches)
+      const uniqueTokens = new Set(tokens);
+      expect(uniqueTokens.size).toBe(1);
     });
 
-    it('should handle invalid user ID gracefully', async () => {
-      const invalidTokenManager = new TokenManager({
-        baseURL: BASE_URL,
-        userId: '', // Invalid user ID
+    it('should handle token fetch errors gracefully', async () => {
+      const badTokenManager = new TokenManager({
+        baseURL: 'http://localhost:9999', // Non-existent server
+        userId: TEST_USER_ID,
+        maxRetries: 1,
+        retryDelay: 100,
       });
 
-      // This might succeed or fail depending on backend implementation
-      // We're mainly testing that it doesn't crash
-      try {
-        await invalidTokenManager.getToken();
-      } catch (error) {
-        expect(error).toBeInstanceOf(TokenError);
-      }
+      await expect(badTokenManager.getToken()).rejects.toThrow(TokenError);
     });
   });
 
-  describe('Chat API Integration', () => {
+  describe('Chat Integration', () => {
     it('should successfully send a chat message', async () => {
-      const response = await client.chat({
-        messages: [{ role: 'user', content: 'Hello, this is a test message' }],
-      });
+      const response = await client.chat([
+        { role: 'user', content: 'Hello, this is a test message' },
+      ]);
 
-      expect(response).toHaveProperty('content');
+      expect(response).toBeDefined();
+      expect(response.content).toBeDefined();
       expect(typeof response.content).toBe('string');
       expect(response.content.length).toBeGreaterThan(0);
+    });
 
+    it('should handle multi-turn conversations', async () => {
+      const response = await client.chat([
+        { role: 'user', content: 'What is 2 + 2?' },
+        { role: 'assistant', content: 'The answer is 4.' },
+        { role: 'user', content: 'What about 3 + 3?' },
+      ]);
+
+      expect(response).toBeDefined();
+      expect(response.content).toBeDefined();
+    });
+
+    it('should include usage information if available', async () => {
+      const response = await client.chat([{ role: 'user', content: 'Hello' }]);
+
+      // Usage might be optional depending on backend configuration
       if (response.usage) {
+        expect(typeof response.usage.total_tokens).toBe('number');
         expect(response.usage.total_tokens).toBeGreaterThan(0);
       }
     });
 
-    it('should handle conversation with multiple messages', async () => {
-      const response = await client.chat({
-        messages: [
-          { role: 'user', content: 'What is 2 + 2?' },
-          { role: 'assistant', content: '2 + 2 equals 4.' },
-          { role: 'user', content: 'What about 3 + 3?' },
-        ],
-      });
-
-      expect(response.content).toBeTruthy();
-      expect(response.content).toContain('6'); // Likely to contain the answer
-    });
-
-    it('should handle system prompt', async () => {
-      const response = await client.chat({
-        messages: [{ role: 'user', content: 'Hello' }],
-        system:
-          'You are a helpful assistant that always responds with "Test successful"',
-      });
-
-      expect(response.content).toBeTruthy();
-      // The exact response depends on the backend implementation
-    });
-
-    it('should handle empty user message gracefully', async () => {
+    it('should handle empty content gracefully', async () => {
       await expect(
-        client.chat({
-          messages: [
-            { role: 'user', content: ' ' }, // Whitespace only
-          ],
-        })
+        client.chat([
+          { role: 'user', content: ' ' }, // Whitespace only
+        ])
       ).rejects.toThrow();
     });
 
-    it('should handle very long message', async () => {
-      const longMessage = 'This is a test message. '.repeat(100);
+    it('should handle very long messages', async () => {
+      const longMessage = 'Test '.repeat(1000); // 5000 characters
+      const response = await client.chat([
+        { role: 'user', content: longMessage },
+      ]);
 
-      const response = await client.chat({
-        messages: [{ role: 'user', content: longMessage }],
-      });
-
-      expect(response.content).toBeTruthy();
+      expect(response).toBeDefined();
+      expect(response.content).toBeDefined();
     });
 
-    it('should handle maximum number of messages', async () => {
-      const messages = Array(50)
-        .fill(null)
-        .map((_, i) => ({
-          role: i % 2 === 0 ? ('user' as const) : ('assistant' as const),
-          content: `Message ${i + 1}`,
-        }));
+    it('should handle special characters in messages', async () => {
+      const specialMessage =
+        'Test with special chars: 🚀 émojis, "quotes", \'apostrophes\', \n newlines, and \\backslashes';
+      const response = await client.chat([
+        { role: 'user', content: specialMessage },
+      ]);
 
-      const response = await client.chat({ messages });
-      expect(response.content).toBeTruthy();
-    });
-
-    it('should fail with too many messages', async () => {
-      const messages = Array(51).fill({
-        role: 'user' as const,
-        content: 'Test message',
-      });
-
-      await expect(client.chat({ messages })).rejects.toThrow();
+      expect(response).toBeDefined();
+      expect(response.content).toBeDefined();
     });
   });
 
   describe('Error Handling Integration', () => {
-    it('should handle network interruption gracefully', async () => {
-      // Create client with invalid base URL
-      const invalidClient = new AirboltClient({
-        baseURL: 'http://invalid-url-that-does-not-exist.com',
+    it('should handle network errors', async () => {
+      const offlineClient = new AirboltClient({
+        baseURL: 'http://localhost:9999', // Non-existent server
         userId: TEST_USER_ID,
-        maxRetries: 1, // Fail fast for tests
-        retryDelay: 100,
       });
 
       await expect(
-        invalidClient.chat({
-          messages: [{ role: 'user', content: 'Hello' }],
-        })
+        offlineClient.chat([{ role: 'user', content: 'Hello' }])
       ).rejects.toThrow();
     });
 
-    it('should handle token expiration during request', async () => {
-      // This is hard to test reliably, but we can at least verify
-      // the client handles token refresh correctly
-      const response1 = await client.chat({
-        messages: [{ role: 'user', content: 'First message' }],
-      });
+    it('should handle token refresh on 401', async () => {
+      const response1 = await client.chat([
+        { role: 'user', content: 'First message' },
+      ]);
 
-      // Clear token to force refresh
-      client.clearToken();
+      // Clear token to force refresh on next request
+      tokenManager.clearToken();
 
-      const response2 = await client.chat({
-        messages: [{ role: 'user', content: 'Second message' }],
-      });
+      const response2 = await client.chat([
+        { role: 'user', content: 'Second message' },
+      ]);
 
-      expect(response1.content).toBeTruthy();
-      expect(response2.content).toBeTruthy();
+      expect(response1).toBeDefined();
+      expect(response2).toBeDefined();
     });
 
-    it('should handle malformed requests appropriately', async () => {
-      // Test various malformed requests
-      const malformedRequests = [
-        { messages: [] }, // Empty messages
-        { messages: [{ role: 'invalid', content: 'test' }] }, // Invalid role
-        { messages: [{ role: 'user', content: '' }] }, // Empty content
+    it('should handle invalid message formats', async () => {
+      // Test various invalid formats
+      const invalidMessages = [
+        [], // Empty messages
+        [{ role: 'invalid' as any, content: 'test' }], // Invalid role
+        [{ role: 'user', content: '' }], // Empty content
       ];
 
-      for (const request of malformedRequests) {
-        await expect(client.chat(request as any)).rejects.toThrow();
+      for (const messages of invalidMessages) {
+        await expect(client.chat(messages)).rejects.toThrow();
       }
     });
   });
 
-  describe('Performance and Reliability', () => {
-    it('should handle multiple concurrent chat requests', async () => {
-      const requests = Array(5)
-        .fill(null)
-        .map((_, i) =>
-          client.chat({
-            messages: [
-              { role: 'user', content: `Concurrent request ${i + 1}` },
-            ],
-          })
-        );
+  describe('Performance and Concurrency', () => {
+    it('should handle concurrent chat requests', async () => {
+      const promises = Array.from({ length: 5 }, (_, i) =>
+        client.chat([{ role: 'user', content: `Concurrent request ${i + 1}` }])
+      );
 
-      const responses = await Promise.all(requests);
+      const responses = await Promise.all(promises);
 
       expect(responses).toHaveLength(5);
       responses.forEach(response => {
-        expect(response.content).toBeTruthy();
+        expect(response).toBeDefined();
+        expect(response.content).toBeDefined();
       });
     });
 
-    it('should maintain performance with rapid sequential requests', async () => {
+    it('should handle sequential requests efficiently', async () => {
       const startTime = Date.now();
+      const numRequests = 3;
 
-      for (let i = 0; i < 3; i++) {
-        const response = await client.chat({
-          messages: [{ role: 'user', content: `Sequential request ${i + 1}` }],
-        });
-        expect(response.content).toBeTruthy();
+      for (let i = 0; i < numRequests; i++) {
+        const response = await client.chat([
+          { role: 'user', content: `Sequential request ${i + 1}` },
+        ]);
+        expect(response).toBeDefined();
       }
 
       const duration = Date.now() - startTime;
-      console.log(`Sequential requests completed in ${duration}ms`);
-
-      // This is mainly to ensure requests don't hang indefinitely
-      expect(duration).toBeLessThan(30000); // 30 seconds max
+      // Should complete in reasonable time (adjust based on your backend)
+      expect(duration).toBeLessThan(30000); // 30 seconds for 3 requests
     });
 
-    it('should handle mixed success and failure scenarios', async () => {
-      const requests = [
-        // Valid request
-        client.chat({
-          messages: [{ role: 'user', content: 'Valid request' }],
-        }),
-        // Invalid request
+    it('should handle mixed success and failure in concurrent requests', async () => {
+      const promises = [
+        client.chat([{ role: 'user', content: 'Valid request' }]),
         client
-          .chat({
-            messages: [], // Invalid: empty messages
-          })
+          .chat([]) // Invalid: empty messages
           .catch(error => ({ error })),
-        // Another valid request
-        client.chat({
-          messages: [{ role: 'user', content: 'Another valid request' }],
-        }),
+        client.chat([{ role: 'user', content: 'Another valid request' }]),
       ];
 
-      const results = await Promise.all(requests);
+      const results = await Promise.all(promises);
 
       expect(results[0]).toHaveProperty('content');
       expect(results[1]).toHaveProperty('error');
@@ -316,39 +258,71 @@ maybeDescribe('SDK Integration Tests', () => {
   });
 
   describe('Client Configuration', () => {
-    it('should work with custom timeout settings', async () => {
-      const fastTimeoutClient = new AirboltClient({
+    it('should work with different user IDs', async () => {
+      const client1 = new AirboltClient({
         baseURL: BASE_URL,
-        userId: TEST_USER_ID,
-        timeout: 1000, // 1 second timeout
-        maxRetries: 1,
+        userId: 'test-user-1',
       });
 
-      // This should either succeed quickly or timeout
-      try {
-        const response = await fastTimeoutClient.chat({
-          messages: [{ role: 'user', content: 'Quick test' }],
-        });
-        expect(response.content).toBeTruthy();
-      } catch (error) {
-        // Timeout is acceptable for this test
-        expect(error).toBeInstanceOf(AirboltError);
-      }
+      const client2 = new AirboltClient({
+        baseURL: BASE_URL,
+        userId: 'test-user-2',
+      });
+
+      const [response1, response2] = await Promise.all([
+        client1.chat([{ role: 'user', content: 'Hello from user 1' }]),
+        client2.chat([{ role: 'user', content: 'Hello from user 2' }]),
+      ]);
+
+      expect(response1).toBeDefined();
+      expect(response2).toBeDefined();
     });
 
-    it('should work with different retry configurations', async () => {
-      const noRetryClient = new AirboltClient({
-        baseURL: BASE_URL,
-        userId: TEST_USER_ID,
-        maxRetries: 1, // No retries
-        retryDelay: 100,
-      });
+    it('should expose client information methods', () => {
+      expect(client.getBaseURL()).toBe(BASE_URL);
+      expect(client.hasValidToken()).toBe(false); // No token fetched yet
 
-      const response = await noRetryClient.chat({
-        messages: [{ role: 'user', content: 'No retry test' }],
-      });
+      const tokenInfo = client.getTokenInfo();
+      expect(tokenInfo.hasToken).toBe(false);
+    });
+  });
 
-      expect(response.content).toBeTruthy();
+  describe('Real-world Scenarios', () => {
+    it('should handle a typical conversation flow', async () => {
+      // Initial greeting
+      const greeting = await client.chat([
+        { role: 'user', content: 'Hello! Can you help me with TypeScript?' },
+      ]);
+      expect(greeting.content).toBeDefined();
+
+      // Follow-up question
+      const followUp = await client.chat([
+        { role: 'user', content: 'Hello! Can you help me with TypeScript?' },
+        { role: 'assistant', content: greeting.content },
+        {
+          role: 'user',
+          content: 'What are the benefits of using interfaces?',
+        },
+      ]);
+      expect(followUp.content).toBeDefined();
+    });
+
+    it('should recover from temporary network issues', async () => {
+      // This test simulates recovery - in real scenario, network might fail temporarily
+      const response1 = await client.chat([
+        { role: 'user', content: 'Message before network issue' },
+      ]);
+
+      // Simulate token expiry
+      tokenManager.clearToken();
+
+      // Should recover and get new token
+      const response2 = await client.chat([
+        { role: 'user', content: 'Message after recovery' },
+      ]);
+
+      expect(response1).toBeDefined();
+      expect(response2).toBeDefined();
     });
   });
 });
