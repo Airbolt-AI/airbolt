@@ -3,7 +3,7 @@ services:
     name: airbolt
     runtime: node
     plan: free
-    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && pnpm exec nx run backend-api:build
     startCommand: node apps/backend-api/dist/server.js
     healthCheckPath: /
     envVars:

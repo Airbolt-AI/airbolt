@@ -89,10 +89,23 @@ Deploy your own instance of Airbolt in seconds:
 ### Setup (< 60 seconds)
 
 1. **Click the button above**
-2. **Enter your OpenAI API key** when prompted
-3. **Click "Create Web Service"**
+2. **Enter a unique name** (e.g., `airbolt-backend-123`)
+3. **Enter your OpenAI API key** when prompted
+4. **Click "Apply"**
 
-That's it! Your API will be live at `https://your-service-name.onrender.com` 🎉
+That's it! Your API will be live in ~3 minutes 🎉
+
+**Find your URL**: After deployment completes, click on your service name in the [Render Dashboard](https://dashboard.render.com). Your URL will be shown at the top (e.g., `https://airbolt-backend-123.onrender.com`)
+
+### Using Your Deployed API
+
+```javascript
+import { AirboltAPI } from '@airbolt/sdk';
+
+const client = new AirboltAPI({
+  baseURL: 'https://your-service.onrender.com',
+});
+```
 
 > **Note**: Free tier services spin down after 15 minutes of inactivity. First request after sleep takes ~1 minute.
 
