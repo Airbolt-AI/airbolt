@@ -113,13 +113,6 @@ export class AirboltClient {
   }
 
   /**
-   * Access the underlying Fern client for advanced usage
-   */
-  getFernClient(): AirboltAPIClient {
-    return this.client;
-  }
-
-  /**
    * Map Fern response to our ChatResponse interface
    */
   private mapChatResponse(

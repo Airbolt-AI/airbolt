@@ -239,11 +239,6 @@ describe('AirboltClient (Fern-based)', () => {
       const baseURL = client.getBaseURL();
       expect(baseURL).toBe('http://localhost:3000');
     });
-
-    it('should provide access to Fern client', () => {
-      const fernClient = client.getFernClient();
-      expect(fernClient).toBe(mockFernClient);
-    });
   });
 
   describe('Error type exports', () => {
