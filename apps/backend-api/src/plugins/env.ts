@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
 
-const EnvSchema = z
+export const EnvSchema = z
   .object({
     NODE_ENV: z
       .enum(['development', 'production', 'test'], {
@@ -71,6 +71,10 @@ const EnvSchema = z
       .refine(
         origins =>
           origins.every(origin => {
+            // Allow wildcard for all origins
+            if (origin === '*') {
+              return true;
+            }
             try {
               // Validate each origin is a valid URL
               const url = new URL(origin);
@@ -79,7 +83,7 @@ const EnvSchema = z
               return false;
             }
           }),
-        'ALLOWED_ORIGIN must contain valid HTTP(S) URLs (comma-separated if multiple)'
+        'ALLOWED_ORIGIN must contain valid HTTP(S) URLs or * for all origins'
       ),
 
     SYSTEM_PROMPT: z

@@ -16,7 +16,7 @@ services:
       - key: JWT_SECRET
         generateValue: true # Render generates a secure random value
       - key: ALLOWED_ORIGIN
-        value: '*' # Users can update this later for production
+        value: '*' # Allow all origins (update for production)
       - key: TRUST_PROXY
         value: 'true'
       - key: LOG_LEVEL
