@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createChatSession } from '../../src/vanilla/session';
+import { createChatSession } from '../../src/api/session';
 
 // Mock the chat module
-vi.mock('../../src/vanilla/chat', () => ({
+vi.mock('../../src/api/chat', () => ({
   chat: vi.fn(),
 }));
 
 // Import chat after mocking
-import { chat } from '../../src/vanilla/chat';
+import { chat } from '../../src/api/chat';
 
 describe('createChatSession', () => {
   const mockChat = vi.mocked(chat);

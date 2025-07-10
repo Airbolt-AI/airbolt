@@ -41,12 +41,8 @@ export class TokenError extends Error {
   public override readonly name = 'TokenError';
   public readonly statusCode?: number | undefined;
   public override readonly cause?: Error | undefined;
-  
-  constructor(
-    message: string,
-    statusCode?: number | undefined,
-    cause?: Error | undefined
-  ) {
+
+  constructor(message: string, statusCode?: number, cause?: Error) {
     super(message);
     this.statusCode = statusCode;
     this.cause = cause;
@@ -55,7 +51,7 @@ export class TokenError extends Error {
 
 /**
  * Secure token manager with automatic refresh capabilities
- * 
+ *
  * Features:
  * - Automatic token refresh before expiration
  * - Secure token storage with proper cleanup
@@ -99,12 +95,12 @@ export class TokenManager {
    */
   private isTokenExpiring(): boolean {
     if (!this.tokenInfo) return true;
-    
+
     const now = new Date();
     const expiryWithBuffer = new Date(
       this.tokenInfo.expiresAt.getTime() - this.options.refreshBuffer * 1000
     );
-    
+
     return now >= expiryWithBuffer;
   }
 
@@ -119,7 +115,7 @@ export class TokenManager {
 
     // Start a new refresh
     this.refreshPromise = this.performTokenRefresh();
-    
+
     try {
       const tokenInfo = await this.refreshPromise;
       this.tokenInfo = tokenInfo;
@@ -151,10 +147,12 @@ export class TokenManager {
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         // Don't retry on validation errors or auth errors
-        if (error instanceof z.ZodError || 
-            (error instanceof TokenError && error.statusCode === 401)) {
+        if (
+          error instanceof z.ZodError ||
+          (error instanceof TokenError && error.statusCode === 401)
+        ) {
           throw error;
         }
 
@@ -176,13 +174,13 @@ export class TokenManager {
   /**
    * Fetch a new token from the API
    */
-  private async fetchToken(): Promise<unknown> {
+  private async fetchToken(): Promise<object> {
     const url = `${this.options.baseURL}/api/tokens`;
     const body = JSON.stringify({ userId: this.options.userId });
 
     // Use appropriate fetch implementation based on environment
     const fetchImpl = this.getFetchImplementation();
-    
+
     const response = await fetchImpl(url, {
       method: 'POST',
       headers: {
@@ -193,9 +191,9 @@ export class TokenManager {
 
     if (!response.ok) {
       let errorMessage = `Token request failed: ${response.status}`;
-      
+
       try {
-        const errorData = await response.json() as { message?: string };
+        const errorData = (await response.json()) as { message?: string };
         errorMessage = errorData.message || errorMessage;
       } catch {
         // Ignore JSON parsing errors
@@ -204,7 +202,7 @@ export class TokenManager {
       throw new TokenError(errorMessage, response.status);
     }
 
-    return response.json();
+    return response.json() as Promise<object>;
   }
 
   /**
@@ -242,11 +240,11 @@ export class TokenManager {
 
     const value = match[1];
     const unit = match[2] || '';
-    
+
     if (!value) {
       throw new TokenError(`Invalid expiration format: ${expiresIn}`);
     }
-    
+
     const seconds = parseInt(value, 10);
 
     let multiplier = 1; // Default to seconds
@@ -300,7 +298,7 @@ export class TokenManager {
     if (this.tokenInfo === null) {
       return { hasToken: false };
     }
-    
+
     return {
       hasToken: true,
       expiresAt: this.tokenInfo.expiresAt,

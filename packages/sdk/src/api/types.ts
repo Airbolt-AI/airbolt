@@ -30,13 +30,13 @@ export interface ChatSession {
    * @returns The assistant's response
    */
   send(content: string): Promise<string>;
-  
+
   /**
    * Get all messages in the current session
    * @returns A read-only array of messages
    */
   getMessages(): readonly Message[];
-  
+
   /**
    * Clear all messages from the session
    */
