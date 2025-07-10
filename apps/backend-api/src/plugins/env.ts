@@ -31,7 +31,6 @@ export const EnvSchema = z
       })
       .default('info'),
 
-    // MVP-specific environment variables
     OPENAI_API_KEY: z
       .string({
         required_error: 'OPENAI_API_KEY is required for AI functionality',
@@ -48,14 +47,7 @@ export const EnvSchema = z
         invalid_type_error: 'JWT_SECRET must be a string',
       })
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
-      .default(() => {
-        // Auto-generate in development mode only
-        if (process.env['NODE_ENV'] === 'development') {
-          return randomBytes(32).toString('hex');
-        }
-        // In production, this will fail validation if not provided due to the refine below
-        return '';
-      }),
+      .optional(),
 
     ALLOWED_ORIGIN: z
       .string({
@@ -115,11 +107,30 @@ export const EnvSchema = z
       })
       .default(false),
   })
-  .refine(data => data.NODE_ENV !== 'production' || data.JWT_SECRET, {
-    message:
-      'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32',
-    path: ['JWT_SECRET'],
-  });
+  .transform(data => {
+    // Auto-generate JWT_SECRET in non-production environments when not provided
+    if (!data.JWT_SECRET && data.NODE_ENV !== 'production') {
+      return {
+        ...data,
+        JWT_SECRET: randomBytes(32).toString('hex'),
+      };
+    }
+    return data;
+  })
+  .refine(
+    data => {
+      // In production, JWT_SECRET must be provided
+      if (data.NODE_ENV === 'production' && !data.JWT_SECRET) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32',
+      path: ['JWT_SECRET'],
+    }
+  );
 
 // Use z.output to get the type after transformations
 export type Env = z.output<typeof EnvSchema>;
