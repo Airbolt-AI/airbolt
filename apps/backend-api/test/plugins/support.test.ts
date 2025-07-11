@@ -39,6 +39,11 @@ describe('Support plugin', () => {
 
     beforeAll(async () => {
       app = await build();
+      // Support plugin is not included in the main app by default
+      // Check if it's already registered to avoid double registration
+      if (!app.someSupport) {
+        await app.register(Support);
+      }
       await app.ready();
     });
 

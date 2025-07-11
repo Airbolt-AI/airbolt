@@ -1,32 +1,50 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { build } from '../../helper.js';
 import type { FastifyInstance } from 'fastify';
+import type { OpenAIService } from '../../../src/services/openai.js';
 
 describe('Chat Route Integration Tests', () => {
   let app: FastifyInstance;
   let validToken: string;
+  let mockOpenAIService: Partial<OpenAIService>;
 
   beforeEach(async () => {
+    // Reset all mocks
+    vi.resetAllMocks();
+
     // Mock OpenAI API calls for integration tests
     vi.stubEnv('OPENAI_API_KEY', 'sk-test123456789012345678901234567890');
     vi.stubEnv('JWT_SECRET', 'test-secret-key-for-integration-tests-32');
     vi.stubEnv('NODE_ENV', 'test');
 
+    // Create mock OpenAI service
+    mockOpenAIService = {
+      createChatCompletion: vi.fn(),
+    };
+
     app = await build();
+
     await app.ready();
 
-    // Check if JWT plugin is registered, if not generate a simple token
-    if (app.jwt && typeof app.jwt.sign === 'function') {
-      validToken = app.jwt.sign({});
-    } else {
-      // Fallback: generate a simple JWT-like token for testing
-      const header = Buffer.from(
-        JSON.stringify({ alg: 'HS256', typ: 'JWT' })
-      ).toString('base64url');
-      const payload = Buffer.from(
-        JSON.stringify({ iat: Date.now() / 1000, exp: Date.now() / 1000 + 900 })
-      ).toString('base64url');
-      validToken = `${header}.${payload}.test-signature`;
+    // Mock the OpenAI service after app is ready
+    if (app.openai) {
+      vi.spyOn(app.openai, 'createChatCompletion').mockImplementation(
+        mockOpenAIService.createChatCompletion as any
+      );
+    }
+
+    // Generate a valid JWT token using the app's JWT plugin
+    validToken = app.jwt.sign({
+      // Include required claims
+      iss: 'airbolt-api',
+    });
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    if (app) {
+      await app.close();
     }
   });
 
@@ -39,9 +57,9 @@ describe('Chat Route Integration Tests', () => {
       };
 
       // Mock the createChatCompletion method
-      vi.spyOn(app.openai, 'createChatCompletion').mockResolvedValue(
-        mockResponse
-      );
+      const createChatCompletionMock =
+        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+      createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
         method: 'POST',
@@ -68,7 +86,7 @@ describe('Chat Route Integration Tests', () => {
       expect(responseBody).toEqual(mockResponse);
 
       // Verify the OpenAI service was called with correct messages
-      expect(app.openai.createChatCompletion).toHaveBeenCalledWith([
+      expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith([
         { role: 'user', content: 'Hello, how are you today?' },
         {
           role: 'assistant',
@@ -116,9 +134,9 @@ describe('Chat Route Integration Tests', () => {
         usage: { total_tokens: 10 },
       };
 
-      vi.spyOn(app.openai, 'createChatCompletion').mockResolvedValue(
-        mockResponse
-      );
+      const createChatCompletionMock =
+        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+      createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
         method: 'POST',
@@ -242,7 +260,9 @@ describe('Chat Route Integration Tests', () => {
       ];
 
       // Mock responses for each call
-      const mockSpy = vi.spyOn(app.openai, 'createChatCompletion');
+      const mockSpy = mockOpenAIService.createChatCompletion as ReturnType<
+        typeof vi.fn
+      >;
       mockSpy.mockResolvedValueOnce(mockResponses[0]!);
       mockSpy.mockResolvedValueOnce(mockResponses[1]!);
       mockSpy.mockResolvedValueOnce(mockResponses[2]!);
@@ -306,26 +326,33 @@ describe('Chat Route Integration Tests', () => {
       expect(JSON.parse(response3.payload)).toEqual(mockResponses[2]);
 
       // Verify all OpenAI calls received the correct conversation context
-      expect(app.openai.createChatCompletion).toHaveBeenNthCalledWith(1, [
-        { role: 'user', content: 'Hello, I am John' },
-      ]);
+      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+        1,
+        [{ role: 'user', content: 'Hello, I am John' }]
+      );
 
-      expect(app.openai.createChatCompletion).toHaveBeenNthCalledWith(2, [
-        { role: 'user', content: 'Hello, I am John' },
-        { role: 'assistant', content: 'Nice to meet you!' },
-        { role: 'user', content: 'What can you help me with?' },
-      ]);
+      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+        2,
+        [
+          { role: 'user', content: 'Hello, I am John' },
+          { role: 'assistant', content: 'Nice to meet you!' },
+          { role: 'user', content: 'What can you help me with?' },
+        ]
+      );
 
-      expect(app.openai.createChatCompletion).toHaveBeenNthCalledWith(3, [
-        { role: 'user', content: 'Hello, I am John' },
-        { role: 'assistant', content: 'Nice to meet you!' },
-        { role: 'user', content: 'What can you help me with?' },
-        {
-          role: 'assistant',
-          content: 'I can help with programming questions.',
-        },
-        { role: 'user', content: 'Can you write a Python function?' },
-      ]);
+      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+        3,
+        [
+          { role: 'user', content: 'Hello, I am John' },
+          { role: 'assistant', content: 'Nice to meet you!' },
+          { role: 'user', content: 'What can you help me with?' },
+          {
+            role: 'assistant',
+            content: 'I can help with programming questions.',
+          },
+          { role: 'user', content: 'Can you write a Python function?' },
+        ]
+      );
     });
 
     it('should handle edge case with maximum message limit', async () => {
@@ -339,9 +366,9 @@ describe('Chat Route Integration Tests', () => {
         usage: { total_tokens: 500 },
       };
 
-      vi.spyOn(app.openai, 'createChatCompletion').mockResolvedValue(
-        mockResponse
-      );
+      const createChatCompletionMock =
+        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+      createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
         method: 'POST',
@@ -356,7 +383,9 @@ describe('Chat Route Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.payload)).toEqual(mockResponse);
-      expect(app.openai.createChatCompletion).toHaveBeenCalledWith(maxMessages);
+      expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith(
+        maxMessages
+      );
     });
 
     it('should properly handle content-type validation', async () => {
@@ -365,9 +394,9 @@ describe('Chat Route Integration Tests', () => {
         usage: { total_tokens: 25 },
       };
 
-      vi.spyOn(app.openai, 'createChatCompletion').mockResolvedValue(
-        mockResponse
-      );
+      const createChatCompletionMock =
+        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+      createChatCompletionMock.mockResolvedValue(mockResponse);
 
       // Test with correct content-type
       const response = await app.inject({

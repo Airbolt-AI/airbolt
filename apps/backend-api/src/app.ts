@@ -118,7 +118,8 @@ export async function buildApp(
   }
 
   // Register the app plugin with options
-  await fastify.register(app, opts);
+  // Wrap with fp to break encapsulation and make decorators available at root level
+  await fastify.register(fp(app), opts);
 
   return fastify;
 }
