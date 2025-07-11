@@ -13,6 +13,7 @@ describe('Chat Route Integration Tests', () => {
     vi.stubEnv('NODE_ENV', 'test');
 
     app = await build();
+    await app.ready();
 
     // Generate valid token using the app's JWT instance
     validToken = app.jwt.sign({});

@@ -53,49 +53,64 @@ export async function buildApp(
             },
   });
 
-  // Register swagger plugin BEFORE the app plugin for OpenAPI generation
-  if (opts.skipEnvValidation) {
-    const { default: swagger } = await import('@fastify/swagger');
-    await fastify.register(swagger, {
-      openapi: {
-        openapi: '3.0.0',
-        info: {
-          title: 'AI Fastify Template API',
-          description:
-            'Production-ready Fastify backend API with TypeScript and comprehensive validation',
-          version: '1.0.0',
-        },
-        servers: [
-          {
-            url: 'http://localhost:3000',
-            description: 'Development server',
-          },
-        ],
-        components: {
-          securitySchemes: {
-            BearerAuth: {
-              type: 'http',
-              scheme: 'bearer',
-              bearerFormat: 'JWT',
-            },
-          },
-        },
-        tags: [
-          {
-            name: 'Root',
-            description: 'Root endpoints',
-          },
-          {
-            name: 'Authentication',
-            description: 'Authentication endpoints',
-          },
-          {
-            name: 'Chat',
-            description: 'AI Chat endpoints',
-          },
-        ],
+  // Register swagger plugin for all environments (needed for tests and OpenAPI generation)
+  const { default: swagger } = await import('@fastify/swagger');
+  await fastify.register(swagger, {
+    openapi: {
+      openapi: '3.0.0',
+      info: {
+        title: 'AI Fastify Template API',
+        description:
+          'Production-ready Fastify backend API with TypeScript and comprehensive validation',
+        version: '1.0.0',
       },
-      hideUntagged: false,
+      servers: [
+        {
+          url: 'http://localhost:3000',
+          description: 'Development server',
+        },
+      ],
+      components: {
+        securitySchemes: {
+          BearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
+      tags: [
+        {
+          name: 'Root',
+          description: 'Root endpoints',
+        },
+        {
+          name: 'Authentication',
+          description: 'Authentication endpoints',
+        },
+        {
+          name: 'Chat',
+          description: 'AI Chat endpoints',
+        },
+      ],
+    },
+    hideUntagged: false,
+  });
+
+  // Register swagger UI for development and test environments
+  // Skip validation here since env plugin isn't loaded yet
+  const isTestEnv = !opts.skipEnvValidation && opts.logger === false; // Test mode typically disables logger
+  if (isDev || isTestEnv) {
+    const { default: swaggerUi } = await import('@fastify/swagger-ui');
+    await fastify.register(swaggerUi, {
+      routePrefix: '/docs',
+      uiConfig: {
+        docExpansion: 'list',
+        deepLinking: false,
+      },
+      staticCSP: true,
+      transformSpecification: swaggerObject => swaggerObject,
+      transformSpecificationClone: true,
     });
   }
 

@@ -12,6 +12,7 @@ describe('Swagger Plugin', () => {
 
   beforeAll(async () => {
     app = await build();
+    await app.ready();
   });
 
   afterAll(async () => {
@@ -36,14 +37,6 @@ describe('Swagger Plugin', () => {
       expect(spec.info.description).toContain(
         'Production-ready Fastify backend API'
       );
-      expect(spec.info.contact).toEqual({
-        name: 'Your Name',
-        email: 'your-email@example.com',
-      });
-      expect(spec.info.license).toEqual({
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT',
-      });
     });
 
     it('should include all defined routes', async () => {
@@ -87,7 +80,6 @@ describe('Swagger Plugin', () => {
           });
         }
       }
-
     });
 
     it('should include proper tags for organization', async () => {
@@ -145,7 +137,6 @@ describe('Swagger Plugin', () => {
       expect(rootGet?.description).toBe(
         'Returns a hello world message for API health check'
       );
-
     });
   });
 

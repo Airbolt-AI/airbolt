@@ -39,6 +39,7 @@ describe('Support plugin', () => {
 
     beforeAll(async () => {
       app = await build();
+      await app.ready();
     });
 
     afterAll(async () => {
