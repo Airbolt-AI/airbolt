@@ -21,6 +21,9 @@ import openaiService from './services/openai.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Import JWT types
+import '@fastify/jwt';
+
 export interface AppOptions
   extends FastifyServerOptions,
     Partial<AutoloadPluginOptions> {
@@ -98,8 +101,8 @@ export async function buildApp(
   });
 
   // Register swagger UI for development and test environments
-  // Skip validation here since env plugin isn't loaded yet
-  const isTestEnv = !opts.skipEnvValidation && opts.logger === false; // Test mode typically disables logger
+  // In tests, logger is false and skipEnvValidation is not set
+  const isTestEnv = opts.logger === false;
   if (isDev || isTestEnv) {
     const { default: swaggerUi } = await import('@fastify/swagger-ui');
     await fastify.register(swaggerUi, {
@@ -159,6 +162,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   await fastify.register(rateLimitPlugin);
 
   // Register JWT plugin after env (it depends on JWT_SECRET from env)
+  // Use config which is decorated by the env plugin
   await fastify.register(fastifyJwt, {
     secret: fastify.config?.JWT_SECRET || 'development-secret',
     sign: {
@@ -188,7 +192,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // through your application
   void fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
-    ignorePattern: /.*(env|cors|rate-limit|jwt|swagger)\.(ts|js)$/,
+    ignorePattern: /.*(env|cors|rate-limit|swagger)\.(ts|js)$/,
     options: opts,
     forceESM: true,
   });

@@ -17,7 +17,8 @@ export async function build(
 ): Promise<FastifyInstance> {
   // Use the buildApp function from app.ts instead of manually building
   // This ensures we get the same configuration as the main app
-  const app = await import('../src/app.js').then(m => m.buildApp(config));
+  const mergedConfig = { ...defaultConfig, ...config };
+  const app = await import('../src/app.js').then(m => m.buildApp(mergedConfig));
 
   return app;
 }
