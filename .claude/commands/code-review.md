@@ -96,4 +96,14 @@ Format your review to be:
 - **Actionable**: Provide clear guidance on fixes
 - **Balanced**: Acknowledge good decisions alongside improvements
 
-Remember: A great review elevates both the code and the developer.
+## Posting Your Review
+
+**IMPORTANT**: After completing your review, always post it directly to the GitHub PR using one of these methods:
+
+1. **For Approval**: `gh pr review [PR-NUMBER] --approve --body "YOUR REVIEW"`
+2. **For Comments**: `gh pr comment [PR-NUMBER] --body "YOUR REVIEW"`
+3. **For Request Changes**: `gh pr review [PR-NUMBER] --request-changes --body "YOUR REVIEW"`
+
+Note: If reviewing your own PR, use `gh pr comment` instead of review commands.
+
+Remember: A great review elevates both the code and the developer, and should always be posted to the actual PR for visibility and discussion.
