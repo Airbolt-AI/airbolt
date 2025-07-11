@@ -99,10 +99,10 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       // Call the SDK chat function with all messages
       const allMessages = [...messages, userMessage];
       const chatOptions: Parameters<typeof chat>[1] = {};
-      if (options?.baseURL) {
+      if (options?.baseURL !== undefined) {
         chatOptions.baseURL = options.baseURL;
       }
-      if (options?.system) {
+      if (options?.system !== undefined) {
         chatOptions.system = options.system;
       }
       const response = await chat(allMessages, chatOptions);
