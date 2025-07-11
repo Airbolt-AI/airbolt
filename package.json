@@ -52,9 +52,9 @@
     "setup:dev": "pnpm install && echo '🎉 Development environment setup complete!'",
     "security:scan": "gitleaks detect --source=. --verbose --no-banner --no-git",
     "openapi:generate": "nx run-many -t openapi:generate",
-    "generate": "pnpm openapi:generate && fern generate --local",
+    "generate": "pnpm openapi:generate && npx fern-api generate --local --force",
     "sdk:generate": "bash scripts/sdk-generate.sh",
-    "fern:check": "fern check",
+    "fern:check": "npx fern-api check",
     "prepare": "husky"
   },
   "keywords": [

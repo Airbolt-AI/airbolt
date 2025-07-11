@@ -3,9 +3,16 @@ import { fileURLToPath } from 'node:url';
 
 import AutoLoad from '@fastify/autoload';
 import type { AutoloadPluginOptions } from '@fastify/autoload';
-import type { FastifyPluginAsync, FastifyServerOptions } from 'fastify';
+import type {
+  FastifyPluginAsync,
+  FastifyServerOptions,
+  FastifyInstance,
+} from 'fastify';
+import Fastify from 'fastify';
+import fp from 'fastify-plugin';
+import { isDevelopment } from '@airbolt/config';
 
-import envPlugin from './plugins/env.js';
+import envPlugin, { type Env } from './plugins/env.js';
 import corsPlugin from './plugins/cors.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import fastifyJwt from '@fastify/jwt';
@@ -16,16 +23,96 @@ const __dirname = dirname(__filename);
 
 export interface AppOptions
   extends FastifyServerOptions,
-    Partial<AutoloadPluginOptions> {}
+    Partial<AutoloadPluginOptions> {
+  skipEnvValidation?: boolean;
+}
+
 // Pass --options via CLI arguments in command to enable these options.
 const options: AppOptions = {};
+
+/**
+ * App factory function that creates a Fastify instance with configurable options
+ * This allows us to create instances for different purposes (runtime, testing, OpenAPI generation)
+ */
+export async function buildApp(
+  opts: AppOptions = {}
+): Promise<FastifyInstance> {
+  const isDev = opts.skipEnvValidation || isDevelopment();
+
+  const fastify = Fastify({
+    logger:
+      opts.logger !== undefined
+        ? opts.logger
+        : isDev
+          ? {
+              level: 'info',
+              transport: { target: 'pino-pretty' },
+            }
+          : {
+              level: 'info',
+            },
+  });
+
+  // Register the app plugin with options
+  await fastify.register(app, opts);
+
+  // Register swagger plugin directly at the top level for OpenAPI generation
+  if (opts.skipEnvValidation) {
+    const { default: swagger } = await import('@fastify/swagger');
+    await fastify.register(swagger, {
+      openapi: {
+        openapi: '3.0.0',
+        info: {
+          title: 'AI Fastify Template API',
+          description:
+            'Production-ready Fastify backend API with TypeScript and comprehensive validation',
+          version: '1.0.0',
+        },
+        servers: [
+          {
+            url: 'http://localhost:3000',
+            description: 'Development server',
+          },
+        ],
+      },
+      hideUntagged: false,
+    });
+  }
+
+  return fastify;
+}
 
 const app: FastifyPluginAsync<AppOptions> = async (
   fastify,
   opts
 ): Promise<void> => {
-  // Register env plugin first
-  await fastify.register(envPlugin);
+  // Register env plugin first (unless skipped for OpenAPI generation)
+  if (!opts.skipEnvValidation) {
+    await fastify.register(envPlugin);
+  } else {
+    // When skipping env validation (for OpenAPI generation), register a mock env plugin
+    // to satisfy plugin dependencies
+    await fastify.register(
+      fp(
+        fastify => {
+          const mockConfig: Env = {
+            NODE_ENV: 'development',
+            PORT: 3000,
+            LOG_LEVEL: 'info',
+            OPENAI_API_KEY: 'sk-openapi-generation-placeholder',
+            ALLOWED_ORIGIN: ['*'], // Allow all origins for OpenAPI generation
+            SYSTEM_PROMPT: '',
+            RATE_LIMIT_MAX: 100,
+            RATE_LIMIT_TIME_WINDOW: 60000,
+            TRUST_PROXY: false,
+            JWT_SECRET: 'openapi-generation-only-jwt-secret-placeholder',
+          };
+          fastify.decorate('config', mockConfig);
+        },
+        { name: 'env-plugin' }
+      )
+    );
+  }
 
   // Register CORS plugin after env (it depends on ALLOWED_ORIGIN from env)
   await fastify.register(corsPlugin);
@@ -47,7 +134,10 @@ const app: FastifyPluginAsync<AppOptions> = async (
   });
 
   // Register OpenAI service after env (it depends on OPENAI_API_KEY from env)
-  await fastify.register(openaiService);
+  // Only register if env validation was not skipped (meaning we have real config)
+  if (!opts.skipEnvValidation) {
+    await fastify.register(openaiService);
+  }
 
   // Place here your custom code!
 
@@ -58,7 +148,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // through your application
   void fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
-    ignorePattern: /.*(env|cors|rate-limit)\.(ts|js)$/,
+    ignorePattern: /.*(env|cors|rate-limit|jwt|swagger)\.(ts|js)$/,
     options: opts,
     forceESM: true,
   });
