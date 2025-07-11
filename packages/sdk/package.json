@@ -18,14 +18,15 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "prebuild": "bash ../../scripts/sdk-generate.sh --skip-build",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
-    "clean": "rm -rf dist/ generated/",
+    "clean": "rm -rf dist/",
     "test": "echo 'SDK tests are run from the main project root'",
     "test:watch": "echo 'SDK tests are run from the main project root'",
     "type-check": "tsc --noEmit",
     "lint": "echo 'SDK linting is done from the main project root'",
-    "generate": "pnpm run clean && fern generate && pnpm run build",
+    "generate": "bash ../../scripts/sdk-generate.sh",
     "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'",
     "example:check": "node examples/check-api.js",
     "example": "pnpm run example:check && node examples/vanilla-chat-demo.js",

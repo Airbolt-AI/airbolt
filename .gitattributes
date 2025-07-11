@@ -35,6 +35,6 @@
 *.pyc binary
 *.pdf binary
 
-# Mark Fern-generated SDK files for GitHub PR management
-packages/sdk/generated/** linguist-generated=true
-packages/sdk/generated/** -diff
+# Fern-generated SDK files (now excluded from git)
+# packages/sdk/generated/** linguist-generated=true
+# packages/sdk/generated/** -diff

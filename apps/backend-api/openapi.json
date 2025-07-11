@@ -6,13 +6,332 @@
     "version": "1.0.0"
   },
   "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {}
   },
-  "paths": {},
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Get welcome message",
+        "tags": ["Root"],
+        "description": "Returns a hello world message for API health check",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Successful response",
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Welcome message",
+                      "example": "Hello World!"
+                    }
+                  },
+                  "required": ["message"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Internal Server Error",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error type",
+                      "example": "Bad Request"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message",
+                      "example": "Invalid request parameters"
+                    },
+                    "statusCode": {
+                      "type": "number",
+                      "description": "HTTP status code",
+                      "example": 400
+                    }
+                  },
+                  "required": ["error", "message", "statusCode"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Send chat messages to AI",
+        "tags": ["Chat"],
+        "description": "Proxies chat messages to OpenAI and returns the assistant response",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["messages"],
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                      "type": "object",
+                      "required": ["role", "content"],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": ["user", "assistant", "system"],
+                          "description": "The role of the message sender"
+                        },
+                        "content": {
+                          "type": "string",
+                          "description": "The content of the message"
+                        }
+                      }
+                    },
+                    "description": "Array of conversation messages"
+                  },
+                  "system": {
+                    "type": "string",
+                    "description": "Optional system prompt to override default"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful chat response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Successful chat response",
+                  "type": "object",
+                  "required": ["content"],
+                  "properties": {
+                    "content": {
+                      "type": "string",
+                      "description": "The AI assistant response"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "total_tokens": {
+                          "type": "number",
+                          "description": "Total tokens used in the request"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request - Invalid input",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Unauthorized - Invalid or missing JWT token",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Rate Limit Exceeded",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable - OpenAI API issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Service Unavailable - OpenAI API issues",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tokens": {
+      "post": {
+        "summary": "Generate JWT token",
+        "tags": ["Authentication"],
+        "description": "Generate a JWT token for API authentication (development endpoint)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "User identifier (optional for development)",
+                    "default": "dev-user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Token generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Token generated successfully",
+                  "type": "object",
+                  "required": ["token", "expiresIn", "tokenType"],
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    },
+                    "expiresIn": {
+                      "type": "string",
+                      "description": "Token expiration time"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token type"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "servers": [
     {
       "url": "http://localhost:3000",
       "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Root",
+      "description": "Root endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Chat",
+      "description": "AI Chat endpoints"
     }
   ]
 }

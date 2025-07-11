@@ -84,5 +84,8 @@ test-results/
 *.metrics.jsonl
 .claude-last-check
 
-# Fern-generated SDK code is now committed
-# packages/sdk/generated/ - Now tracked in Git for better DX
+# SDK generation cache and backups
+.sdk-cache/
+
+# Fern-generated SDK code (prebuild generation)
+packages/sdk/generated/

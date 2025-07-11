@@ -53,10 +53,7 @@ export async function buildApp(
             },
   });
 
-  // Register the app plugin with options
-  await fastify.register(app, opts);
-
-  // Register swagger plugin directly at the top level for OpenAPI generation
+  // Register swagger plugin BEFORE the app plugin for OpenAPI generation
   if (opts.skipEnvValidation) {
     const { default: swagger } = await import('@fastify/swagger');
     await fastify.register(swagger, {
@@ -74,10 +71,36 @@ export async function buildApp(
             description: 'Development server',
           },
         ],
+        components: {
+          securitySchemes: {
+            BearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+            },
+          },
+        },
+        tags: [
+          {
+            name: 'Root',
+            description: 'Root endpoints',
+          },
+          {
+            name: 'Authentication',
+            description: 'Authentication endpoints',
+          },
+          {
+            name: 'Chat',
+            description: 'AI Chat endpoints',
+          },
+        ],
       },
       hideUntagged: false,
     });
   }
+
+  // Register the app plugin with options
+  await fastify.register(app, opts);
 
   return fastify;
 }
@@ -138,6 +161,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
   if (!opts.skipEnvValidation) {
     await fastify.register(openaiService);
   }
+
+  // Swagger plugin registration moved to root level in buildApp function
 
   // Place here your custom code!
 
