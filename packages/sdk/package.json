@@ -24,6 +24,7 @@
     "clean": "rm -rf dist/",
     "test": "echo 'SDK tests are run from the main project root'",
     "test:watch": "echo 'SDK tests are run from the main project root'",
+    "pretype-check": "bash ../../scripts/sdk-generate.sh --skip-build",
     "type-check": "tsc --noEmit",
     "lint": "echo 'SDK linting is done from the main project root'",
     "generate": "bash ../../scripts/sdk-generate.sh",
