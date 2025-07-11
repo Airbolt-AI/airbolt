@@ -1,253 +1,225 @@
 #!/bin/bash
-
-# SDK Generation Script with Docker Validation
-# This script ensures Docker is available and generates the SDK with proper error handling
-
+# SDK Generation Script - Smart Caching Version
 set -euo pipefail
 
 # Colors for output
-RED='\033[0;31m'
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
-}
+# Configuration
+CACHE_DIR=".sdk-cache"
+CACHE_FILE="$CACHE_DIR/generation-cache.json"
+BACKUP_DIR="$CACHE_DIR/backup"
+SDK_DIR="packages/sdk/generated"
 
-log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
+# Ensure cache directory exists
+mkdir -p "$CACHE_DIR"
+mkdir -p "$BACKUP_DIR"
 
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-# Check if Docker is available and running
-check_docker() {
-    log_info "Checking Docker availability..."
-
-    if ! command -v docker &> /dev/null; then
-        log_error "Docker is not installed or not in PATH"
-        log_info "Please install Docker from: https://docs.docker.com/get-docker/"
-        return 1
+# Function to calculate hash of inputs
+calculate_input_hash() {
+    local openapi_hash=""
+    local fern_hash=""
+    
+    # Calculate OpenAPI hash
+    if [[ -f "apps/backend-api/openapi.json" ]]; then
+        openapi_hash=$(shasum -a 256 "apps/backend-api/openapi.json" | cut -d' ' -f1)
     fi
-
-    if ! docker info &> /dev/null; then
-        log_error "Docker is not running"
-        log_info "Please start Docker Desktop or Docker daemon"
-        log_info "On macOS: open -a Docker"
-        log_info "On Linux: sudo systemctl start docker"
-        return 1
+    
+    # Calculate Fern config hash
+    if [[ -d "fern" ]]; then
+        fern_hash=$(find fern -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.json" \) -exec shasum -a 256 {} \; | sort | shasum -a 256 | cut -d' ' -f1)
     fi
-
-    log_success "Docker is available and running"
-    return 0
+    
+    # Combine hashes
+    echo "${openapi_hash}-${fern_hash}"
 }
 
-# Check if OpenAPI spec exists
-check_openapi_spec() {
-    local openapi_file="apps/backend-api/openapi.json"
-
-    if [[ ! -f "$openapi_file" ]]; then
-        log_warning "OpenAPI specification not found at $openapi_file"
-        log_info "Generating OpenAPI specification first..."
-
-        if ! pnpm openapi:generate; then
-            log_error "Failed to generate OpenAPI specification"
-            return 1
-        fi
-
-        log_success "OpenAPI specification generated"
-    else
-        log_info "OpenAPI specification found at $openapi_file"
+# Function to check if generation is needed
+is_generation_needed() {
+    local current_hash="$1"
+    
+    # Check if cache file exists
+    if [[ ! -f "$CACHE_FILE" ]]; then
+        return 0  # Generation needed
     fi
-
-    return 0
+    
+    # Check if generated directory exists
+    if [[ ! -d "$SDK_DIR" ]]; then
+        return 0  # Generation needed
+    fi
+    
+    # Check if cache matches
+    local cached_hash=$(cat "$CACHE_FILE" 2>/dev/null || echo "")
+    if [[ "$current_hash" != "$cached_hash" ]]; then
+        return 0  # Generation needed
+    fi
+    
+    return 1  # No generation needed
 }
 
-# Validate Fern configuration
-validate_fern_config() {
-    log_info "Validating Fern configuration..."
-
-    if ! pnpm fern:check; then
-        log_error "Fern configuration validation failed"
-        log_info "Please check your Fern configuration files:"
-        log_info "  - fern/fern.config.json"
-        log_info "  - fern/generators.yml"
-        log_info "  - fern/definition/api.yml"
-        return 1
+# Function to backup successful generation
+backup_generation() {
+    if [[ -d "$SDK_DIR" ]]; then
+        echo -e "${BLUE}📦 Backing up generated SDK...${NC}"
+        rm -rf "$BACKUP_DIR"
+        cp -r "$SDK_DIR" "$BACKUP_DIR"
+        echo -e "${GREEN}✅ Backup created${NC}"
     fi
-
-    log_success "Fern configuration is valid"
-    return 0
 }
 
-# Generate SDK
-generate_sdk() {
-    log_info "Generating SDK with Fern..."
-
-    # Create SDK directory if it doesn't exist
-    mkdir -p packages/sdk
-
-    # Run Fern generation with local Docker (browser SDK for JavaScript/TypeScript)
-    if fern generate --group browser --local; then
-        log_success "SDK generated successfully"
+# Function to restore from backup
+restore_from_backup() {
+    if [[ -d "$BACKUP_DIR" ]]; then
+        echo -e "${YELLOW}🔄 Restoring from backup...${NC}"
+        rm -rf "$SDK_DIR"
+        cp -r "$BACKUP_DIR" "$SDK_DIR"
+        echo -e "${GREEN}✅ Restored from backup${NC}"
         return 0
     else
-        log_error "SDK generation failed"
-        log_info "Common solutions:"
-        log_info "  1. Ensure Docker has enough memory allocated (4GB+ recommended)"
-        log_info "  2. Check that Docker can pull images from registry"
-        log_info "  3. Verify OpenAPI specification is valid"
-        log_info "  4. Check Fern configuration files"
+        echo -e "${RED}❌ No backup available${NC}"
         return 1
     fi
 }
 
-# Validate generated SDK
-validate_sdk() {
-    log_info "Validating generated SDK..."
-
-    local sdk_dir="packages/sdk"
-
-    # Check if SDK directory exists and has content
-    if [[ ! -d "$sdk_dir" ]]; then
-        log_error "SDK directory not found at $sdk_dir"
+# Function to generate SDK with error handling
+generate_sdk() {
+    local current_hash="$1"
+    local skip_build="$2"
+    
+    echo -e "${BLUE}🚀 Generating SDK...${NC}"
+    
+    # Check if Docker is running
+    if ! docker info &> /dev/null; then
+        echo -e "${RED}❌ Docker is not running${NC}"
+        echo "Please start Docker Desktop and try again"
         return 1
     fi
-
-    # Check for essential files
-    local essential_files=("package.json")
-    for file in "${essential_files[@]}"; do
-        if [[ ! -f "$sdk_dir/$file" ]]; then
-            log_warning "Expected file not found: $sdk_dir/$file"
+    
+    # Generate OpenAPI spec if needed
+    if [[ ! -f "apps/backend-api/openapi.json" ]] || [[ "${1:-}" == "--force" ]]; then
+        echo -e "${BLUE}📄 Generating OpenAPI specification...${NC}"
+        if ! pnpm openapi:generate; then
+            echo -e "${RED}❌ OpenAPI generation failed${NC}"
+            return 1
         fi
-    done
-
-    # Check for TypeScript files
-    if find "$sdk_dir" -name "*.ts" -o -name "*.js" | head -1 | read; then
-        log_success "SDK contains generated code files"
+    fi
+    
+    # Validate Fern configuration
+    echo -e "${BLUE}✓ Validating Fern configuration...${NC}"
+    if ! pnpm exec fern check; then
+        echo -e "${RED}❌ Fern configuration validation failed${NC}"
+        return 1
+    fi
+    
+    # Generate SDK
+    echo -e "${BLUE}🚀 Generating browser SDK...${NC}"
+    if ! pnpm exec fern generate --local; then
+        echo -e "${RED}❌ SDK generation failed${NC}"
+        return 1
+    fi
+    
+    # Validate generation output
+    if [[ ! -d "$SDK_DIR" ]] || [[ ! -f "$SDK_DIR/index.ts" ]]; then
+        echo -e "${RED}❌ SDK generation incomplete - missing expected files${NC}"
+        return 1
+    fi
+    
+    # Build SDK package (skip if requested)
+    if [[ "$skip_build" != "true" ]]; then
+        echo -e "${BLUE}📦 Building SDK package...${NC}"
+        if ! (cd packages/sdk && pnpm build); then
+            echo -e "${RED}❌ SDK build failed${NC}"
+            return 1
+        fi
     else
-        log_warning "No TypeScript/JavaScript files found in generated SDK"
+        echo -e "${BLUE}⏭️ Skipping SDK package build...${NC}"
     fi
-
-    # Try to install SDK dependencies if package.json exists
-    if [[ -f "$sdk_dir/package.json" ]]; then
-        log_info "Installing SDK dependencies..."
-        cd "$sdk_dir"
-
-        if pnpm install --frozen-lockfile 2>/dev/null || pnpm install; then
-            log_success "SDK dependencies installed"
-        else
-            log_warning "Failed to install SDK dependencies (this may be normal for generated SDKs)"
-        fi
-
-        cd - > /dev/null
-    fi
-
-    log_success "SDK validation completed"
+    
+    # Update cache
+    echo "$current_hash" > "$CACHE_FILE"
+    
+    # Backup successful generation
+    backup_generation
+    
+    echo -e "${GREEN}✅ SDK generation complete!${NC}"
     return 0
-}
-
-# Display SDK info
-display_sdk_info() {
-    log_info "SDK Generation Summary:"
-    echo ""
-    echo "📁 Generated SDK location: packages/sdk/"
-    echo "📄 OpenAPI specification: apps/backend-api/openapi.json"
-    echo ""
-    echo "🚀 Usage:"
-    echo "  import { AirboltAPI } from '@airbolt/sdk';"
-    echo ""
-    echo "📖 Documentation:"
-    echo "  - SDK README: packages/sdk/README.md"
-    echo "  - API Docs: http://localhost:3000/docs (when server is running)"
-    echo ""
-}
-
-# Cleanup function
-cleanup() {
-    log_info "Cleaning up temporary files..."
-    # Add any cleanup logic here if needed
 }
 
 # Main execution
 main() {
-    log_info "Starting SDK generation process..."
-    echo ""
-
-    # Set up cleanup trap
-    trap cleanup EXIT
-
-    # Run all checks and generation steps
-    if check_docker && \
-       check_openapi_spec && \
-       validate_fern_config && \
-       generate_sdk && \
-       validate_sdk; then
-
-        echo ""
-        log_success "SDK generation completed successfully! 🎉"
-        echo ""
-        display_sdk_info
-        exit 0
+    local force_generate=false
+    local skip_cache=false
+    local skip_build=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --force)
+                force_generate=true
+                shift
+                ;;
+            --skip-cache)
+                skip_cache=true
+                shift
+                ;;
+            --skip-build)
+                skip_build=true
+                shift
+                ;;
+            --help)
+                echo "Usage: $0 [--force] [--skip-cache] [--skip-build] [--help]"
+                echo "  --force      Force regeneration even if cache is valid"
+                echo "  --skip-cache Skip cache validation (always generate)"
+                echo "  --skip-build Skip SDK package build step"
+                echo "  --help       Show this help message"
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Calculate current input hash
+    local current_hash=$(calculate_input_hash)
+    
+    # Check if generation is needed
+    if [[ "$force_generate" == true ]] || [[ "$skip_cache" == true ]]; then
+        echo -e "${YELLOW}🔄 Forcing regeneration...${NC}"
+    elif ! is_generation_needed "$current_hash"; then
+        echo -e "${GREEN}✅ SDK is up to date (cache hit)${NC}"
+        echo "Generated SDK: $SDK_DIR"
+        echo "Cache hash: $current_hash"
+        return 0
     else
-        echo ""
-        log_error "SDK generation failed. Please check the errors above."
-        echo ""
-        log_info "For help, see:"
-        log_info "  - Fern documentation: https://docs.buildwithfern.com/"
-        log_info "  - Project README: packages/sdk/README.md"
-        log_info "  - Troubleshooting: fern/README.md"
-        exit 1
+        echo -e "${YELLOW}🔄 SDK regeneration needed${NC}"
+        echo "Cache hash: $current_hash"
+    fi
+    
+    # Attempt generation
+    if generate_sdk "$current_hash" "$skip_build"; then
+        echo -e "${GREEN}✅ SDK generation successful!${NC}"
+        echo "Generated SDK: $SDK_DIR"
+        echo "Cache hash: $current_hash"
+    else
+        echo -e "${RED}❌ SDK generation failed${NC}"
+        
+        # Try to restore from backup
+        if restore_from_backup; then
+            echo -e "${YELLOW}⚠️  Using backup SDK - build may succeed but SDK may be outdated${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ No backup available - build will fail${NC}"
+            return 1
+        fi
     fi
 }
 
-# Handle script arguments
-case "${1:-}" in
-    "--help"|"-h")
-        echo "SDK Generation Script"
-        echo ""
-        echo "Usage: $0 [options]"
-        echo ""
-        echo "Options:"
-        echo "  --help, -h     Show this help message"
-        echo "  --check, -c    Only check prerequisites without generating"
-        echo ""
-        echo "This script:"
-        echo "  1. Checks Docker availability"
-        echo "  2. Generates OpenAPI specification if needed"
-        echo "  3. Validates Fern configuration"
-        echo "  4. Generates TypeScript SDK using Fern"
-        echo "  5. Validates generated SDK"
-        echo ""
-        exit 0
-        ;;
-    "--check"|"-c")
-        log_info "Checking prerequisites only..."
-        if check_docker && \
-           check_openapi_spec && \
-           validate_fern_config; then
-            log_success "All prerequisites are met!"
-            exit 0
-        else
-            log_error "Prerequisites check failed"
-            exit 1
-        fi
-        ;;
-    "")
-        main
-        ;;
-    *)
-        log_error "Unknown option: $1"
-        echo "Use --help for usage information"
-        exit 1
-        ;;
-esac
+# Execute main function
+main "$@"

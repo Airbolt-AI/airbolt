@@ -49,15 +49,12 @@
     "ci:debug": "act --verbose",
     "doctor": "volta --version && node --version && pnpm --version",
     "benchmark": "node scripts/benchmark-performance.js",
-    "setup:dev": "pnpm install && echo '🎉 Development environment setup complete!'",
+    "setup:dev": "pnpm install && pnpm generate && echo '🎉 Development environment setup complete!'",
     "security:scan": "gitleaks detect --source=. --verbose --no-banner --no-git",
     "openapi:generate": "nx run-many -t openapi:generate",
     "generate": "bash scripts/sdk-generate.sh",
     "sdk:generate": "bash scripts/sdk-generate.sh",
-    "sdk:check": "bash scripts/sdk-generate.sh --check",
-    "fern:check": "fern check",
-    "fern:validate": "fern check && echo '✅ Fern configuration is valid'",
-    "prebuild": "pnpm generate",
+    "fern:check": "npx fern-api check",
     "prepare": "husky"
   },
   "keywords": [

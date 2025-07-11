@@ -3,8 +3,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { writeFileSync, existsSync } from 'node:fs';
-import Fastify from 'fastify';
-import fp from 'fastify-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,21 +26,27 @@ async function generateOpenAPISpec() {
       process.exit(1);
     }
 
-    // Import the built app
-    const { default: App } = await import(appPath);
+    // Import the built app factory
+    const { buildApp } = await import(appPath);
 
-    // Build the Fastify app
-    const app = Fastify({
+    // Build the app with env validation skipped for OpenAPI generation
+    const app = await buildApp({
       logger: false, // Disable logging for spec generation
+      skipEnvValidation: true, // Skip env validation for OpenAPI generation
     });
-
-    // Register our application
-    await app.register(fp(App));
 
     // Wait for plugins to load (this might take a moment for autoload)
     await app.ready();
 
+    // Give a small delay to ensure all plugins are fully loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // Generate OpenAPI specification
+    if (typeof app.swagger !== 'function') {
+      throw new Error(
+        'Swagger plugin not loaded. Make sure @fastify/swagger is registered.'
+      );
+    }
     const spec = app.swagger();
 
     // Write to openapi.json file

@@ -5,304 +5,43 @@ on:
     branches: [main]
     paths:
       - 'apps/backend-api/src/**'
-      - 'apps/backend-api/package.json'
       - 'fern/**'
       - '.github/workflows/sdk-generation.yml'
   workflow_dispatch:
-    inputs:
-      force_generation:
-        description: 'Force SDK generation even if no API changes detected'
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
   group: sdk-generation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  detect-changes:
-    name: Detect API Changes
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      api_changed: ${{ steps.changes.outputs.api_changed }}
-      fern_changed: ${{ steps.changes.outputs.fern_changed }}
-      should_generate: ${{ steps.should-generate.outputs.result }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detect changes
-        id: changes
-        run: |
-          if git diff --quiet HEAD~1 HEAD -- apps/backend-api/src/ apps/backend-api/package.json; then
-            echo "api_changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "api_changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-          if git diff --quiet HEAD~1 HEAD -- fern/; then
-            echo "fern_changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "fern_changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Determine if SDK generation should run
-        id: should-generate
-        run: |
-          if [[ "${{ steps.changes.outputs.api_changed }}" == "true" ||
-                "${{ steps.changes.outputs.fern_changed }}" == "true" ||
-                "${{ github.event.inputs.force_generation }}" == "true" ]]; then
-            echo "result=true" >> "$GITHUB_OUTPUT"
-            echo "🚀 SDK generation will run due to detected changes or manual trigger"
-          else
-            echo "result=false" >> "$GITHUB_OUTPUT"
-            echo "⏭️ Skipping SDK generation - no relevant changes detected"
-          fi
-
   generate-sdk:
-    name: Generate and Validate SDK
+    name: Generate SDK
     runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.should_generate == 'true'
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup project
         uses: ./.github/actions/setup-project
 
-      - name: Build application
-        run: pnpm build
-
       - name: Generate OpenAPI specification
         run: pnpm openapi:generate
 
-      - name: Validate Fern configuration
-        run: pnpm fern:check
-
-      - name: Generate SDK (Browser and Node.js)
+      - name: Validate SDK is up-to-date
         run: |
-          echo "🌐 Generating browser SDK..."
-          fern generate --group browser --local
-          echo "🟢 Generating Node.js SDK..."
-          fern generate --group node --local
-          echo "🔧 Building core infrastructure..."
-          cd packages/sdk && pnpm build
-        env:
-          # Ensure we have access to Docker for Fern generation
-          DOCKER_HOST: unix:///var/run/docker.sock
-
-      - name: Validate generated SDK
-        run: |
-          # Check that SDK was generated
-          if [ ! -d "packages/sdk" ]; then
-            echo "❌ SDK directory not found"
-            exit 1
-          fi
-
-          # Check for key files
-          if [ ! -f "packages/sdk/package.json" ]; then
-            echo "❌ SDK package.json not found"
-            exit 1
-          fi
-
-          # Check for dual environment structure
-          if [ ! -d "packages/sdk/generated/browser" ]; then
-            echo "❌ Browser SDK not found"
-            exit 1
-          fi
-
-          if [ ! -d "packages/sdk/generated/node" ]; then
-            echo "❌ Node.js SDK not found"
-            exit 1
-          fi
-
-          # Check for core infrastructure
-          if [ ! -d "packages/sdk/dist" ]; then
-            echo "❌ Built core infrastructure not found"
-            exit 1
-          fi
-
-          echo "✅ SDK generated successfully with dual environment support"
-
-          # Show SDK structure
-          echo "📁 Generated SDK structure:"
-          echo "Core infrastructure:"
-          find packages/sdk/dist -type f -name "*.js" -o -name "*.d.ts" | head -10
-          echo "Browser SDK:"
-          find packages/sdk/generated/browser -type f -name "*.ts" -o -name "*.js" | head -5
-          echo "Node.js SDK:"
-          find packages/sdk/generated/node -type f -name "*.ts" -o -name "*.js" | head -5
-
-      - name: Test SDK compilation and functionality
-        run: |
-          cd packages/sdk
+          # Generate SDK
+          pnpm sdk:generate
           
-          # Install SDK dependencies
-          echo "📦 Installing SDK dependencies..."
-          pnpm install
-
-          # Run type checking
-          echo "🔍 Type checking SDK..."
-          pnpm type-check
-
-          # Run SDK tests
-          echo "🧪 Running SDK tests..."
-          pnpm test
-
-          # Test SDK imports
-          echo "🔗 Testing SDK imports..."
-          node -e "
-            console.log('Testing Node.js import...');
-            try {
-              const { AirboltClient } = require('./dist/index.js');
-              console.log('✅ Node.js import successful');
-            } catch (error) {
-              console.error('❌ Node.js import failed:', error.message);
-              process.exit(1);
-            }
-          "
-
-          echo "✅ SDK compilation and functionality tests completed"
-
-      - name: Create SDK changelog entry
-        run: |
-          # Generate changelog entry
-          current_date=$(date +%Y-%m-%d)
-          cat > sdk_changelog_entry.md << EOF
-          ## SDK Changes - ${current_date}
-
-          ### API Changes Detected
-          - **API Modified**: ${{ needs.detect-changes.outputs.api_changed }}
-          - **Fern Config Modified**: ${{ needs.detect-changes.outputs.fern_changed }}
-          - **Commit**: ${{ github.sha }}
-
-          ### Generated Files
-          - OpenAPI Specification: \`apps/backend-api/openapi.json\`
-          - TypeScript SDK: \`packages/sdk/\`
-
-          ### Integration
-          The SDK is now available for import:
-          \`\`\`typescript
-          import { AiFastifyTemplateAPI } from '@airbolt/sdk';
-          \`\`\`
-
-          EOF
-
-          echo "📝 SDK changelog entry created"
-
-      - name: Check for SDK changes
-        id: sdk-changes
-        run: |
-          # Check if generated files have changed
-          if git diff --quiet HEAD -- packages/sdk/ apps/backend-api/openapi.json; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️ No changes detected in generated SDK"
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "✅ SDK changes detected"
-
-            # Show what changed
-            echo "📝 Changed files:"
-            git diff --name-only HEAD -- packages/sdk/ apps/backend-api/openapi.json
+          # Check if there are changes
+          if ! git diff --quiet HEAD -- packages/sdk/generated; then
+            echo "❌ Generated SDK is out of date!"
+            echo "Please run 'pnpm sdk:generate' and commit the changes"
+            git diff --name-status packages/sdk/generated
+            exit 1
           fi
-
-      - name: Commit and create PR for SDK updates
-        if: steps.sdk-changes.outputs.has_changes == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: |
-            chore(sdk): update generated SDK and OpenAPI specification
-
-            - Update OpenAPI spec from API changes
-            - Regenerate TypeScript SDK with latest changes
-            - Automatic generation from commit ${{ github.sha }}
-
-            🤖 Generated with [GitHub Actions](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          title: 'chore(sdk): update generated SDK from API changes'
-          body: |
-            ## Automated SDK Update 🤖
-
-            This PR contains automatically generated updates to the SDK based on API changes.
-
-            ### Changes Included
-            - 📄 Updated OpenAPI specification
-            - 📦 Regenerated TypeScript SDK
-            - 🔄 Synchronized with commit ${{ github.sha }}
-
-            ### API Changes Summary
-            - **API Source Modified**: ${{ needs.detect-changes.outputs.api_changed }}
-            - **Fern Configuration Modified**: ${{ needs.detect-changes.outputs.fern_changed }}
-
-            ### Generated Files
-            - `apps/backend-api/openapi.json` - Updated OpenAPI specification
-            - `packages/sdk/` - Regenerated TypeScript SDK
-
-            ### Testing
-            - ✅ OpenAPI specification validates successfully
-            - ✅ Fern configuration is valid
-            - ✅ SDK generates without errors
-            - ✅ Generated SDK compiles successfully
-
-            ### Next Steps
-            1. Review the generated changes
-            2. Test the SDK with your applications
-            3. Merge when satisfied with the updates
-
-            ---
-
-            *This PR was automatically created by the SDK Generation workflow.*
-            *Triggered by changes in: ${{ github.event.head_commit.message }}*
-          branch: automated/sdk-update-${{ github.run_number }}
-          branch-suffix: timestamp
-          delete-branch: true
-          labels: |
-            automated
-            sdk
-            documentation
-          reviewers: |
-            ${{ github.actor }}
-
-      - name: Upload SDK artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: generated-sdk-${{ github.sha }}
-          path: |
-            packages/sdk/
-            apps/backend-api/openapi.json
-            sdk_changelog_entry.md
-          retention-days: 30
-
-      - name: Summary
-        run: |
-          {
-            echo "## SDK Generation Summary 📊"
-            echo ""
-            echo "- **Repository**: ${{ github.repository }}"
-            echo "- **Commit**: ${{ github.sha }}"
-            echo "- **API Changes**: ${{ needs.detect-changes.outputs.api_changed }}"
-            echo "- **Fern Changes**: ${{ needs.detect-changes.outputs.fern_changed }}"
-            echo "- **SDK Updated**: ${{ steps.sdk-changes.outputs.has_changes }}"
-            echo ""
-            echo "### Files Generated"
-            echo "- OpenAPI Specification: \`apps/backend-api/openapi.json\`"
-            echo "- TypeScript SDK: \`packages/sdk/\`"
-            echo ""
-            if [[ "${{ steps.sdk-changes.outputs.has_changes }}" == "true" ]]; then
-              echo "✅ **SDK updated successfully and PR created**"
-            else
-              echo "ℹ️ **No SDK changes needed**"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          
+          echo "✅ SDK is up-to-date"

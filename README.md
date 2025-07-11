@@ -99,15 +99,35 @@ That's it! Your API will be live in ~3 minutes 🎉
 
 ### Using Your Deployed API
 
-```javascript
-import { AirboltAPI } from '@airbolt/sdk';
+See the [SDK Installation](#-sdk-installation) section below for detailed instructions.
 
-const client = new AirboltAPI({
-  baseURL: 'https://your-service.onrender.com',
+> **Note**: Free tier services spin down after 15 minutes of inactivity. First request after sleep takes ~1 minute.
+
+## 📦 SDK Installation
+
+After deploying your backend, install the SDK in your application:
+
+```bash
+npm install @airbolt/sdk
+```
+
+Configure the SDK with your deployed backend URL:
+
+```typescript
+import { AirboltClient } from '@airbolt/sdk';
+
+const client = new AirboltClient({
+  url: 'https://your-backend.onrender.com', // Your deployed backend URL
+  token: process.env.JWT_TOKEN,
+});
+
+// Example usage
+const response = await client.messages.create({
+  content: 'Hello from my app!',
 });
 ```
 
-> **Note**: Free tier services spin down after 15 minutes of inactivity. First request after sleep takes ~1 minute.
+**Version Compatibility**: Use matching versions (backend v0.1.0 = SDK v0.1.0)
 
 ## Quick Start
 

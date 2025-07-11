@@ -16,9 +16,9 @@ Fern automatically generates type-safe client SDKs and documentation from our Fa
 
 ### SDK Output
 
-- **Location**: `packages/sdk/`
+- **Location**: `packages/sdk/generated/`
 - **Package Name**: `@airbolt/sdk`
-- **Client Name**: `AiFastifyTemplateAPI`
+- **Client Name**: `AirboltAPI`
 
 ## Usage
 

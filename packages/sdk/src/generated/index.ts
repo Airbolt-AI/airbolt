@@ -8,7 +8,6 @@
 // Placeholder - will be replaced by Fern generation
 export const FERN_GENERATED_PLACEHOLDER = true;
 
-// When Fern generates the clients, this file will export:
-// - Browser client from ../generated/browser
-// - Node.js client from ../generated/node
+// When Fern generates the SDK, this file will export:
+// - Browser SDK from ../generated
 // - Common types and interfaces

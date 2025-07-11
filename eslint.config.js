@@ -18,6 +18,8 @@ export default tseslint.config(
       '**/.stryker-tmp',
       '**/reports',
       'examples/**', // Documentation examples may have intentional type issues
+      'packages/sdk/generated/**', // Generated SDK files
+      '.sdk-cache/**', // SDK generation cache
       '.claude/**', // Claude Code commands/tools
     ],
   },

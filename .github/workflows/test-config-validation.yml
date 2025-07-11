@@ -38,6 +38,9 @@ jobs:
       - name: Setup project
         uses: ./.github/actions/setup-project
 
+      - name: Generate Fern SDK
+        run: pnpm generate
+
       - name: Validate Configuration Consistency
         run: |
           echo "🔍 Validating Vitest configuration consistency..."

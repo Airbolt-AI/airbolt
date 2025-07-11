@@ -1,6 +1,6 @@
 {
   "name": "@airbolt/sdk",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Type-safe TypeScript SDK for the Airbolt API with automatic token management",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -9,14 +9,6 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js"
-    },
-    "./browser": {
-      "types": "./generated/browser/index.d.ts",
-      "import": "./generated/browser/index.js"
-    },
-    "./node": {
-      "types": "./generated/node/index.d.ts",
-      "import": "./generated/node/index.js"
     }
   },
   "files": [
@@ -26,14 +18,16 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "prebuild": "bash ../../scripts/sdk-generate.sh --skip-build",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
-    "clean": "rm -rf dist/ generated/",
+    "clean": "rm -rf dist/",
     "test": "echo 'SDK tests are run from the main project root'",
     "test:watch": "echo 'SDK tests are run from the main project root'",
+    "pretype-check": "bash ../../scripts/sdk-generate.sh --skip-build",
     "type-check": "tsc --noEmit",
     "lint": "echo 'SDK linting is done from the main project root'",
-    "generate": "pnpm run clean && fern generate --group browser && fern generate --group node && pnpm run build",
+    "generate": "bash ../../scripts/sdk-generate.sh",
     "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'",
     "example:check": "node examples/check-api.js",
     "example": "pnpm run example:check && node examples/vanilla-chat-demo.js",

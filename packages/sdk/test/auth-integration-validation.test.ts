@@ -11,7 +11,7 @@ describe('Auth Integration Feasibility', () => {
   describe('Fetcher Infrastructure Assessment', () => {
     it('should support custom headers for JWT tokens', async () => {
       const { fetcherImpl } = await import(
-        '../generated/browser/core/fetcher/Fetcher.js'
+        '../generated/core/fetcher/Fetcher.js'
       );
 
       // Mock fetch to verify headers are passed correctly
@@ -51,7 +51,7 @@ describe('Auth Integration Feasibility', () => {
 
     it('should support async header suppliers for dynamic tokens', async () => {
       const { fetcherImpl } = await import(
-        '../generated/browser/core/fetcher/Fetcher.js'
+        '../generated/core/fetcher/Fetcher.js'
       );
 
       const mockFetch = vi.fn().mockResolvedValue({
@@ -88,7 +88,7 @@ describe('Auth Integration Feasibility', () => {
 
     it('should handle timeout and retry configurations', async () => {
       const { fetcherImpl } = await import(
-        '../generated/browser/core/fetcher/Fetcher.js'
+        '../generated/core/fetcher/Fetcher.js'
       );
 
       // Test timeout handling
