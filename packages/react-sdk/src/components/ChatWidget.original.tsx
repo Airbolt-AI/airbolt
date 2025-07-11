@@ -2,17 +2,12 @@ import React, { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useChat } from '../hooks/useChat.js';
 import type { UseChatOptions } from '../types/index.js';
 import {
-  baseStyles,
-  getMergedStyles,
-  themeToCSS,
-  type MinimalTheme,
+  getStyles,
+  lightTheme,
+  darkTheme,
+  keyframes,
+  type ThemeColors,
 } from './ChatWidget.styles.js';
-import {
-  convertLegacyTheme,
-  detectSystemTheme,
-  defaultThemes,
-} from './ChatWidget.compat.js';
-import type { ThemeColors } from './ChatWidget.styles.legacy.js';
 
 /**
  * Escapes HTML entities to prevent XSS attacks
@@ -28,8 +23,6 @@ function escapeHtml(text: string): string {
   };
   return text.replace(/[<>&"']/g, char => htmlEntities[char] ?? char);
 }
-
-export type { MinimalTheme } from './ChatWidget.styles.js';
 
 export interface ChatWidgetProps {
   /**
@@ -61,14 +54,9 @@ export interface ChatWidgetProps {
    */
   className?: string;
   /**
-   * Custom theme colors (legacy - maintained for backward compatibility)
-   * @deprecated Use CSS custom properties instead
+   * Custom theme colors (overrides built-in themes)
    */
   customTheme?: Partial<ThemeColors>;
-  /**
-   * Minimal theme using CSS custom properties (recommended)
-   */
-  minimalTheme?: MinimalTheme;
   /**
    * Custom styles for widget elements
    */
@@ -82,33 +70,19 @@ export interface ChatWidgetProps {
 }
 
 /**
- * ChatWidget - A universally compatible chat UI component
- * 
- * New simplified approach:
- * - Inherits typography from parent by default
- * - Uses only 4 CSS custom properties for theming
- * - Minimal opinionated styles for maximum compatibility
- * - No complex animations or shadows
+ * ChatWidget - A complete chat UI component with zero configuration required
  *
  * @example
  * ```tsx
- * // Zero configuration - inherits from parent
+ * // Basic usage
  * <ChatWidget />
  *
- * // With minimal theme
+ * // With custom configuration
  * <ChatWidget
- *   minimalTheme={{
- *     primary: '#FF6B6B',
- *     surface: '#F8F9FA'
- *   }}
- * />
- * 
- * // Legacy theme support (backward compatibility)
- * <ChatWidget
- *   customTheme={{
- *     userMessage: '#FF6B6B',
- *     assistantMessage: '#4ECDC4'
- *   }}
+ *   title="Support Chat"
+ *   theme="dark"
+ *   position="fixed-bottom-right"
+ *   system="You are a helpful support agent"
  * />
  * ```
  */
@@ -121,7 +95,6 @@ export function ChatWidget({
   position = 'inline',
   className,
   customTheme,
-  minimalTheme,
   customStyles,
 }: ChatWidgetProps): React.ReactElement {
   const chatOptions: UseChatOptions = {};
@@ -144,15 +117,14 @@ export function ChatWidget({
   // Auto-detect theme
   useEffect(() => {
     if (theme === 'auto') {
-      const handleChange = () => {
-        setCurrentTheme(detectSystemTheme());
-      };
-      
-      handleChange(); // Set initial theme
-      
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent) => {
+        setCurrentTheme(e.matches ? 'dark' : 'light');
+      };
+
+      setCurrentTheme(mediaQuery.matches ? 'dark' : 'light');
       mediaQuery.addEventListener('change', handleChange);
-      
+
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
       setCurrentTheme(theme);
@@ -165,16 +137,31 @@ export function ChatWidget({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Determine theme to use
-  const effectiveTheme: MinimalTheme = minimalTheme || 
-    convertLegacyTheme(customTheme) || 
-    (theme !== 'auto' ? {} : defaultThemes[currentTheme]);
+  // Get theme colors
+  const themeColors: ThemeColors = {
+    ...(currentTheme === 'dark' ? darkTheme : lightTheme),
+    ...customTheme,
+  };
 
-  // Get merged styles
-  const styles = getMergedStyles(position, customStyles);
-  
-  // Convert theme to CSS custom properties
-  const cssVars = themeToCSS(effectiveTheme);
+  // Get styles
+  const styles = getStyles(themeColors, position);
+
+  // Inject keyframes
+  useEffect(() => {
+    const styleId = 'chat-widget-keyframes';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = keyframes;
+      document.head.appendChild(style);
+    }
+    return () => {
+      const style = document.getElementById(styleId);
+      if (style) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,14 +180,17 @@ export function ChatWidget({
       className={className}
       style={{
         ...styles.widget,
-        ...cssVars,
+        ...customStyles?.widget,
       }}
       data-testid="chat-widget"
       role="region"
       aria-label={title}
     >
       <div
-        style={styles.header}
+        style={{
+          ...styles.header,
+          ...customStyles?.header,
+        }}
         role="heading"
         aria-level={2}
       >
@@ -208,7 +198,10 @@ export function ChatWidget({
       </div>
 
       <div
-        style={styles.messages}
+        style={{
+          ...styles.messages,
+          ...customStyles?.messages,
+        }}
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
@@ -231,7 +224,9 @@ export function ChatWidget({
 
         {isLoading && (
           <div style={styles.typing} aria-label="Assistant is typing">
-            <span>Typing...</span>
+            <span style={{ ...styles.typingDot, animationDelay: '0ms' }} />
+            <span style={{ ...styles.typingDot, animationDelay: '200ms' }} />
+            <span style={{ ...styles.typingDot, animationDelay: '400ms' }} />
           </div>
         )}
 
@@ -258,6 +253,7 @@ export function ChatWidget({
           style={{
             ...styles.input,
             ...(isInputFocused ? styles.inputFocus : {}),
+            ...customStyles?.input,
           }}
           aria-label="Message input"
           aria-invalid={!!error}
@@ -274,6 +270,7 @@ export function ChatWidget({
               ? styles.buttonHover
               : {}),
             ...(isLoading || !input.trim() ? styles.buttonDisabled : {}),
+            ...customStyles?.button,
           }}
           aria-label="Send message"
         >

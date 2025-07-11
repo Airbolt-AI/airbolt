@@ -570,9 +570,9 @@
                     </div>
 
                     <div className="example-section">
-                        <div className="example-title">Custom Theme Colors</div>
+                        <div className="example-title">CSS Custom Properties (New Approach)</div>
                         <div className="example-description">
-                            Customize specific colors while keeping the rest of the theme:
+                            Use CSS custom properties for universal compatibility - only 4 properties needed:
                         </div>
                         
                         <div className="controls">
@@ -588,19 +588,19 @@
                             {showCustomTheme && (
                                 <>
                                     <div className="control-group">
-                                        <label>User Message Color</label>
+                                        <label>Primary Color (--chat-primary)</label>
                                         <input 
                                             type="color" 
-                                            value={customColors.userMessage}
-                                            onChange={(e) => setCustomColors({...customColors, userMessage: e.target.value})}
+                                            value={customColors.primary || '#007aff'}
+                                            onChange={(e) => setCustomColors({...customColors, primary: e.target.value})}
                                         />
                                     </div>
                                     <div className="control-group">
-                                        <label>Assistant Message Color</label>
+                                        <label>Surface Color (--chat-surface)</label>
                                         <input 
                                             type="color" 
-                                            value={customColors.assistantMessage}
-                                            onChange={(e) => setCustomColors({...customColors, assistantMessage: e.target.value})}
+                                            value={customColors.surface || '#f0f0f0'}
+                                            onChange={(e) => setCustomColors({...customColors, surface: e.target.value})}
                                         />
                                     </div>
                                 </>
@@ -610,7 +610,7 @@
                         <div className="widget-wrapper">
                             <ChatWidget
                                 title="Custom Themed Chat"
-                                customTheme={showCustomTheme ? customColors : undefined}
+                                minimalTheme={showCustomTheme ? customColors : undefined}
                             />
                         </div>
                         
@@ -618,9 +618,9 @@
                             <div className="code-snippet">
                                 {`<ChatWidget
     title="Custom Themed Chat"
-    customTheme={{
-        userMessage: "${customColors.userMessage}",
-        assistantMessage: "${customColors.assistantMessage}"
+    minimalTheme={{
+        primary: "${customColors.primary || '#007aff'}",
+        surface: "${customColors.surface || '#f0f0f0'}"
     }}
 />`}
                             </div>
