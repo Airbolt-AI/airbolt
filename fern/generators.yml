@@ -16,4 +16,3 @@ groups:
           outputEsm: true
           includeCredentialsOnCrossOriginRequests: true
           allowCustomFetcher: true
-          target: browser

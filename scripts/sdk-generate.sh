@@ -15,7 +15,7 @@ if ! docker info &> /dev/null; then
 fi
 
 # Generate OpenAPI spec if needed
-if [[ ! -f "apps/backend-api/openapi.json" ]] || [[ "$1" == "--force" ]]; then
+if [[ ! -f "apps/backend-api/openapi.json" ]] || [[ "${1:-}" == "--force" ]]; then
     echo "📄 Generating OpenAPI specification..."
     pnpm openapi:generate
 fi
