@@ -8,10 +8,10 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { AirboltClient } from '../../src/core/fern-client.js';
 import { TokenManager } from '../../src/core/token-manager.js';
-import { AirboltAPIClient, AirboltAPI } from '../../generated/browser/index.js';
+import { AirboltAPIClient, AirboltAPI } from '../../generated/index.js';
 
 // Mock the generated client
-vi.mock('../../generated/browser/index.js', () => ({
+vi.mock('../../generated/index.js', () => ({
   AirboltAPIClient: vi.fn(),
   AirboltAPI: {
     UnauthorizedError: class UnauthorizedError extends Error {

@@ -10,14 +10,6 @@
       "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js"
     },
-    "./browser": {
-      "types": "./generated/browser/index.d.ts",
-      "import": "./generated/browser/index.js"
-    },
-    "./node": {
-      "types": "./generated/node/index.d.ts",
-      "import": "./generated/node/index.js"
-    }
   },
   "files": [
     "dist/",
@@ -33,7 +25,7 @@
     "test:watch": "echo 'SDK tests are run from the main project root'",
     "type-check": "tsc --noEmit",
     "lint": "echo 'SDK linting is done from the main project root'",
-    "generate": "pnpm run clean && fern generate --group browser && fern generate --group node && pnpm run build",
+    "generate": "pnpm run clean && fern generate && pnpm run build",
     "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'",
     "example:check": "node examples/check-api.js",
     "example": "pnpm run example:check && node examples/vanilla-chat-demo.js",

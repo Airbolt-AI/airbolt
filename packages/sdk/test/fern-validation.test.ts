@@ -13,7 +13,7 @@ describe('Fern SDK Generation Validation', () => {
   describe('Generated Code Structure', () => {
     it('should generate clean TypeScript infrastructure', () => {
       // Check that main exports exist
-      const indexPath = join(__dirname, '../generated/browser/index.ts');
+      const indexPath = join(__dirname, '../generated/index.ts');
       const indexContent = readFileSync(indexPath, 'utf-8');
 
       expect(indexContent).toContain('AirboltAPIError');
@@ -23,7 +23,7 @@ describe('Fern SDK Generation Validation', () => {
     it('should include sophisticated error handling', () => {
       const errorPath = join(
         __dirname,
-        '../generated/browser/errors/AirboltAPIError.ts'
+        '../generated/errors/AirboltAPIError.ts'
       );
       const errorContent = readFileSync(errorPath, 'utf-8');
 
@@ -37,7 +37,7 @@ describe('Fern SDK Generation Validation', () => {
     it('should include comprehensive fetcher infrastructure', () => {
       const fetcherPath = join(
         __dirname,
-        '../generated/browser/core/fetcher/Fetcher.ts'
+        '../generated/core/fetcher/Fetcher.ts'
       );
       const fetcherContent = readFileSync(fetcherPath, 'utf-8');
 
@@ -51,7 +51,7 @@ describe('Fern SDK Generation Validation', () => {
 
   describe('Code Quality Analysis', () => {
     it('should have minimal any/unknown types', async () => {
-      const generatedDir = join(__dirname, '../generated/browser');
+      const generatedDir = join(__dirname, '../generated');
 
       // This is a snapshot test - if the count changes significantly, investigate
       const { execSync } = await import('child_process');
@@ -153,7 +153,7 @@ describe('Fern SDK Generation Validation', () => {
 
   describe('Generated Client Analysis', () => {
     it('should verify client and API methods are properly generated', () => {
-      const indexPath = join(__dirname, '../generated/browser/index.ts');
+      const indexPath = join(__dirname, '../generated/index.ts');
       const indexContent = readFileSync(indexPath, 'utf-8');
 
       // Verify client is properly exported

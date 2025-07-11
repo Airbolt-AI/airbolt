@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://schema.buildwithfern.dev/generators-yml.json
-default-group: local
+default-group: browser
 api:
   specs:
     - openapi: ../apps/backend-api/openapi.json
@@ -10,27 +10,10 @@ groups:
         version: 2.4.3
         output:
           location: local-file-system
-          path: ../packages/sdk/generated/browser
+          path: ../packages/sdk/generated
         config:
           namespaceExport: 'AirboltAPI'
           outputEsm: true
           includeCredentialsOnCrossOriginRequests: true
           allowCustomFetcher: true
-  node:
-    generators:
-      - name: fernapi/fern-typescript-node-sdk
-        version: 2.4.3
-        output:
-          location: local-file-system
-          path: ../packages/sdk/generated/node
-        config:
-          namespaceExport: 'AirboltAPI'
-  local:
-    generators:
-      - name: fernapi/fern-typescript-node-sdk
-        version: 2.4.3
-        output:
-          location: local-file-system
-          path: ../packages/sdk/generated/node
-        config:
-          namespaceExport: 'AirboltAPI'
+          target: browser

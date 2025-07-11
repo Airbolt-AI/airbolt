@@ -11,6 +11,13 @@ const __dirname = dirname(__filename);
 
 async function generateOpenAPISpec() {
   try {
+    // Set dummy environment variables for OpenAPI generation only
+    // These are not used during spec generation but required by env validation
+    process.env.OPENAI_API_KEY =
+      process.env.OPENAI_API_KEY || 'sk-dummy-key-for-openapi-generation';
+    process.env.JWT_SECRET =
+      process.env.JWT_SECRET || 'dummy-secret-for-openapi-generation';
+
     // Check if dist directory exists
     const distPath = join(__dirname, '..', 'dist');
     if (!existsSync(distPath)) {
