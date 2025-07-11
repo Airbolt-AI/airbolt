@@ -224,9 +224,10 @@ describe('SDK Integration', () => {
       expect(existsSync(generatorsPath)).toBe(true);
 
       const generatorsContent = readFileSync(generatorsPath, 'utf8');
-      expect(generatorsContent).toContain('fernapi/fern-typescript-node-sdk');
       expect(generatorsContent).toContain('fernapi/fern-typescript-sdk');
       expect(generatorsContent).toContain('AirboltAPI');
+      expect(generatorsContent).toContain('default-group: browser');
+      expect(generatorsContent).toContain('outputEsm: true');
     });
 
     it('should have API definition pointing to correct OpenAPI spec', () => {
