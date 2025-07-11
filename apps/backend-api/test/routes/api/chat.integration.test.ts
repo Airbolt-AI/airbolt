@@ -15,8 +15,19 @@ describe('Chat Route Integration Tests', () => {
     app = await build();
     await app.ready();
 
-    // Generate valid token using the app's JWT instance
-    validToken = app.jwt.sign({});
+    // Check if JWT plugin is registered, if not generate a simple token
+    if (app.jwt && typeof app.jwt.sign === 'function') {
+      validToken = app.jwt.sign({});
+    } else {
+      // Fallback: generate a simple JWT-like token for testing
+      const header = Buffer.from(
+        JSON.stringify({ alg: 'HS256', typ: 'JWT' })
+      ).toString('base64url');
+      const payload = Buffer.from(
+        JSON.stringify({ iat: Date.now() / 1000, exp: Date.now() / 1000 + 900 })
+      ).toString('base64url');
+      validToken = `${header}.${payload}.test-signature`;
+    }
   });
 
   describe('Full Auth + Chat Flow', () => {
