@@ -41,7 +41,11 @@ The commands are designed to be used in a specific sequence for optimal developm
   - Templates for bugs, features, tasks, investigations
   - Automatic project assignment to Airbolt MVP
   - Duplicate checking before creation
-- **`/respond-to-pr`** - Address PR feedback systematically (planned)
+- **`/respond-to-pr`** - Address PR feedback systematically
+  - Gathers all PR comments and reviews
+  - Requires human approval before changes
+  - Posts acknowledgments with emoji tracking
+  - Implements only approved changes
 
 ## Supporting Commands
 
@@ -75,6 +79,9 @@ These commands can be used at any time:
 # PR created! Now switch context for review
 /code-review
 
+# Got PR feedback? Address it systematically
+/respond-to-pr
+
 # If you need to check current work
 /get-in-progress-ticket
 
@@ -100,7 +107,5 @@ The commands use:
 
 ## Future Enhancements
 
-Planned commands to complete the workflow:
-
-- `/respond-to-pr` - Handle PR feedback and make requested changes
 - Dedicated bot accounts for clearer automation attribution
+- Additional workflow automation commands as needed
