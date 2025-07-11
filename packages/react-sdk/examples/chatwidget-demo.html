@@ -256,6 +256,7 @@
                 position = 'inline',
                 className,
                 customTheme,
+                minimalTheme,
                 customStyles
             } = props;
 
@@ -306,16 +307,25 @@
 
             const colors = { ...themes[currentTheme], ...customTheme };
 
+            // Convert minimalTheme to CSS custom properties
+            const cssVars = {};
+            if (minimalTheme) {
+                if (minimalTheme.primary) cssVars['--chat-primary'] = minimalTheme.primary;
+                if (minimalTheme.surface) cssVars['--chat-surface'] = minimalTheme.surface;
+                if (minimalTheme.border) cssVars['--chat-border'] = minimalTheme.border;
+                if (minimalTheme.text) cssVars['--chat-text'] = minimalTheme.text;
+            }
+
             const baseStyles = {
                 widget: {
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: colors.background,
-                    color: colors.text,
+                    backgroundColor: minimalTheme ? 'var(--chat-surface, #ffffff)' : colors.background,
+                    color: minimalTheme ? 'var(--chat-text, inherit)' : colors.text,
                     borderRadius: '12px',
                     overflow: 'hidden',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontSize: '14px',
+                    fontFamily: minimalTheme ? 'inherit' : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontSize: minimalTheme ? 'inherit' : '14px',
                     boxShadow: position === 'fixed-bottom-right' ? '0 4px 24px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
                     boxSizing: 'border-box',
                     ...(position === 'fixed-bottom-right' ? {
@@ -335,8 +345,8 @@
                 },
                 header: {
                     padding: '16px 20px',
-                    backgroundColor: colors.surface,
-                    borderBottom: `1px solid ${colors.border}`,
+                    backgroundColor: minimalTheme ? 'var(--chat-surface)' : colors.surface,
+                    borderBottom: minimalTheme ? '1px solid var(--chat-border)' : `1px solid ${colors.border}`,
                     fontWeight: 600,
                     fontSize: '16px',
                 },
@@ -357,43 +367,56 @@
                 },
                 userMessage: {
                     alignSelf: 'flex-end',
-                    backgroundColor: colors.userMessage,
-                    color: colors.userMessageText,
+                    backgroundColor: minimalTheme ? 'var(--chat-primary)' : colors.userMessage,
+                    color: minimalTheme ? 'white' : colors.userMessageText,
                     borderRadius: '18px 18px 4px 18px',
                 },
                 assistantMessage: {
                     alignSelf: 'flex-start',
-                    backgroundColor: colors.assistantMessage,
-                    color: colors.assistantMessageText,
+                    backgroundColor: minimalTheme ? 'var(--chat-surface)' : colors.assistantMessage,
+                    color: minimalTheme ? 'var(--chat-text)' : colors.assistantMessageText,
                     borderRadius: '18px 18px 18px 4px',
                 },
                 form: {
                     display: 'flex',
                     gap: '8px',
                     padding: '16px',
-                    borderTop: `1px solid ${colors.border}`,
-                    backgroundColor: colors.surface,
+                    borderTop: minimalTheme ? '1px solid var(--chat-border)' : `1px solid ${colors.border}`,
+                    backgroundColor: minimalTheme ? 'var(--chat-surface)' : colors.surface,
                 },
                 input: {
                     flex: 1,
                     padding: '10px 14px',
-                    backgroundColor: colors.inputBackground,
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
+                    backgroundColor: minimalTheme ? 'var(--chat-surface)' : colors.inputBackground,
+                    color: minimalTheme ? 'var(--chat-text)' : colors.text,
+                    border: minimalTheme ? '1px solid var(--chat-border)' : `1px solid ${colors.border}`,
                     borderRadius: '24px',
-                    fontSize: '14px',
+                    fontSize: minimalTheme ? 'inherit' : '14px',
                     outline: 'none',
                 },
                 button: {
                     padding: '10px 20px',
-                    backgroundColor: colors.buttonBackground,
-                    color: colors.buttonText,
+                    backgroundColor: minimalTheme ? 'var(--chat-primary)' : colors.buttonBackground,
+                    color: minimalTheme ? 'white' : colors.buttonText,
                     border: 'none',
                     borderRadius: '24px',
-                    fontSize: '14px',
+                    fontSize: minimalTheme ? 'inherit' : '14px',
                     fontWeight: 500,
                     cursor: 'pointer',
                 },
+                typing: {
+                    alignSelf: 'flex-start',
+                    padding: '10px 14px',
+                    color: minimalTheme ? 'var(--chat-text)' : colors.textSecondary,
+                },
+                error: {
+                    padding: '12px',
+                    backgroundColor: '#fee',
+                    color: '#dc3545',
+                    margin: '0 16px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                }
             };
 
             const handleSubmit = (e) => {
@@ -402,7 +425,7 @@
             };
 
             return (
-                <div className={className} style={{ ...baseStyles.widget, ...customStyles?.widget }}>
+                <div className={className} style={{ ...baseStyles.widget, ...cssVars, ...customStyles?.widget }}>
                     <div style={baseStyles.header}>{title}</div>
                     
                     <div style={baseStyles.messages}>
@@ -419,14 +442,14 @@
                         ))}
                         
                         {isLoading && (
-                            <div style={{ alignSelf: 'flex-start', padding: '10px 14px' }}>
+                            <div style={baseStyles.typing}>
                                 <span>AI is typing...</span>
                             </div>
                         )}
                     </div>
 
                     {error && (
-                        <div style={{ padding: '12px', backgroundColor: '#fee', color: '#dc3545' }}>
+                        <div style={baseStyles.error}>
                             {error.message}
                         </div>
                     )}
@@ -464,8 +487,10 @@
 
             const [showCustomTheme, setShowCustomTheme] = React.useState(false);
             const [customColors, setCustomColors] = React.useState({
-                userMessage: '#007aff',
-                assistantMessage: '#f0f0f0',
+                primary: '#007aff',
+                surface: '#f0f0f0',
+                border: '#e0e0e0',
+                text: '#1a1a1a',
             });
 
             return (
@@ -603,6 +628,22 @@
                                             onChange={(e) => setCustomColors({...customColors, surface: e.target.value})}
                                         />
                                     </div>
+                                    <div className="control-group">
+                                        <label>Border Color (--chat-border)</label>
+                                        <input 
+                                            type="color" 
+                                            value={customColors.border || '#e0e0e0'}
+                                            onChange={(e) => setCustomColors({...customColors, border: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="control-group">
+                                        <label>Text Color (--chat-text)</label>
+                                        <input 
+                                            type="color" 
+                                            value={customColors.text || '#1a1a1a'}
+                                            onChange={(e) => setCustomColors({...customColors, text: e.target.value})}
+                                        />
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -620,7 +661,9 @@
     title="Custom Themed Chat"
     minimalTheme={{
         primary: "${customColors.primary || '#007aff'}",
-        surface: "${customColors.surface || '#f0f0f0'}"
+        surface: "${customColors.surface || '#f0f0f0'}",
+        border: "${customColors.border || '#e0e0e0'}",
+        text: "${customColors.text || '#1a1a1a'}"
     }}
 />`}
                             </div>
