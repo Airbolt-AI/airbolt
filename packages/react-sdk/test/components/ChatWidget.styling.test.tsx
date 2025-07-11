@@ -121,7 +121,7 @@ describe('ChatWidget Styling', () => {
         height: '100%',
       });
       // Should not have fixed positioning
-      expect(widget?.style.position).not.toBe('fixed');
+      expect((widget as HTMLElement)?.style.position).not.toBe('fixed');
     });
 
     it('should apply fixed positioning when specified', () => {
@@ -160,7 +160,7 @@ describe('ChatWidget Styling', () => {
 
   describe('Minimal Styling', () => {
     it('should not include complex animations', () => {
-      const { container } = render(<ChatWidget />);
+      render(<ChatWidget />);
 
       // Check that no animation keyframes are injected
       const styleElements = document.querySelectorAll('style');

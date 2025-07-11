@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useChat } from '../hooks/useChat.js';
 import type { UseChatOptions } from '../types/index.js';
 import {
-  baseStyles,
   getMergedStyles,
   themeToCSS,
   type MinimalTheme,
@@ -83,7 +82,7 @@ export interface ChatWidgetProps {
 
 /**
  * ChatWidget - A universally compatible chat UI component
- * 
+ *
  * New simplified approach:
  * - Inherits typography from parent by default
  * - Uses only 4 CSS custom properties for theming
@@ -102,7 +101,7 @@ export interface ChatWidgetProps {
  *     surface: '#F8F9FA'
  *   }}
  * />
- * 
+ *
  * // Legacy theme support (backward compatibility)
  * <ChatWidget
  *   customTheme={{
@@ -147,12 +146,12 @@ export function ChatWidget({
       const handleChange = () => {
         setCurrentTheme(detectSystemTheme());
       };
-      
+
       handleChange(); // Set initial theme
-      
+
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       mediaQuery.addEventListener('change', handleChange);
-      
+
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
       setCurrentTheme(theme);
@@ -166,13 +165,14 @@ export function ChatWidget({
   }, [messages]);
 
   // Determine theme to use
-  const effectiveTheme: MinimalTheme = minimalTheme || 
-    convertLegacyTheme(customTheme) || 
+  const effectiveTheme: MinimalTheme =
+    minimalTheme ||
+    convertLegacyTheme(customTheme) ||
     (theme !== 'auto' ? {} : defaultThemes[currentTheme]);
 
   // Get merged styles
   const styles = getMergedStyles(position, customStyles);
-  
+
   // Convert theme to CSS custom properties
   const cssVars = themeToCSS(effectiveTheme);
 
@@ -192,23 +192,19 @@ export function ChatWidget({
     <div
       className={className}
       style={{
-        ...styles.widget,
+        ...styles['widget'],
         ...cssVars,
       }}
       data-testid="chat-widget"
       role="region"
       aria-label={title}
     >
-      <div
-        style={styles.header}
-        role="heading"
-        aria-level={2}
-      >
+      <div style={styles['header']} role="heading" aria-level={2}>
         {title}
       </div>
 
       <div
-        style={styles.messages}
+        style={styles['messages']}
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
@@ -217,10 +213,10 @@ export function ChatWidget({
           <div
             key={index}
             style={{
-              ...styles.message,
+              ...styles['message'],
               ...(message.role === 'user'
-                ? styles.userMessage
-                : styles.assistantMessage),
+                ? styles['userMessage']
+                : styles['assistantMessage']),
             }}
             role="article"
             aria-label={`${message.role} message`}
@@ -230,7 +226,7 @@ export function ChatWidget({
         ))}
 
         {isLoading && (
-          <div style={styles.typing} aria-label="Assistant is typing">
+          <div style={styles['typing']} aria-label="Assistant is typing">
             <span>Typing...</span>
           </div>
         )}
@@ -239,12 +235,12 @@ export function ChatWidget({
       </div>
 
       {error && (
-        <div style={styles.error} role="alert" aria-live="assertive">
+        <div style={styles['error']} role="alert" aria-live="assertive">
           {error.message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <form onSubmit={handleSubmit} style={styles['form']}>
         <input
           ref={inputRef}
           type="text"
@@ -256,8 +252,8 @@ export function ChatWidget({
           placeholder={placeholder}
           disabled={isLoading}
           style={{
-            ...styles.input,
-            ...(isInputFocused ? styles.inputFocus : {}),
+            ...styles['input'],
+            ...(isInputFocused ? styles['inputFocus'] : {}),
           }}
           aria-label="Message input"
           aria-invalid={!!error}
@@ -269,11 +265,11 @@ export function ChatWidget({
           onMouseEnter={() => setIsButtonHovered(true)}
           onMouseLeave={() => setIsButtonHovered(false)}
           style={{
-            ...styles.button,
+            ...styles['button'],
             ...(isButtonHovered && !isLoading && input.trim()
-              ? styles.buttonHover
+              ? styles['buttonHover']
               : {}),
-            ...(isLoading || !input.trim() ? styles.buttonDisabled : {}),
+            ...(isLoading || !input.trim() ? styles['buttonDisabled'] : {}),
           }}
           aria-label="Send message"
         >

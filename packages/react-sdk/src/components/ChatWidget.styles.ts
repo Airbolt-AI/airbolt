@@ -16,7 +16,7 @@ export interface MinimalTheme {
  */
 export function themeToCSS(theme?: MinimalTheme): CSSProperties {
   const cssVars: Record<string, string> = {};
-  
+
   if (theme?.primary) {
     cssVars['--chat-primary'] = theme.primary;
   }
@@ -29,7 +29,7 @@ export function themeToCSS(theme?: MinimalTheme): CSSProperties {
   if (theme?.text) {
     cssVars['--chat-text'] = theme.text;
   }
-  
+
   return cssVars as CSSProperties;
 }
 
@@ -44,7 +44,7 @@ export const baseStyles: Record<string, CSSProperties> = {
     fontSize: 'inherit',
     lineHeight: 'inherit',
     color: 'var(--chat-text, inherit)',
-    
+
     // Minimal structure
     display: 'flex',
     flexDirection: 'column',
@@ -53,18 +53,18 @@ export const baseStyles: Record<string, CSSProperties> = {
     borderRadius: '8px',
     overflow: 'hidden',
     boxSizing: 'border-box',
-    
+
     // Remove opinionated shadows and transitions for MVP
     // These can be added by parent if needed
   },
-  
+
   header: {
     padding: '12px 16px',
     borderBottom: '1px solid var(--chat-border, currentColor)',
     fontWeight: 600,
     // Inherit font size from parent
   },
-  
+
   messages: {
     flex: 1,
     overflowY: 'auto',
@@ -74,33 +74,33 @@ export const baseStyles: Record<string, CSSProperties> = {
     gap: '8px',
     minHeight: 0,
   },
-  
+
   message: {
     maxWidth: '70%',
     wordWrap: 'break-word',
     padding: '8px 12px',
     borderRadius: '8px',
   },
-  
+
   userMessage: {
     alignSelf: 'flex-end',
     backgroundColor: 'var(--chat-primary, #007aff)',
     color: 'white',
   },
-  
+
   assistantMessage: {
     alignSelf: 'flex-start',
     backgroundColor: 'var(--chat-surface, #f0f0f0)',
     border: '1px solid var(--chat-border, transparent)',
   },
-  
+
   form: {
     display: 'flex',
     gap: '8px',
     padding: '12px 16px',
     borderTop: '1px solid var(--chat-border, currentColor)',
   },
-  
+
   input: {
     flex: 1,
     padding: '8px 12px',
@@ -112,11 +112,11 @@ export const baseStyles: Record<string, CSSProperties> = {
     fontFamily: 'inherit',
     outline: 'none',
   },
-  
+
   inputFocus: {
     borderColor: 'var(--chat-primary, #007aff)',
   },
-  
+
   button: {
     padding: '8px 16px',
     backgroundColor: 'var(--chat-primary, #007aff)',
@@ -129,16 +129,16 @@ export const baseStyles: Record<string, CSSProperties> = {
     cursor: 'pointer',
     outline: 'none',
   },
-  
+
   buttonHover: {
     opacity: 0.9,
   },
-  
+
   buttonDisabled: {
     opacity: 0.5,
     cursor: 'not-allowed',
   },
-  
+
   error: {
     margin: '0 16px 12px',
     padding: '8px 12px',
@@ -147,7 +147,7 @@ export const baseStyles: Record<string, CSSProperties> = {
     borderRadius: '6px',
     fontSize: '0.875em',
   },
-  
+
   // Simple loading indicator without complex animations
   typing: {
     display: 'flex',
@@ -163,7 +163,9 @@ export const baseStyles: Record<string, CSSProperties> = {
 /**
  * Get position-specific styles
  */
-export function getPositionStyles(position: 'inline' | 'fixed-bottom-right'): CSSProperties {
+export function getPositionStyles(
+  position: 'inline' | 'fixed-bottom-right'
+): CSSProperties {
   if (position === 'fixed-bottom-right') {
     return {
       position: 'fixed',
@@ -177,7 +179,7 @@ export function getPositionStyles(position: 'inline' | 'fixed-bottom-right'): CS
       boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
     };
   }
-  
+
   return {
     width: '100%',
     height: '100%',
@@ -194,21 +196,25 @@ export function getMergedStyles(
   customStyles?: Record<string, CSSProperties>
 ): Record<string, CSSProperties> {
   const positionStyles = getPositionStyles(position);
-  
+
   return {
-    widget: { ...baseStyles.widget, ...positionStyles, ...customStyles?.widget },
-    header: { ...baseStyles.header, ...customStyles?.header },
-    messages: { ...baseStyles.messages, ...customStyles?.messages },
-    message: { ...baseStyles.message },
-    userMessage: { ...baseStyles.userMessage },
-    assistantMessage: { ...baseStyles.assistantMessage },
-    form: { ...baseStyles.form },
-    input: { ...baseStyles.input, ...customStyles?.input },
-    inputFocus: { ...baseStyles.inputFocus },
-    button: { ...baseStyles.button, ...customStyles?.button },
-    buttonHover: { ...baseStyles.buttonHover },
-    buttonDisabled: { ...baseStyles.buttonDisabled },
-    error: { ...baseStyles.error },
-    typing: { ...baseStyles.typing },
+    widget: {
+      ...baseStyles['widget'],
+      ...positionStyles,
+      ...customStyles?.['widget'],
+    },
+    header: { ...baseStyles['header'], ...customStyles?.['header'] },
+    messages: { ...baseStyles['messages'], ...customStyles?.['messages'] },
+    message: { ...baseStyles['message'] },
+    userMessage: { ...baseStyles['userMessage'] },
+    assistantMessage: { ...baseStyles['assistantMessage'] },
+    form: { ...baseStyles['form'] },
+    input: { ...baseStyles['input'], ...customStyles?.['input'] },
+    inputFocus: { ...baseStyles['inputFocus'] },
+    button: { ...baseStyles['button'], ...customStyles?.['button'] },
+    buttonHover: { ...baseStyles['buttonHover'] },
+    buttonDisabled: { ...baseStyles['buttonDisabled'] },
+    error: { ...baseStyles['error'] },
+    typing: { ...baseStyles['typing'] },
   };
 }
