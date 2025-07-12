@@ -1,0 +1,55 @@
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: system-ui, sans-serif;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+header h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+header p {
+  color: #666;
+  font-size: 18px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+section h2 {
+  color: #444;
+  margin-bottom: 16px;
+}
+
+section p {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+code {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.widget-container {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.widget-container h2 {
+  margin-bottom: 20px;
+}

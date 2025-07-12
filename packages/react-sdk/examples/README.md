@@ -1,102 +1,70 @@
 # React SDK Examples
 
-This directory contains example React applications demonstrating how to use the `@airbolt/react-sdk` package.
+This directory contains minimal, focused examples demonstrating how to use `@airbolt/react-sdk`.
 
 ## Examples
 
-### 1. Simple Chat (`simple-chat.tsx`)
+### 1. React Hooks (`react-hooks/`)
 
-A basic chat interface showing the core functionality of the `useChat` hook:
+Shows how to use the `useChat` hook for custom chat interfaces:
 
-- Send and receive messages
-- Loading states
-- Error handling
-- Clear conversation
+```tsx
+const { messages, input, setInput, send } = useChat({
+  baseURL: 'http://localhost:3000'
+});
+```
 
-### 2. Advanced Chat (`advanced-chat.tsx`)
+- Full control over UI
+- ~40 lines of code
+- Perfect for custom designs
 
-An advanced chat application with additional features:
+### 2. React Widget (`react-widget/`)
 
-- Customizable system prompt
-- Configurable API endpoint
-- Export chat history to JSON
-- Better UX with typing indicators
-- Keyboard shortcuts (Enter to send)
-- Retry on error
+Demonstrates the drop-in `ChatWidget` component:
 
-### 3. Standalone Demo (`standalone-demo.html`)
+```tsx
+<ChatWidget 
+  baseURL="http://localhost:3000"
+  title="AI Assistant"
+/>
+```
 
-A self-contained HTML file that demonstrates the SDK without any build process:
-
-- Works directly in the browser
-- No bundler or transpiler needed
-- Perfect for quick testing
-- Includes a mock implementation for offline testing
-
-### 4. ChatWidget Demo (`chatwidget-demo.html`)
-
-An interactive demonstration of the pre-built ChatWidget component:
-
-- Zero-configuration usage examples
-- Live theme switching (light/dark/auto)
-- Position modes (inline vs fixed bottom-right)
-- Custom color theming
-- Interactive configuration panel
-- Code snippets for each configuration
+- Zero configuration
+- ~20 lines of code
+- Ready-to-use chat interface
 
 ## Running the Examples
 
-### For HTML Examples (Standalone & ChatWidget demos)
-
-1. From the package directory, run:
-
+1. **Start the backend** (from project root):
    ```bash
-   pnpm demo
+   cd apps/backend-api
+   pnpm dev
    ```
 
-   This will start a local server and open the standalone demo in your browser.
-
-2. To view the ChatWidget demo, navigate to:
-   ```
-   http://localhost:8080/chatwidget-demo.html
-   ```
-
-### For React Application Examples
-
-1. Install the SDK:
-
+2. **Choose an example**:
    ```bash
-   npm install @airbolt/react-sdk
+   # For hooks example
+   cd react-hooks
+   pnpm install
+   pnpm dev
+
+   # For widget example
+   cd react-widget
+   pnpm install
+   pnpm dev
    ```
 
-2. Copy the example code into your React application
+## Key Features
 
-3. Import and use the component:
+All examples demonstrate:
+- 🔐 **Automatic authentication** - No JWT code needed
+- 🚀 **Instant setup** - Works with localhost
+- 📦 **Workspace dependencies** - Uses local packages
+- 🎯 **Focused code** - Only essential functionality
 
-   ```tsx
-   import { SimpleChatApp } from './simple-chat';
-   // or
-   import { AdvancedChatApp } from './advanced-chat';
-   // or use the pre-built widget
-   import { ChatWidget } from '@airbolt/react-sdk';
+## Which Example to Use?
 
-   function App() {
-     return <ChatWidget />;
-   }
-   ```
+- **Use `react-hooks`** when you need custom UI/UX
+- **Use `react-widget`** when you want it working instantly
 
-4. Make sure your Airbolt API is running at `http://localhost:3000` (or configure the `baseURL`)
-
-## Customization
-
-Both examples use inline styles for simplicity. In a production application, you would typically:
-
-- Use a CSS framework (Tailwind, Material-UI, etc.)
-- Extract styles to CSS modules or styled-components
-- Add more sophisticated error handling
-- Implement user authentication
-- Add message persistence
-
-## TypeScript Support
-
-All examples are written in TypeScript and demonstrate proper typing with the React SDK.
+Both examples are production-ready patterns!
