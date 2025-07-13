@@ -58,6 +58,9 @@ jobs:
       - name: Setup project
         uses: ./.github/actions/setup-project
 
+      - name: Generate Fern SDK (required for SDK tests)
+        run: pnpm generate
+
       - name: Run unit and property tests
         run: |
           echo "🧪 Stage 2: Unit and property tests..."
@@ -81,9 +84,6 @@ jobs:
 
       - name: Setup project
         uses: ./.github/actions/setup-project
-
-      - name: Generate Fern SDK
-        run: pnpm generate
 
       - name: Run full validation
         run: |

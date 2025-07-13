@@ -13,6 +13,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate"],
       "options": {
         "command": "pnpm test",
         "cwd": "packages/sdk"
@@ -41,6 +42,7 @@
     },
     "type-check": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate"],
       "options": {
         "command": "tsc --noEmit",
         "cwd": "packages/sdk"
