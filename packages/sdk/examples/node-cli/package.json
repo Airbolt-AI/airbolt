@@ -1,9 +1,9 @@
 {
-  "name": "airbolt-vanilla-example",
+  "name": "airbolt-node-cli-example",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Simple example of using @airbolt/sdk in Node.js",
+  "description": "Simple CLI chat example using @airbolt/sdk in Node.js",
   "scripts": {
     "start": "node index.js",
     "start:ts": "tsx index.ts"

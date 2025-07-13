@@ -2,35 +2,36 @@
 
 This directory contains minimal examples demonstrating how to use `@airbolt/sdk` in Node.js.
 
-## Vanilla JavaScript/TypeScript Example
+## Node.js CLI Chat Example
 
-The `vanilla/` directory shows the simplest way to use the SDK:
+The `node-cli/` directory shows the simplest way to use the SDK:
 
 ```javascript
 import { chat } from '@airbolt/sdk';
 
-const response = await chat(
-  [{ role: 'user', content: 'Hello!' }],
-  { baseURL: 'http://localhost:3000' }
-);
+const response = await chat([{ role: 'user', content: 'Hello!' }], {
+  baseURL: 'http://localhost:3000',
+});
 ```
 
 ### Running the Example
 
 1. **Start the backend** (from project root):
+
    ```bash
    cd apps/backend-api
    pnpm dev
    ```
 
 2. **Run the example**:
+
    ```bash
-   cd packages/sdk/examples/vanilla
+   cd packages/sdk/examples/node-cli
    pnpm install
-   
+
    # JavaScript version
    pnpm start
-   
+
    # TypeScript version
    pnpm start:ts
    ```

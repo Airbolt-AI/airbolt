@@ -1,6 +1,6 @@
-# Vanilla JavaScript/TypeScript Example
+# Node.js CLI Chat Example
 
-This example shows the simplest way to use `@airbolt/sdk` in Node.js.
+This example shows the simplest way to use `@airbolt/sdk` in a Node.js command-line interface.
 
 ## Prerequisites
 
@@ -10,6 +10,7 @@ This example shows the simplest way to use `@airbolt/sdk` in Node.js.
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -23,6 +24,7 @@ This example shows the simplest way to use `@airbolt/sdk` in Node.js.
 ## Run the Examples
 
 ### JavaScript Version
+
 ```bash
 npm start
 # or
@@ -30,6 +32,7 @@ pnpm start
 ```
 
 ### TypeScript Version
+
 ```bash
 npm run start:ts
 # or
