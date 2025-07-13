@@ -59,6 +59,7 @@ export const baseConfig: InlineConfig = {
     extensionAlias: {
       '.js': ['.ts', '.js'],
       '.jsx': ['.tsx', '.jsx'],
+      '.ts': ['.ts'],
     },
   },
 };
