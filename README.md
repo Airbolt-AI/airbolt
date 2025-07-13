@@ -168,6 +168,8 @@ pnpm setup:gitleaks
 
 ### Development
 
+See our [testing philosophy](.github/TESTING.md) for quality guidelines.
+
 ```bash
 # Start development server
 pnpm dev              # Start all apps in development mode

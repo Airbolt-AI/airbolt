@@ -26,5 +26,9 @@
     // Explicitly disable JavaScript checking to prevent CI failures
     "allowJs": false,
     "checkJs": false
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

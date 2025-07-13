@@ -18,7 +18,7 @@
     "test": "NODE_OPTIONS='--import tsx' nx run-many -t test",
     "test:watch": "NODE_OPTIONS='--import tsx' nx run-many -t test:watch",
     "test:coverage": "NODE_OPTIONS='--import tsx' nx run-many -t test:coverage",
-    "test:mutation": "stryker run",
+    "test:mutation": "NODE_OPTIONS='--import tsx' stryker run",
     "test:config:verify": "NODE_OPTIONS='--import tsx' node scripts/validate-vitest-configs.js && nx run-many -t test:workspace,test:mutation-config --parallel=false && nx run backend-api:test:verify-configs",
     "test:config:validate": "NODE_OPTIONS='--import tsx' node scripts/validate-vitest-configs.js",
     "test:config:quick": "NODE_OPTIONS='--import tsx' node scripts/validate-vitest-configs.js && cd apps/backend-api && pnpm test:workspace && pnpm test:mutation-config && pnpm test:verify-configs",

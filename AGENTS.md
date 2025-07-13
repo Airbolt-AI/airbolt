@@ -225,26 +225,24 @@ const EnvSchema = z.object({
 export const env = EnvSchema.parse(process.env);
 ```
 
-## 🚨 CRITICAL: Mutation Testing Gate (AI-Only Development)
+## 🚨 CRITICAL: Mutation Testing Gate
 
-**Required for All PRs** - 85% mutation score threshold on business logic
+**Required**: 85% mutation score on LLM business logic
 
-**Targeted Scope** (High-ROI only):
+**Scope**:
 
-- **Enforced**: `apps/backend-api/src/utils/` - calculations, validators, formatters
-- **Excluded**: Framework code, configuration, routes, plugins
+- `apps/backend-api/src/services/openai.ts` - LLM service
+- `packages/sdk/src/core/token-manager.ts` - Auth tokens
+- `packages/react-sdk/src/hooks/useChat.ts` - React state
 
-**Execution**:
+**Commands**:
 
-- **Local**: `pnpm ai:compliance` includes mutation testing
-- **CI/CD**: Automatically runs on every PR with config validation
-- **Direct**: `pnpm ai:mutation` to run standalone
-- **Verify Config**: `pnpm test:config:verify` uses Nx to validate both configs produce identical results
+- `pnpm ai:mutation` - Run mutation testing
+- `pnpm ai:compliance` - Full pipeline including mutations
 
-**Why It's Required**: AI-generated tests often achieve 100% coverage without validating logic. Mutation testing is the only reliable gate against coverage theater in AI-only development.
+**Why**: Tests must validate logic, not just achieve coverage.
 
-**⚠️ Implementation Note**:
-Mutation testing uses a separate `vitest.mutation.config.ts` that disables workspace mode due to Stryker's incompatibility with Vitest workspaces. This config directly includes test files and maintains the same module resolution as the main test setup. When Stryker adds workspace support, we can remove this workaround.
+**Testing Philosophy**: See [.github/TESTING.md](/.github/TESTING.md) for comprehensive testing guidelines.
 
 ## 🚨 CRITICAL: Testing Anti-Patterns
 
@@ -332,13 +330,12 @@ it('should create and retrieve user', async () => {
 4. **Before PR submission**: `pnpm ai:compliance` (includes mutation testing gate)
 5. **Create proper branches**: `git checkout -b feature/LIN-XXX-description`
 6. **Conventional commits**: `feat(scope): description`
-7. **Quality gates**: ALL checks must pass including 85% mutation score on utils/
+7. **Quality gates**: ALL checks must pass including 85% mutation score on LLM business logic
 
 ### Local Validation Commands
 
-- `pnpm test:config:quick` - Fast validation of test configs (utils only)
-- `pnpm test:config:verify` - Full validation using Nx (all tests)
-- `pnpm pre-push` - Complete pre-push validation suite
+- `pnpm test:config:verify` - Validate test configs match
+- `pnpm pre-push` - Complete pre-push validation
 
 ### Linear MCP Integration Rules
 

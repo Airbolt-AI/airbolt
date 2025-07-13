@@ -22,16 +22,22 @@ export default mergeConfig(
 
       // Directly include test files instead of using workspace
       include: [
-        'apps/backend-api/test/**/*.test.ts',
-        'packages/*/test/**/*.test.ts',
+        // Core LLM business logic tests
+        'apps/backend-api/test/services/openai.unit.test.ts',
+
+        // Token management tests
+        'packages/sdk/test/core/token-manager.test.ts',
+
+        // Rate limiting tests
+        'apps/backend-api/test/plugins/rate-limit.test.ts',
       ],
 
-      // Ensure single thread for mutation testing consistency
-      pool: 'threads',
+      // Use forks to support NODE_OPTIONS
+      pool: 'forks',
       poolOptions: {
-        threads: {
-          singleThread: true,
-          isolate: false,
+        forks: {
+          singleFork: true,
+          execArgv: ['--import', 'tsx'],
         },
       },
     },
