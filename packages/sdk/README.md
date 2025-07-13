@@ -1,18 +1,14 @@
 # @airbolt/sdk
 
-> Type-safe TypeScript SDK for the AI Fastify Template API
-
-This package contains the auto-generated TypeScript SDK for consuming the AI Fastify Template API. The SDK provides full type safety, excellent developer experience, and is automatically kept in sync with the API specification.
-
-## Installation
+> Core TypeScript SDK for Airbolt AI chat API
 
 ```bash
 npm install @airbolt/sdk
-# or
-yarn add @airbolt/sdk
-# or
-pnpm add @airbolt/sdk
 ```
+
+**Looking for React components?** Use [@airbolt/react-sdk](../react-sdk/) instead for the easiest integration.
+
+**Just want to get started?** See the [main README](../../README.md) for the 3-step quickstart guide.
 
 ## Quick Start
 

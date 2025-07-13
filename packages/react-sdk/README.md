@@ -1,21 +1,12 @@
 # @airbolt/react-sdk
 
-React hooks and utilities for the Airbolt API with built-in state management.
-
-## Installation
+> Add AI chat to your React app in one line of code
 
 ```bash
 npm install @airbolt/react-sdk
-# or
-yarn add @airbolt/react-sdk
-# or
-pnpm add @airbolt/react-sdk
 ```
 
-## Requirements
-
-- React 16.8 or higher (hooks support required)
-- Node.js 18.0.0 or higher
+**Just want to get started?** See the [main README](../../README.md) for the 3-step quickstart guide.
 
 ## Quick Start
 
