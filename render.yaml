@@ -22,6 +22,6 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: RATE_LIMIT_MAX
-        value: '60'
+        value: '100'
       - key: RATE_LIMIT_TIME_WINDOW
         value: '60000'

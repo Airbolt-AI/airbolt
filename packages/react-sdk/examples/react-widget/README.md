@@ -1,6 +1,6 @@
 # React Widget Example - ChatWidget
 
-This example demonstrates the simplest way to add AI chat to your React app using the pre-built `ChatWidget` component.
+This example demonstrates the simplest way to add AI chat to your React app using the pre-built `ChatWidget` component from Airbolt.
 
 ## What This Shows
 
@@ -11,36 +11,53 @@ This example demonstrates the simplest way to add AI chat to your React app usin
 
 ## Setup
 
+### Local Development
+
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
-2. Start the backend (from project root):
+2. Start the Airbolt backend (from project root):
+
    ```bash
    cd apps/backend-api
    pnpm dev
    ```
 
 3. Start this example:
+
    ```bash
    pnpm dev
    ```
 
 4. Open http://localhost:5174 in your browser
 
+### Production Usage
+
+```tsx
+<ChatWidget
+  baseURL="https://my-ai-backend.onrender.com" // Required - your deployed Airbolt backend
+  title="AI Assistant"
+  placeholder="Ask me anything..."
+/>
+```
+
 ## The Magic Line
 
 ```tsx
-<ChatWidget 
-  baseURL="http://localhost:3000"
+<ChatWidget
+  baseURL="https://my-ai-backend.onrender.com" // Required
   title="AI Assistant"
   placeholder="Ask me anything..."
 />
 ```
 
 That's it! This single component provides:
+
 - 🔐 Automatic authentication
+- 🔒 Secure LLM proxy (API keys stay server-side)
 - 💬 Message interface
 - ⏳ Loading states
 - ❌ Error handling
@@ -49,7 +66,7 @@ That's it! This single component provides:
 
 ## Customization Options
 
-- `baseURL` - Your backend URL
+- `baseURL` - Your Airbolt backend URL (required)
 - `title` - Widget header title
 - `placeholder` - Input placeholder text
 - `position` - "inline" or "fixed-bottom-right"
@@ -58,6 +75,7 @@ That's it! This single component provides:
 
 ## Next Steps
 
+- Deploy your Airbolt backend and update the `baseURL`
 - Try changing the position to "fixed-bottom-right"
 - Customize the theme colors
 - Check the useChat hook example for more control

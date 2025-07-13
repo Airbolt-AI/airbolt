@@ -1,33 +1,53 @@
-# 🚀 Add AI Chat to Your Website in 3 Steps
+# Airbolt
 
-> Production-ready AI chat widget that takes 3 minutes to integrate. No backend experience required.
+**A production-ready backend for calling LLMs from your frontend securely.**
+
+Stripe removed payment rails. Auth0 removed login flows. Airbolt removes AI plumbing.
+
+## Why You Need This
+
+**The Problem**: If you put your OpenAI API key in frontend code, anyone can:
+
+- View it in browser DevTools (it's visible in your JavaScript)
+- Use it to make unlimited API calls on your dime
+- Potentially rack up thousands in charges before you notice
+- Access your entire OpenAI account and usage history
+
+**The Solution**: Airbolt is a secure backend proxy that:
+
+- Keeps your API keys on the server only
+- Issues time-limited JWT tokens to your frontend users
+- Validates every request with cryptographic signatures
+- Rate limits to prevent abuse
+- Logs usage for monitoring
+
+## Getting Started
+
+**Deploy the Airbolt backend **
+
+Deploy our production-ready LLM proxy to Render. You'll get your own private API that securely handles LLM calls:
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt)
 
-⚡ **Your backend will be live in ~90 seconds**  
-🔑 **Just add your OpenAI API key when prompted**  
-✅ **No credit card required to start**
+**What this deploys:**
 
----
+- Secure LLM proxy with JWT authentication
+- Rate limiting and abuse prevention
+- OpenAI integration with your API key
+- Production logging and error handling
 
-## ✨ See It Work (3 Minutes)
+**What you need:**
 
-### Step 1: Deploy Your Backend (90 seconds)
+- Service name (this becomes your URL, e.g., `my-ai-backend` → `https://my-ai-backend.onrender.com`)
+- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
 
-Click the button above to deploy your AI backend to Render. You'll be prompted for:
+After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
 
-- **Service Name**: Choose any name (e.g., `my-ai-chat`)
-- **OpenAI API Key**: Get yours at [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-
-That's it! Your API will be live at `https://your-service-name.onrender.com`
-
-### Step 2: Install the Widget (30 seconds)
+Then add to your app:
 
 ```bash
 npm install @airbolt/react-sdk
 ```
-
-### Step 3: Add to Your Site (30 seconds)
 
 ```tsx
 import { ChatWidget } from '@airbolt/react-sdk';
@@ -35,214 +55,252 @@ import { ChatWidget } from '@airbolt/react-sdk';
 function App() {
   return (
     <div>
-      <h1>My Website</h1>
-      <ChatWidget baseURL="https://your-service-name.onrender.com" />
+      <h1>My App</h1>
+      <ChatWidget baseURL="https://my-ai-backend.onrender.com" />
     </div>
   );
 }
 ```
 
-**🎉 Done!** You now have AI chat on your website.
+That's it! Your app now has secure AI chat that can't be abused by random users.
 
----
+> **Coming soon**: Skip deployment entirely with our hosted solution. [Get early access](https://github.com/Airbolt-AI/airbolt/discussions)
 
-## 📱 Live Examples
+## What you get today
 
-### React Component
+**Secure LLM proxy** - Your OpenAI API key stays on the server. Frontend gets short-lived JWT tokens (15 min expiry) that can only access the chat endpoint.
+
+**How the security works**:
+
+1. Frontend requests a JWT token from `/api/tokens` endpoint
+2. Token is signed with a secret key (HS256 algorithm) only the server knows
+3. Frontend includes token in `Authorization: Bearer <token>` header
+4. Backend verifies the JWT signature on every request
+5. Invalid/expired tokens are rejected with 401 Unauthorized
+
+**Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Rate limiting (100 requests/minute) prevents runaway usage.
+
+**Pre-built backend** - We provide the backend, you just deploy it. One-click to Render or any Node.js hosting platform. No custom server code to write or maintain.
+
+**TypeScript SDKs** - Auto-generated Javascript and React libraries with full type safety. The SDK handles token refresh automatically.
+
+**Production-ready patterns** - Zod validation on all inputs, Fastify error handling, secure environment configuration, and structured logging.
+
+This is an MVP to validate the core concept. We're learning what the "Stripe for LLMs" should actually look like based on real developer feedback.
+
+## What's coming soon
+
+**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. Currently in private beta.
+
+**Auth provider integrations** - Connect your existing Auth0, Clerk, or Firebase Auth. Users automatically get secure AI access based on your app's authentication.
+
+**Streaming responses** - Real-time message streaming for better user experience.
+
+**Function calling** - Let AI models call your application functions and APIs.
+
+**Multi-provider support** - Anthropic Claude, Google Gemini, local models, and more.
+
+**Conversation management** - Persistent chat sessions, message history, and context management.
+
+The roadmap is driven by feedback from developers using Airbolt.
+
+## Examples
+
+### Basic usage
 
 ```tsx
-import { ChatWidget } from '@airbolt/react-sdk';
+<ChatWidget baseURL="https://my-ai-backend.onrender.com" />
+```
 
-// Zero-config widget
-<ChatWidget />
+### Custom system prompt and styling
 
-// Customized widget
+```tsx
 <ChatWidget
-  baseURL="https://your-api.onrender.com"
-  title="Support Chat"
-  position="fixed-bottom-right"
+  baseURL="https://my-ai-backend.onrender.com"
+  system="You are a helpful assistant for my e-commerce store. Help customers with orders, returns, and product questions."
+  title="Customer Support"
   theme="dark"
+  position="fixed-bottom-right"
 />
 ```
 
-### Custom Chat with Hooks
+### Build your own chat interface
 
 ```tsx
 import { useChat } from '@airbolt/react-sdk';
 
 function CustomChat() {
   const { messages, input, setInput, send, isLoading } = useChat({
-    baseURL: 'https://your-api.onrender.com',
+    baseURL: 'https://my-ai-backend.onrender.com',
+    system:
+      'You are a coding assistant. Help users debug their code and suggest improvements.',
   });
 
   return (
-    <div>
-      {messages.map((msg, i) => (
-        <div key={i}>
-          {msg.role}: {msg.content}
-        </div>
-      ))}
+    <div className="chat-container">
+      <div className="messages">
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.role}`}>
+            <strong>{msg.role}:</strong> {msg.content}
+          </div>
+        ))}
+        {isLoading && <div className="typing">AI is thinking...</div>}
+      </div>
 
-      <input
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyPress={e => e.key === 'Enter' && send()}
-      />
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          send();
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Ask me anything about your code..."
+          disabled={isLoading}
+        />
+        <button type="submit" disabled={isLoading || !input.trim()}>
+          Send
+        </button>
+      </form>
     </div>
   );
 }
 ```
 
-### Next.js Integration
-
-```tsx
-// pages/index.tsx
-import { ChatWidget } from '@airbolt/react-sdk';
-
-export default function Home() {
-  return (
-    <main>
-      <h1>Welcome to my site</h1>
-      <ChatWidget baseURL={process.env.NEXT_PUBLIC_API_URL} />
-    </main>
-  );
-}
-```
-
----
-
-## 🎨 Customize Your Chat
-
-### Styling Options
-
-```tsx
-<ChatWidget
-  title="AI Assistant"
-  theme="dark" // 'light' | 'dark' | 'auto'
-  position="inline" // 'inline' | 'fixed-bottom-right'
-  customTheme={{
-    userMessage: '#007bff',
-    assistantMessage: '#6c757d',
-  }}
-/>
-```
-
-### Behavior Options
-
-```tsx
-<ChatWidget
-  system="You are a helpful support agent for my product"
-  placeholder="Ask me anything about our service..."
-/>
-```
-
----
-
-## 🔧 Framework Support
-
-| Framework      | Installation                     | Usage              |
-| -------------- | -------------------------------- | ------------------ |
-| **React**      | `npm install @airbolt/react-sdk` | `<ChatWidget />`   |
-| **Next.js**    | `npm install @airbolt/react-sdk` | Same as React      |
-| **Vue**        | `npm install @airbolt/sdk`       | Custom integration |
-| **Vanilla JS** | `npm install @airbolt/sdk`       | Custom integration |
-
-### Vanilla JavaScript Example
+### Non-React applications
 
 ```javascript
 import { chat } from '@airbolt/sdk';
 
-async function sendMessage(content) {
-  const response = await chat([{ role: 'user', content }], {
-    baseURL: 'https://your-api.onrender.com',
-  });
+async function askAI(question) {
+  const response = await chat(
+    [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: question },
+    ],
+    {
+      baseURL: 'https://my-ai-backend.onrender.com',
+    }
+  );
 
-  console.log('AI Response:', response);
+  return response;
 }
+
+// Usage
+const answer = await askAI('Explain how React hooks work');
+console.log(answer);
 ```
 
----
+**See more examples**:
 
-## 🚀 Ready for Production
+- [React Widget Example](packages/react-sdk/examples/react-widget/) - Pre-built chat widget
+- [React Hooks Example](packages/react-sdk/examples/react-hooks/) - Custom chat interface
+- [Node.js CLI Example](packages/sdk/examples/node-cli/) - Command-line chat
 
-### Environment Variables
+## Alternative deployment options
+
+### Self-hosting
+
+Deploy the Airbolt backend to any hosting platform:
 
 ```bash
-# .env.local (Next.js)
-NEXT_PUBLIC_API_URL=https://your-api.onrender.com
+git clone https://github.com/Airbolt-AI/airbolt
+cd airbolt
+npm install
+npm run build
 
-# .env (React)
-REACT_APP_API_URL=https://your-api.onrender.com
+# Set environment variables
+export OPENAI_API_KEY=sk-...
+export NODE_ENV=production
+
+npm start
 ```
 
-### Custom Backend URL
+## Roadmap
 
-If you're self-hosting or using a different deployment:
+**Phase 1: Foundation** (Current)
 
-```tsx
-<ChatWidget baseURL="https://your-custom-domain.com" />
-```
+- ✅ Core chat API with OpenAI integration
+- ✅ TypeScript SDKs for Node.js and React
+- ✅ One-click deployment to Render
+- ✅ Production-ready error handling and validation
 
-### Error Handling
+**Phase 2: Developer Experience**
 
-```tsx
-const { messages, send, error } = useChat({
-  baseURL: 'https://your-api.onrender.com',
-});
+- 🚧 Hosted solution (private beta)
+- 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
+- 🚧 Response streaming for real-time chat
+- 🚧 Function calling and tool use
+- 🚧 Multi-provider support (Anthropic, Google, etc.)
 
-{
-  error && (
-    <div className="error">Failed to send message. Please try again.</div>
-  );
-}
-```
+**Phase 3: Production Scale**
 
----
+- 📋 Conversation and session management
+- 📋 RAG integration for knowledge bases
+- 📋 Caching layer for cost optimization
+- 📋 Batch processing for high throughput
 
-## 💡 What You Get
+**Phase 4: Enterprise**
 
-✅ **Complete Chat Interface** - Messages, input, loading states  
-✅ **Automatic Error Handling** - Network issues, API errors  
-✅ **TypeScript Support** - Full type safety included  
-✅ **Customizable Styling** - Themes, colors, positioning  
-✅ **Mobile Responsive** - Works on all screen sizes  
-✅ **Production Ready** - Used by 500+ developers
+- 📋 SSO/SAML authentication
+- 📋 Role-based access control
+- 📋 Usage quotas and billing management
+- 📋 Compliance tools (SOC2, GDPR, etc.)
 
----
+**Want to influence the roadmap?** [Share your use case](https://github.com/Airbolt-AI/airbolt/discussions). We prioritize features based on real developer needs.
 
-## 🛠️ Need Help?
+## Architecture
 
-### Common Issues
+Built on modern TypeScript infrastructure:
 
-**Q: Chat widget doesn't appear**  
-A: Check that your backend URL is correct and the service is running.
+- **Fastify backend** - High-performance, type-safe API server
+- **Zod validation** - Runtime type safety for all inputs and outputs
+- **Auto-generated SDKs** - Fern-based client generation from OpenAPI specs
+- **Comprehensive testing** - Unit, integration, and mutation testing with 90%+ coverage
+- **Quality automation** - Pre-commit hooks, CI/CD, security scanning
 
-**Q: Messages not sending**  
-A: Verify your OpenAI API key is set correctly in your Render deployment.
+The monorepo structure makes it easy to contribute and understand how everything works together. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development setup.
 
-**Q: Styling looks wrong**  
-A: Try setting an explicit theme: `theme="light"` or `theme="dark"`
+## Documentation
 
-### Resources
+- **[React SDK API Reference](packages/react-sdk/README.md)** - Complete guide to components and hooks
+- **[Core SDK API Reference](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
+- **[API Documentation](https://your-deployment.onrender.com/docs)** - Interactive OpenAPI documentation
+- **[Development Guide](docs/CONTRIBUTING.md)** - Set up the project locally and contribute
 
-- 📖 [Complete Documentation](packages/react-sdk/README.md)
-- 🎯 [Live Examples](packages/react-sdk/examples/)
-- 💬 [Discord Community](https://discord.gg/your-discord)
-- 🐛 [Report Issues](https://github.com/Airbolt-AI/airbolt/issues)
+## Community
 
----
+- **[GitHub Discussions](https://github.com/Airbolt-AI/airbolt/discussions)** - Feature requests and roadmap input
+- **[Issues](https://github.com/Airbolt-AI/airbolt/issues)** - Bug reports and technical questions
 
-## 🔗 Related Packages
+## Why Airbolt?
 
-- **[@airbolt/sdk](packages/sdk/)** - Core TypeScript SDK
-- **[@airbolt/react-sdk](packages/react-sdk/)** - React hooks and components
+**Stop rebuilding the same AI plumbing.** Every AI-powered app needs the same backend infrastructure: secure API key storage, user authentication, rate limiting, logging, provider switching. You shouldn't have to rebuild this from scratch every time.
 
----
+**Enable truly backend-free AI apps.** Just like you can build entire apps with Stripe + Auth0 + Firebase, you should be able to add AI without spinning up servers. Airbolt makes that possible.
 
-## 📄 License
+**Focus on the AI experience, not the infrastructure.** The hard part is building great AI interactions for your users. The proxy handles the boring production-ready bits so you can focus on what makes your app unique.
+
+As Andrej Karpathy said: "The code was actually the easy part… all of this DevOps stuff was… extremely slow." We're here to fix that.
+
+## License
 
 MIT © [Airbolt AI](https://github.com/Airbolt-AI)
 
 ---
 
-**For developers who want to contribute or understand the technical details, see [CONTRIBUTING.md](docs/CONTRIBUTING.md).**
+**Airbolt is in active development.** We're a small team building thoughtfully based on real developer feedback. If you're using Airbolt in production, we'd love to hear about your experience and help you succeed.
+
+<!-- Alternative tagline options for consideration:
+1. "A production-ready backend for calling LLMs from your frontend securely."
+2. "The secure proxy between your frontend and OpenAI."
+3. "Deploy once, call LLMs safely from any frontend."
+4. "Your OpenAI API key stays secret. Your frontend stays simple."
+5. "The missing backend for frontend AI apps."
+6. "Stop exposing API keys. Start shipping AI features."
+7. "A JWT-secured proxy for OpenAI APIs."
+8. "The auth layer for LLM APIs you don't want to build."
+9. "Frontend AI without the API key nightmares."
+10. "Open-source backend for secure LLM access."
+-->

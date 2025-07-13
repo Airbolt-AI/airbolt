@@ -1,6 +1,15 @@
-# Backend API - Fastify TypeScript Service
+# Airbolt Backend API
 
-Production-ready Fastify backend with TypeScript, Zod validation, and comprehensive environment configuration.
+A production-ready backend for calling LLMs from your frontend securely. Built with Fastify, TypeScript, and comprehensive security features.
+
+## Features
+
+- **Secure LLM Proxy**: Call OpenAI models from your frontend without exposing API keys
+- **JWT Authentication**: 15-minute access tokens for secure API access
+- **Rate Limiting**: Configurable per-minute request limits (default: 100 req/min)
+- **CORS Support**: Configure allowed origins for your frontend
+- **One-Click Deploy**: Deploy to Render with a single click
+- **Type Safety**: Full TypeScript with strict validation using Zod
 
 ## Quick Start
 
@@ -41,7 +50,7 @@ All environment variables are validated using Zod schemas for type safety and ru
 | `JWT_SECRET`             | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
 | `ALLOWED_ORIGIN`         | CORS allowed origins (comma-separated)         | `http://localhost:5173` | Valid HTTP(S) URLs                                 |
 | `SYSTEM_PROMPT`          | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
-| `RATE_LIMIT_MAX`         | Max requests per window                        | `60`                    | Positive integer                                   |
+| `RATE_LIMIT_MAX`         | Max requests per window                        | `100`                   | Positive integer                                   |
 | `RATE_LIMIT_TIME_WINDOW` | Rate limit window (ms)                         | `60000` (1 minute)      | Positive integer (milliseconds)                    |
 
 ### Security Notes
@@ -67,12 +76,12 @@ ALLOWED_ORIGIN=https://example.com,https://app.example.com,http://localhost:3000
 ### Rate Limiting Examples
 
 ```bash
-# 60 requests per minute (default)
-RATE_LIMIT_MAX=60
+# 100 requests per minute (default)
+RATE_LIMIT_MAX=100
 RATE_LIMIT_TIME_WINDOW=60000
 
-# 100 requests per 5 minutes
-RATE_LIMIT_MAX=100
+# 200 requests per 5 minutes
+RATE_LIMIT_MAX=200
 RATE_LIMIT_TIME_WINDOW=300000
 
 # 1000 requests per hour
@@ -80,24 +89,30 @@ RATE_LIMIT_MAX=1000
 RATE_LIMIT_TIME_WINDOW=3600000
 ```
 
-### Migration Guide
+## Deployment
 
-If you're upgrading from a previous version:
+### Deploy to Render
 
-1. **New Required Variables**:
-   - `OPENAI_API_KEY` is now required - obtain from [OpenAI Platform](https://platform.openai.com/api-keys)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/markprompt/airbolt)
 
-2. **Changed Defaults**:
-   - `RATE_LIMIT_TIME_WINDOW` default changed from 100000ms to 60000ms (1 minute)
-   - Adjust your configuration if you relied on the old default
+1. Click the button above
+2. Enter your OpenAI API key when prompted
+3. Render will automatically generate a secure JWT secret
+4. Update `ALLOWED_ORIGIN` to match your frontend URL
 
-3. **Production Requirements**:
-   - `JWT_SECRET` is now enforced in production environments
-   - Generate a secure secret: `openssl rand -hex 32`
+### Manual Deployment
 
-4. **Validation Changes**:
-   - All environment variables now have strict validation
-   - Check logs for validation errors on startup
+1. **Required Environment Variables**:
+   - `OPENAI_API_KEY` - Your OpenAI API key
+   - `JWT_SECRET` - Generate with: `openssl rand -hex 32`
+   - `NODE_ENV=production`
+
+2. **Build and Start**:
+   ```bash
+   pnpm install --frozen-lockfile
+   pnpm build
+   node apps/backend-api/dist/server.js
+   ```
 
 ## Available Scripts
 
@@ -145,14 +160,68 @@ backend-api/
 └── package.json         # Dependencies
 ```
 
-## Key Features
+## API Endpoints
 
-- **Type Safety**: Full TypeScript with @tsconfig/strictest preset
-- **Validation**: Zod schemas for all inputs and environment variables
-- **Security**: Automatic redaction of sensitive values in logs
-- **Documentation**: Auto-generated OpenAPI specification
-- **Testing**: Comprehensive test suite with mutation testing
-- **Developer Experience**: Hot reload, detailed error messages
+### Authentication
+
+#### POST `/api/tokens`
+
+Generate a JWT token for API access.
+
+**Request Body:**
+
+```json
+{
+  "userId": "user-123" // Optional in development
+}
+```
+
+**Response:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresIn": "15m",
+  "tokenType": "Bearer"
+}
+```
+
+### Chat
+
+#### POST `/api/chat`
+
+Send chat messages to OpenAI GPT models.
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello, how are you?"
+    }
+  ],
+  "system": "Optional system prompt override"
+}
+```
+
+**Response:**
+
+```json
+{
+  "content": "I'm doing well, thank you! How can I help you today?",
+  "usage": {
+    "total_tokens": 42
+  }
+}
+```
 
 ## API Documentation
 
@@ -190,6 +259,16 @@ The API uses Fastify's built-in error handling with custom error messages:
   "message": "Something went wrong"
 }
 ```
+
+## Architecture
+
+- **Framework**: Fastify for high performance
+- **Language**: TypeScript with strict type checking
+- **Validation**: Zod for runtime validation
+- **Authentication**: JWT tokens with configurable expiration
+- **Rate Limiting**: Per-IP rate limiting using @fastify/rate-limit
+- **Logging**: Structured JSON logging with Pino
+- **Security**: CORS, Helmet, request validation
 
 ## Health Check
 

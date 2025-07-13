@@ -1,6 +1,6 @@
 # React Hooks Example - useChat
 
-This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk`.
+This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk` with the Airbolt secure LLM proxy.
 
 ## What This Shows
 
@@ -12,27 +12,41 @@ This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk
 
 ## Setup
 
+### Local Development
+
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
-2. Start the backend (from project root):
+2. Start the Airbolt backend (from project root):
+
    ```bash
    cd apps/backend-api
    pnpm dev
    ```
 
 3. Start this example:
+
    ```bash
    pnpm dev
    ```
 
 4. Open http://localhost:5173 in your browser
 
+### Production Usage
+
+```tsx
+const { messages, input, setInput, send } = useChat({
+  baseURL: 'https://my-ai-backend.onrender.com', // Required - your deployed Airbolt backend
+});
+```
+
 ## Key Features
 
 - **Automatic authentication** - No JWT code needed
+- **Secure LLM proxy** - Your API keys stay server-side
 - **Real-time chat** - Send and receive messages
 - **Loading states** - Shows when AI is responding
 - **Error handling** - Graceful error display
