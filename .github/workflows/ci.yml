@@ -85,6 +85,9 @@ jobs:
       - name: Setup project
         uses: ./.github/actions/setup-project
 
+      - name: Generate Fern SDK (required for build)
+        run: pnpm generate
+
       - name: Run full validation
         run: |
           echo "🔍 Stage 3: Full validation..."
