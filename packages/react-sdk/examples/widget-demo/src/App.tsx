@@ -26,8 +26,9 @@ export function App() {
             It's just one line of code: <code>&lt;ChatWidget /&gt;</code>
           </p>
           <p className="highlight">
-            <strong>New:</strong> The widget now uses only 4 CSS custom properties for theming
-            and inherits typography from its parent container!
+            <strong>New:</strong> The widget now uses only 4 CSS custom
+            properties for theming and inherits typography from its parent
+            container!
           </p>
         </section>
 
@@ -37,25 +38,31 @@ export function App() {
             <input
               type="checkbox"
               checked={showCustomTheme}
-              onChange={(e) => setShowCustomTheme(e.target.checked)}
-            />
-            {' '}Enable custom theme with CSS variables
+              onChange={e => setShowCustomTheme(e.target.checked)}
+            />{' '}
+            Enable custom theme with CSS variables
           </label>
         </section>
 
-        <section className={`widget-container ${showCustomTheme ? 'custom-theme' : ''}`}>
+        <section
+          className={`widget-container ${showCustomTheme ? 'custom-theme' : ''}`}
+        >
           <h2>Try the Chat Widget</h2>
           <ChatWidget
             baseURL="http://localhost:3000" // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
             title="AI Assistant"
             placeholder="Ask me anything..."
             position="inline"
-            minimalTheme={showCustomTheme ? {
-              primary: '#FF6B6B',
-              surface: '#F8F9FA',
-              border: '#DEE2E6',
-              text: '#212529'
-            } : undefined}
+            minimalTheme={
+              showCustomTheme
+                ? {
+                    primary: '#FF6B6B',
+                    surface: '#F8F9FA',
+                    border: '#DEE2E6',
+                    text: '#212529',
+                  }
+                : undefined
+            }
           />
         </section>
 

@@ -1,9 +1,9 @@
 {
-  "name": "airbolt-react-hooks-example",
+  "name": "airbolt-widget-demo",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Example of using @airbolt/react-sdk useChat hook",
+  "description": "Example of using @airbolt/react-sdk ChatWidget component",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

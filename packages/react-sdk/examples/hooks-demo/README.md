@@ -1,4 +1,4 @@
-# React Hooks Example - useChat
+# Hooks Demo - useChat
 
 This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk` with the Airbolt secure LLM proxy.
 
