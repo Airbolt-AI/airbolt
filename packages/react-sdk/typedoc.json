@@ -3,7 +3,6 @@
   "out": "../../docs/api/react",
   "readme": "README.md",
   "name": "@airbolt/react-sdk",
-  "plugin": ["typedoc-plugin-markdown"],
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeProtected": true,
