@@ -11,21 +11,5 @@
         ]
       }
     ]
-  },
-  "tools": {
-    "enabled": [
-      "Read",
-      "Write",
-      "Edit",
-      "MultiEdit",
-      "Bash",
-      "TodoRead",
-      "TodoWrite",
-      "WebSearch",
-      "WebFetch",
-      "Grep",
-      "Glob",
-      "LS"
-    ]
   }
 }
