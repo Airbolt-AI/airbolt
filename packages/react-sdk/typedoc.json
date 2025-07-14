@@ -10,7 +10,7 @@
   "disableSources": false,
   "navigationLinks": {
     "Home": "/",
-    "Core SDK": "/api/core",
+    "Core SDK": "/api/core/",
     "GitHub": "https://github.com/Airbolt-AI/airbolt"
   },
   "categorizeByGroup": true,

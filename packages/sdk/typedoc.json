@@ -10,7 +10,7 @@
   "disableSources": false,
   "navigationLinks": {
     "Home": "/",
-    "React SDK": "/api/react",
+    "React SDK": "/api/react/",
     "GitHub": "https://github.com/Airbolt-AI/airbolt"
   },
   "categorizeByGroup": true,

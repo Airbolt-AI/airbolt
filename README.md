@@ -260,14 +260,14 @@ Built on modern TypeScript infrastructure:
 - **Comprehensive testing** - Unit, integration, and mutation testing with 90%+ coverage
 - **Quality automation** - Pre-commit hooks, CI/CD, security scanning
 
-The monorepo structure makes it easy to contribute and understand how everything works together. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development setup.
+The monorepo structure makes it easy to contribute and understand how everything works together. See [CONTRIBUTING.md](https://github.com/Airbolt-AI/airbolt/blob/main/docs/CONTRIBUTING.md) for development setup.
 
 ## Documentation
 
 - **[SDK Documentation](https://airbolt-ai.github.io/airbolt/)** - Complete API reference for both Core and React SDKs
 - **[React SDK Guide](packages/react-sdk/README.md)** - Getting started with React components and hooks
 - **[Core SDK Guide](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
-- **[Development Guide](docs/CONTRIBUTING.md)** - Set up the project locally and contribute
+- **[Development Guide](https://github.com/Airbolt-AI/airbolt/blob/main/docs/CONTRIBUTING.md)** - Set up the project locally and contribute
 
 ## Community
 
