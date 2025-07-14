@@ -63,7 +63,7 @@ function ChatComponent() {
 
 ### ChatWidget
 
-A pre-built, customizable chat component with zero configuration required.
+A universally compatible chat component that inherits from parent styles by default. Zero configuration required, with only 4 CSS custom properties for theming instead of 17+ complex theme options.
 
 ```typescript
 function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
@@ -80,7 +80,8 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 | `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)        |
 | `position`     | `'inline' \| 'fixed-bottom-right'` | `'inline'`            | Widget positioning mode                            |
 | `className`    | `string`                           | -                     | Additional CSS class for custom styling            |
-| `customTheme`  | `Partial<ThemeColors>`             | -                     | Custom theme colors to override defaults           |
+| `customTheme`  | `Partial<ThemeColors>`             | -                     | Legacy theme colors (backward compatibility)       |
+| `minimalTheme` | `MinimalTheme`                     | -                     | New minimal theme using CSS custom properties      |
 | `customStyles` | `object`                           | -                     | Custom styles for widget elements                  |
 
 #### Example Usage
@@ -98,14 +99,24 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
   system="You are a helpful support agent"
 />
 
-// With custom theme colors
+// With CSS custom properties (recommended)
 <ChatWidget
   baseURL="https://your-deployment.onrender.com"
-  customTheme={{
-    userMessage: '#FF6B6B',
-    assistantMessage: '#4ECDC4'
+  minimalTheme={{
+    primary: '#FF6B6B',    // --chat-primary
+    surface: '#F8F9FA',    // --chat-surface
+    border: '#DEE2E6',     // --chat-border
+    text: '#212529'        // --chat-text
   }}
 />
+
+// Or use CSS directly in your stylesheet
+<style>
+  .my-chat-container {
+    --chat-primary: #FF6B6B;
+    --chat-surface: #F8F9FA;
+  }
+</style>
 ```
 
 ### useChat
@@ -331,6 +342,17 @@ const { messages, input, setInput, send } = useChat({
 });
 // Use the hook's managed state and functions
 ```
+
+## CSS Custom Properties
+
+The ChatWidget uses CSS custom properties for maximum compatibility:
+
+- `--chat-primary`: Primary color for buttons and user messages
+- `--chat-surface`: Background color for surfaces and assistant messages
+- `--chat-border`: Border color for inputs and dividers
+- `--chat-text`: Text color (inherits from parent by default)
+
+The widget inherits typography (font-family, font-size, line-height) from its parent container, making it blend seamlessly with any design system.
 
 ## TypeScript Support
 
