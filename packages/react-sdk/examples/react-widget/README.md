@@ -71,7 +71,37 @@ That's it! This single component provides:
 - `placeholder` - Input placeholder text
 - `position` - "inline" or "fixed-bottom-right"
 - `theme` - "light", "dark", or "auto"
-- `customTheme` - Override specific colors
+- `minimalTheme` - NEW: Use only 4 CSS custom properties for theming
+- `customTheme` - Legacy: Override specific colors (17 properties)
+
+## NEW: Simplified Theming with CSS Custom Properties
+
+The ChatWidget now supports a minimal theme approach using only 4 CSS custom properties:
+
+```tsx
+<ChatWidget
+  baseURL="https://my-ai-backend.onrender.com"
+  minimalTheme={{
+    primary: '#FF6B6B',    // Buttons and user messages
+    surface: '#F8F9FA',    // Backgrounds and assistant messages
+    border: '#DEE2E6',     // Borders and dividers
+    text: '#212529'        // Text color
+  }}
+/>
+```
+
+Or use CSS directly:
+
+```css
+.my-chat-container {
+  --chat-primary: #FF6B6B;
+  --chat-surface: #F8F9FA;
+  --chat-border: #DEE2E6;
+  --chat-text: #212529;
+}
+```
+
+The widget inherits typography (font-family, font-size) from its parent container, making it blend seamlessly with any design system.
 
 ## Next Steps
 
