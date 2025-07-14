@@ -188,15 +188,10 @@ const app: FastifyPluginAsync<AppOptions> = async (
 
   // Do not touch the following lines
 
-  // This loads all plugins defined in plugins
-  // those should be support plugins that are reused
-  // through your application
-  void fastify.register(AutoLoad, {
-    dir: join(__dirname, 'plugins'),
-    ignorePattern: /.*(env|cors|rate-limit|swagger)\.(ts|js)$/,
-    options: opts,
-    forceESM: true,
-  });
+  // Register support plugins explicitly
+  // No autoload = no stale cached files breaking builds
+  await fastify.register(import('./plugins/sensible.js'));
+  await fastify.register(import('./plugins/support.js'));
 
   // This loads all plugins defined in routes
   // define your routes in one of these
