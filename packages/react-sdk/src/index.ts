@@ -12,5 +12,4 @@ export { ChatWidget } from './components/ChatWidget.js';
 
 // Export types
 export type { UseChatOptions, UseChatReturn, Message } from './types/index.js';
-export type { ChatWidgetProps } from './components/ChatWidget.js';
-export type { ThemeColors } from './components/ChatWidget.styles.legacy.js';
+export type { ChatWidgetProps, MinimalTheme } from './components/ChatWidget.js';

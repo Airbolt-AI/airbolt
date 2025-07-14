@@ -5,13 +5,9 @@ import {
   getMergedStyles,
   themeToCSS,
   type MinimalTheme,
-} from './ChatWidget.styles.js';
-import {
-  convertLegacyTheme,
   detectSystemTheme,
   defaultThemes,
-} from './ChatWidget.compat.js';
-import type { ThemeColors } from './ChatWidget.styles.legacy.js';
+} from './ChatWidget.styles.js';
 
 /**
  * Escapes HTML entities to prevent XSS attacks
@@ -60,11 +56,6 @@ export interface ChatWidgetProps {
    */
   className?: string;
   /**
-   * Custom theme colors (legacy - maintained for backward compatibility)
-   * @deprecated Use CSS custom properties instead
-   */
-  customTheme?: Partial<ThemeColors>;
-  /**
    * Minimal theme using CSS custom properties (recommended)
    */
   minimalTheme?: MinimalTheme;
@@ -101,14 +92,6 @@ export interface ChatWidgetProps {
  *     surface: '#F8F9FA'
  *   }}
  * />
- *
- * // Legacy theme support (backward compatibility)
- * <ChatWidget
- *   customTheme={{
- *     userMessage: '#FF6B6B',
- *     assistantMessage: '#4ECDC4'
- *   }}
- * />
  * ```
  */
 export function ChatWidget({
@@ -119,7 +102,6 @@ export function ChatWidget({
   theme = 'auto',
   position = 'inline',
   className,
-  customTheme,
   minimalTheme,
   customStyles,
 }: ChatWidgetProps): React.ReactElement {
@@ -166,9 +148,7 @@ export function ChatWidget({
 
   // Determine theme to use
   const effectiveTheme: MinimalTheme =
-    minimalTheme ||
-    convertLegacyTheme(customTheme) ||
-    defaultThemes[currentTheme];
+    minimalTheme || defaultThemes[currentTheme];
 
   // Get merged styles
   const styles = getMergedStyles(position, customStyles);
