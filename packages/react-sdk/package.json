@@ -25,7 +25,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "prepublishOnly": "pnpm run build && echo 'React SDK package ready for publishing'",
-    "demo": "cd examples && npx http-server -p 8080 --cors -o standalone-demo.html"
+    "demo": "cd examples && npx http-server -p 8080 --cors -o standalone-demo.html",
+    "docs": "typedoc"
   },
   "keywords": [
     "react",
@@ -76,6 +77,8 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-test-renderer": "^18.0.0",
+    "typedoc": "^0.28.7",
+    "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   }
