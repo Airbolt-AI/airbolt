@@ -55,7 +55,8 @@
     "generate": "bash scripts/sdk-generate.sh",
     "sdk:generate": "bash scripts/sdk-generate.sh",
     "fern:check": "npx fern-api check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:generate": "cd packages/sdk && pnpm docs && cd ../react-sdk && pnpm docs"
   },
   "keywords": [
     "fastify",
