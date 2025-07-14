@@ -73,7 +73,13 @@ describe('Environment Plugin Direct Tests', () => {
       expect(app.config?.LOG_LEVEL).toBe('info');
       expect(app.config?.OPENAI_API_KEY).toBe(validApiKey);
       expect(app.config?.JWT_SECRET).toBeDefined(); // Auto-generated
-      expect(app.config?.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+      expect(app.config?.ALLOWED_ORIGIN).toEqual([
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://localhost:5174',
+        'http://localhost:4200',
+        'http://localhost:8080',
+      ]);
     } finally {
       process.env = originalEnv;
       await app.close();
@@ -108,7 +114,7 @@ describe('Environment Plugin Direct Tests', () => {
       expect(app.config?.PORT).toBe(3000);
       expect(app.config?.LOG_LEVEL).toBe('info');
       expect(app.config?.JWT_SECRET).toBeDefined(); // Auto-generated in dev
-      expect(app.config?.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+      expect(app.config?.ALLOWED_ORIGIN).toEqual(['*']); // Development default is wildcard
       expect(app.config?.SYSTEM_PROMPT).toBe('');
       expect(app.config?.RATE_LIMIT_MAX).toBe(60);
       expect(app.config?.RATE_LIMIT_TIME_WINDOW).toBe(60000);
@@ -131,6 +137,10 @@ describe('Environment Plugin Direct Tests', () => {
         // Provide JWT_SECRET for production and test, let development auto-generate
         ...(value !== 'development' && {
           JWT_SECRET: randomBytes(32).toString('hex'),
+        }),
+        // Provide appropriate ALLOWED_ORIGIN for production
+        ...(value === 'production' && {
+          ALLOWED_ORIGIN: 'https://example.com',
         }),
       };
 
@@ -211,6 +221,7 @@ describe('Environment Plugin Direct Tests', () => {
       ...originalEnv,
       NODE_ENV: 'production',
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'https://example.com', // Required in production
       // No JWT_SECRET provided
     };
     delete process.env['JWT_SECRET'];
@@ -227,6 +238,7 @@ describe('Environment Plugin Direct Tests', () => {
     const originalEnv = process.env;
     process.env = {
       ...originalEnv,
+      NODE_ENV: 'development', // Use development to allow mixed HTTP/HTTPS
       OPENAI_API_KEY: validApiKey,
       ALLOWED_ORIGIN:
         'https://example.com, http://localhost:3000, https://app.example.com',
@@ -240,6 +252,10 @@ describe('Environment Plugin Direct Tests', () => {
         'https://example.com',
         'http://localhost:3000',
         'https://app.example.com',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:4200',
+        'http://localhost:8080',
       ]);
     } finally {
       process.env = originalEnv;
@@ -438,7 +454,7 @@ describe('Environment Plugin Direct Tests', () => {
     };
 
     await expect(app2.register(envPlugin).ready()).rejects.toThrow(
-      /ALLOWED_ORIGIN.*empty/
+      /Invalid CORS configuration/
     );
     await app2.close();
 

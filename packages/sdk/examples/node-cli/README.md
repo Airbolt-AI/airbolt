@@ -5,22 +5,41 @@ This example shows the simplest way to use `@airbolt/sdk` in a Node.js command-l
 ## Prerequisites
 
 - Node.js 18 or higher
+- pnpm 10 or higher
 - Airbolt backend deployed or running locally
 
 ## Setup
 
 ### Local Development
 
-1. Install dependencies:
+**IMPORTANT**: This example must be run from the Airbolt monorepo workspace.
+
+1. **From the project root**, build the SDK and install dependencies:
 
    ```bash
+   # Navigate to project root
+   cd /path/to/airbolt
+
+   # Install all workspace dependencies
    pnpm install
+
+   # Build the SDK package
+   cd packages/sdk
+   pnpm build
    ```
 
-2. Start the Airbolt backend (in the project root):
+2. Start the Airbolt backend:
+
    ```bash
+   # From project root
    cd apps/backend-api
    pnpm dev
+   ```
+
+3. Run the example:
+   ```bash
+   # Navigate to the example directory
+   cd packages/sdk/examples/node-cli
    ```
 
 ### Production Usage
@@ -36,20 +55,28 @@ const response = await chat(messages, {
 
 ## Run the Examples
 
+**IMPORTANT**: Make sure you're in the `packages/sdk/examples/node-cli` directory.
+
 ### JavaScript Version
 
 ```bash
-npm start
-# or
 pnpm start
 ```
 
 ### TypeScript Version
 
 ```bash
-npm run start:ts
-# or
 pnpm start:ts
+```
+
+### Expected Output
+
+```bash
+🤖 Airbolt Chat Example
+
+AI: [AI response with a joke or helpful information]
+
+✅ Success! The SDK handles authentication automatically.
 ```
 
 ## What This Demonstrates

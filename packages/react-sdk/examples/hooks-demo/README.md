@@ -14,26 +14,55 @@ This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk
 
 ### Local Development
 
-1. Install dependencies:
+**IMPORTANT**: This example must be run from the Airbolt monorepo workspace.
+
+1. **From the project root**, install dependencies:
 
    ```bash
+   # Navigate to project root
+   cd /path/to/airbolt
+
+   # Install all workspace dependencies
    pnpm install
    ```
 
-2. Start the Airbolt backend (from project root):
+2. **Set up environment variables** (CRITICAL for CORS):
 
    ```bash
+   # From project root - create .env file if it doesn't exist
+   echo "NODE_ENV=development" >> .env
+   echo "OPENAI_API_KEY=your-openai-api-key" >> .env
+   ```
+
+   **⚠️ IMPORTANT**: `NODE_ENV=development` is required for CORS to work with multiple localhost ports. Without this, you'll get CORS errors.
+
+3. Start the Airbolt backend:
+
+   ```bash
+   # From project root
    cd apps/backend-api
    pnpm dev
    ```
 
-3. Start this example:
+4. Start this example:
 
    ```bash
+   # Navigate to the example directory
+   cd packages/react-sdk/examples/hooks-demo
    pnpm dev
    ```
 
-4. Open http://localhost:5173 in your browser
+5. Open http://localhost:5173 in your browser
+
+## 🚨 Troubleshooting
+
+**"Failed to refresh token" errors?**
+
+1. Add `NODE_ENV=development` to your `.env` file in the project root
+2. Restart the backend: `cd apps/backend-api && pnpm dev`
+3. Hard refresh your browser (Cmd+Shift+R)
+
+**Backend not starting?** Ensure you're running from `apps/backend-api/` directory, not project root.
 
 ### Production Usage
 

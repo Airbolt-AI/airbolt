@@ -4,35 +4,64 @@ This example demonstrates the simplest way to add AI chat to your React app usin
 
 ## What This Shows
 
-- Drop-in `ChatWidget` component
-- Zero configuration needed
-- Customizable props (title, placeholder, position)
-- Complete chat UI with just one component
+- Drop-in `ChatWidget` component that **inherits your app's styling**
+- Automatically adopts parent fonts, colors, and spacing
+- Zero configuration needed - just works with your existing design
+- Optional CSS custom properties for chat-specific theming
 
 ## Setup
 
 ### Local Development
 
-1. Install dependencies:
+**IMPORTANT**: This example must be run from the Airbolt monorepo workspace.
+
+1. **From the project root**, install dependencies:
 
    ```bash
+   # Navigate to project root
+   cd /path/to/airbolt
+
+   # Install all workspace dependencies
    pnpm install
    ```
 
-2. Start the Airbolt backend (from project root):
+2. **Set up environment variables** (CRITICAL for CORS):
 
    ```bash
+   # From project root - create .env file if it doesn't exist
+   echo "NODE_ENV=development" >> .env
+   echo "OPENAI_API_KEY=your-openai-api-key" >> .env
+   ```
+
+   **⚠️ IMPORTANT**: `NODE_ENV=development` is required for CORS to work with multiple localhost ports. Without this, you'll get CORS errors.
+
+3. Start the Airbolt backend:
+
+   ```bash
+   # From project root
    cd apps/backend-api
    pnpm dev
    ```
 
-3. Start this example:
+4. Start this example:
 
    ```bash
+   # Navigate to the example directory
+   cd packages/react-sdk/examples/widget-demo
    pnpm dev
    ```
 
-4. Open http://localhost:5174 in your browser
+5. Open http://localhost:5174 in your browser
+
+## 🚨 Troubleshooting
+
+**"Failed to refresh token" errors?**
+
+1. Add `NODE_ENV=development` to your `.env` file in the project root
+2. Restart the backend: `cd apps/backend-api && pnpm dev`
+3. Hard refresh your browser (Cmd+Shift+R)
+
+**Backend not starting?** Ensure you're running from `apps/backend-api/` directory, not project root.
 
 ### Production Usage
 
@@ -64,43 +93,33 @@ That's it! This single component provides:
 - 🎨 Professional styling
 - 📱 Responsive design
 
+## Styling Philosophy
+
+**The ChatWidget inherits your app's design automatically:**
+
+- Uses parent's `font-family`, `font-size`, `line-height`
+- Adapts to parent's text color by default
+- Minimal, non-intrusive styling that blends with any design system
+
 ## Customization Options
 
 - `baseURL` - Your Airbolt backend URL (required)
 - `title` - Widget header title
 - `placeholder` - Input placeholder text
 - `position` - "inline" or "fixed-bottom-right"
-- `theme` - "light", "dark", or "auto"
-- `minimalTheme` - Use 4 CSS custom properties for theming
 
-## Simplified Theming with CSS Custom Properties
+## Optional Theming
 
-The ChatWidget supports a minimal theme approach using only 4 CSS custom properties:
-
-```tsx
-<ChatWidget
-  baseURL="https://my-ai-backend.onrender.com"
-  minimalTheme={{
-    primary: '#FF6B6B', // Buttons and user messages
-    surface: '#F8F9FA', // Backgrounds and assistant messages
-    border: '#DEE2E6', // Borders and dividers
-    text: '#212529', // Text color
-  }}
-/>
-```
-
-Or use CSS directly:
+If you need chat-specific colors, use CSS custom properties:
 
 ```css
-.my-chat-container {
-  --chat-primary: #ff6b6b;
-  --chat-surface: #f8f9fa;
-  --chat-border: #dee2e6;
-  --chat-text: #212529;
+.my-container {
+  --chat-primary: #your-brand-color;
+  --chat-surface: #your-background;
+  --chat-border: #your-border-color;
+  --chat-text: #your-text-color;
 }
 ```
-
-The widget inherits typography (font-family, font-size) from its parent container, making it blend seamlessly with any design system.
 
 ## Next Steps
 

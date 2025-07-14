@@ -274,6 +274,19 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.7)(happy-dom@15.11.7)
 
+  packages/sdk/examples/node-cli:
+    dependencies:
+      '@airbolt/sdk':
+        specifier: workspace:*
+        version: link:../..
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.7
+      tsx:
+        specifier: ^4.0.0
+        version: 4.20.3
+
   packages/types:
     dependencies:
       zod:
@@ -5212,14 +5225,6 @@ snapshots:
       chai: 5.2.1
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(vite@5.4.19(@types/node@20.19.7))':
-    dependencies:
-      '@vitest/spy': 3.2.4
-      estree-walker: 3.0.3
-      magic-string: 0.30.17
-    optionalDependencies:
-      vite: 5.4.19(@types/node@20.19.7)
-
   '@vitest/mocker@3.2.4(vite@5.4.19(@types/node@22.16.3))':
     dependencies:
       '@vitest/spy': 3.2.4
@@ -7721,7 +7726,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.19(@types/node@20.19.7))
+      '@vitest/mocker': 3.2.4(vite@5.4.19(@types/node@22.16.3))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4

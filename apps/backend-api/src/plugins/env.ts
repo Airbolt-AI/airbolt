@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
+import {
+  COMMON_DEV_PORTS,
+  DEFAULT_TEST_ORIGINS,
+  validateOrigins,
+} from '../constants/cors.js';
 
 export const EnvSchema = z
   .object({
@@ -49,33 +54,33 @@ export const EnvSchema = z
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
       .optional(),
 
+    // CORS origins (environment-aware defaults, see constants/cors.ts for details)
     ALLOWED_ORIGIN: z
-      .string({
-        required_error: 'ALLOWED_ORIGIN is required for CORS configuration',
-        invalid_type_error: 'ALLOWED_ORIGIN must be a string',
+      .string()
+      .default(() => {
+        const env = process.env['NODE_ENV'];
+        if (env === 'production') {
+          throw new Error(
+            'ALLOWED_ORIGIN required in production. Example: ALLOWED_ORIGIN=https://yourdomain.com'
+          );
+        }
+        return env === 'test' ? DEFAULT_TEST_ORIGINS : '*';
       })
-      .min(1, 'ALLOWED_ORIGIN cannot be empty')
-      .default('http://localhost:5173')
       .transform(origins => {
-        // Support comma-separated origins and trim whitespace
-        return origins.split(',').map(origin => origin.trim());
+        const list = origins.split(',').map(s => s.trim());
+
+        // Auto-enhance development with common ports (unless wildcard)
+        if (process.env['NODE_ENV'] === 'development' && !list.includes('*')) {
+          const newPorts = COMMON_DEV_PORTS.filter(
+            port => !list.includes(port)
+          );
+          return [...list, ...newPorts];
+        }
+        return list;
       })
       .refine(
-        origins =>
-          origins.every(origin => {
-            // Allow wildcard for all origins
-            if (origin === '*') {
-              return true;
-            }
-            try {
-              // Validate each origin is a valid URL
-              const url = new URL(origin);
-              return url.protocol === 'http:' || url.protocol === 'https:';
-            } catch {
-              return false;
-            }
-          }),
-        'ALLOWED_ORIGIN must contain valid HTTP(S) URLs or * for all origins'
+        origins => validateOrigins(origins, process.env['NODE_ENV']),
+        'Invalid CORS configuration'
       ),
 
     SYSTEM_PROMPT: z

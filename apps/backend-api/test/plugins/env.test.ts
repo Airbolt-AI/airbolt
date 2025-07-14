@@ -18,7 +18,7 @@ describe('Environment Schema Validation', () => {
         expect(result.NODE_ENV).toBe('development');
         expect(result.PORT).toBe(3000);
         expect(result.LOG_LEVEL).toBe('info');
-        expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+        expect(result.ALLOWED_ORIGIN).toEqual(['*']);
         expect(result.SYSTEM_PROMPT).toBe('');
         expect(result.RATE_LIMIT_MAX).toBe(60);
         expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
@@ -288,12 +288,23 @@ describe('Environment Schema Validation', () => {
   });
 
   describe('ALLOWED_ORIGIN validation', () => {
-    it('should use default localhost origin', () => {
-      const result = EnvSchema.parse({
-        OPENAI_API_KEY: validApiKey,
-        JWT_SECRET: randomBytes(32).toString('hex'),
-      });
-      expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+    it('should use default wildcard origin in development', () => {
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
+
+      try {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          JWT_SECRET: randomBytes(32).toString('hex'),
+        });
+        expect(result.ALLOWED_ORIGIN).toEqual(['*']);
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env['NODE_ENV'] = originalEnv;
+        } else {
+          delete process.env['NODE_ENV'];
+        }
+      }
     });
 
     it('should parse single origin', () => {
@@ -338,7 +349,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'not-a-url',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('valid HTTP(S) URLs or * for all origins');
+      ).toThrow('Invalid CORS configuration');
     });
 
     it('should reject non-HTTP(S) protocols', () => {
@@ -348,7 +359,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'ftp://example.com',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('valid HTTP(S) URLs or * for all origins');
+      ).toThrow('Invalid CORS configuration');
     });
 
     it('should accept wildcard * for all origins', () => {
