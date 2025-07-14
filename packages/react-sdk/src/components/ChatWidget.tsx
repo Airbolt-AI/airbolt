@@ -168,7 +168,7 @@ export function ChatWidget({
   const effectiveTheme: MinimalTheme =
     minimalTheme ||
     convertLegacyTheme(customTheme) ||
-    (theme !== 'auto' ? {} : defaultThemes[currentTheme]);
+    defaultThemes[currentTheme];
 
   // Get merged styles
   const styles = getMergedStyles(position, customStyles);

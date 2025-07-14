@@ -60,10 +60,12 @@ export const defaultThemes = {
     primary: '#007aff',
     surface: '#f5f5f5',
     border: '#e0e0e0',
+    text: '#000000',
   },
   dark: {
     primary: '#0a84ff',
     surface: '#2a2a2a',
     border: '#3a3a3a',
+    text: '#ffffff',
   },
 } as const;

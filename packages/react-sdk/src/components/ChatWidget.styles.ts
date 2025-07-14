@@ -114,7 +114,7 @@ export const baseStyles: Record<string, CSSProperties> = {
   },
 
   inputFocus: {
-    borderColor: 'var(--chat-primary, #007aff)',
+    border: '1px solid var(--chat-primary, #007aff)',
   },
 
   button: {

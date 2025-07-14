@@ -62,12 +62,15 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   const [error, setError] = useState<Error | null>(null);
 
   // Use ref to track if component is mounted to prevent state updates after unmount
-  const isMountedRef = useRef(true);
+  const isMountedRef = useRef(false);
 
   // Track abort controller for cleanup
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // Set mounted to true when effect runs
+    isMountedRef.current = true;
+
     return () => {
       isMountedRef.current = false;
       // Cancel any pending requests on unmount
