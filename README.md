@@ -264,9 +264,9 @@ The monorepo structure makes it easy to contribute and understand how everything
 
 ## Documentation
 
-- **[React SDK API Reference](packages/react-sdk/README.md)** - Complete guide to components and hooks
-- **[Core SDK API Reference](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
-- **[API Documentation](https://your-deployment.onrender.com/docs)** - Interactive OpenAPI documentation
+- **[SDK Documentation](https://airbolt-ai.github.io/airbolt/)** - Complete API reference for both Core and React SDKs
+- **[React SDK Guide](packages/react-sdk/README.md)** - Getting started with React components and hooks
+- **[Core SDK Guide](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
 - **[Development Guide](docs/CONTRIBUTING.md)** - Set up the project locally and contribute
 
 ## Community
