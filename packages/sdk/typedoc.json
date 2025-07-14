@@ -1,29 +1,5 @@
 {
   "entryPoints": ["src/index.ts"],
   "out": "../../docs/api/core",
-  "readme": "README.md",
-  "name": "@airbolt/sdk",
-  "plugin": ["typedoc-plugin-markdown"],
-  "excludePrivate": true,
-  "excludeInternal": true,
-  "excludeProtected": true,
-  "hideGenerator": true,
-  "disableSources": false,
-  "navigationLinks": {
-    "Home": "/",
-    "React SDK": "/api/react/",
-    "GitHub": "https://github.com/Airbolt-AI/airbolt"
-  },
-  "categorizeByGroup": true,
-  "defaultCategory": "Other",
-  "categoryOrder": [
-    "Functions",
-    "Classes",
-    "Interfaces",
-    "Type Aliases",
-    "Other"
-  ],
-  "skipErrorChecking": true,
-  "treatWarningsAsErrors": false,
-  "excludeExternals": true
+  "name": "@airbolt/sdk"
 }
