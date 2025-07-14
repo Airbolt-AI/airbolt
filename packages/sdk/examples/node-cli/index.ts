@@ -20,7 +20,7 @@ async function main(): Promise<void> {
 
     // Send message with typed options
     const response = await chat(messages, {
-      baseURL: process.env.AIRBOLT_URL || 'http://localhost:3000',
+      baseURL: process.env.AIRBOLT_URL || 'http://localhost:3000', // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
       system: 'You are a helpful assistant. Keep responses concise.',
     });
 

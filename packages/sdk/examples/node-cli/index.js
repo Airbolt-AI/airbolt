@@ -17,7 +17,7 @@ async function main() {
     const response = await chat(
       [{ role: 'user', content: 'Hello! Can you tell me a short joke?' }],
       {
-        baseURL: 'http://localhost:3000',
+        baseURL: 'http://localhost:3000', // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
       }
     );
 
