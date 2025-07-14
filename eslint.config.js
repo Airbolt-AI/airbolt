@@ -18,6 +18,10 @@ export default tseslint.config(
       '**/.stryker-tmp',
       '**/reports',
       'examples/**', // Documentation examples may have intentional type issues
+      '**/examples/**', // Examples in any package
+      'packages/*/examples/**', // Package-specific examples
+      'packages/sdk/generated/**', // Generated SDK files
+      '.sdk-cache/**', // SDK generation cache
       '.claude/**', // Claude Code commands/tools
     ],
   },
@@ -33,6 +37,7 @@ export default tseslint.config(
             '*.config.js',
             'vitest.config.ts',
             'vitest.workspace.ts',
+            'vite.config.ts',
           ],
         },
         tsconfigRootDir: import.meta.dirname,

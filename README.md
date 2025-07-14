@@ -1,479 +1,306 @@
-# 🚀 Airbolt
+# Airbolt
 
-> Production-ready Fastify + TypeScript monorepo optimized for AI-assisted development
+**A production-ready backend for calling LLMs from your frontend securely.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
-[![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D10.0.0-orange)](https://pnpm.io/)
+Stripe removed payment rails. Auth0 removed login flows. Airbolt removes AI plumbing.
 
-## Overview
+## Why You Need This
 
-This template provides a production-ready foundation where **AI coding agents autonomously generate complete backend APIs with automatically generated type-safe client SDKs** using comprehensive guardrails that prevent technical debt and architectural violations.
+**The Problem**: If you put your OpenAI API key in frontend code, anyone can:
 
-### Why This Template Exists
+- View it in browser DevTools (it's visible in your JavaScript)
+- Use it to make unlimited API calls on your dime
+- Potentially rack up thousands in charges before you notice
+- Access your entire OpenAI account and usage history
 
-Modern AI coding assistants are powerful but can introduce subtle bugs, architectural violations, or security issues. This template provides:
+**The Solution**: Airbolt is a secure backend proxy that:
 
-- **Immediate feedback loops** for AI agents through fail-fast pipelines
-- **Constraint-driven development** that guides AI toward correct patterns
-- **Comprehensive quality gates** that catch issues before they reach production
-- **Clear architectural boundaries** that prevent spaghetti code
+- Keeps your API keys on the server only
+- Issues time-limited JWT tokens to your frontend users
+- Validates every request with cryptographic signatures
+- Rate limits to prevent abuse
+- Logs usage for monitoring
 
-### Why AI Development Needs Different Constraints
+## Getting Started
 
-Traditional software quality relies on experienced developers making good decisions. AI agents have different failure modes that require systematic prevention:
+**Deploy the Airbolt backend **
 
-**🧪 The "Coverage Theater" Problem**
-
-```typescript
-// AI frequently writes tests that achieve 100% coverage but validate nothing:
-it('should calculate tax', () => {
-  const result = calculateTax(100, 0.1);
-  expect(result).toBeDefined(); // ✅ Passes
-  expect(typeof result).toBe('number'); // ✅ Passes - 100% coverage!
-});
-
-// Our enterprise-grade mutation testing standards catch this
-// When logic is mutated, the test still passes, revealing it's fake
-```
-
-**🏗️ Architectural Drift Without Understanding**
-
-```typescript
-// AI doesn't understand why this is problematic:
-const config = {
-  port: process.env.PORT || 3000, // ❌ No validation
-  secret: process.env.JWT_SECRET, // ❌ Could be undefined
-};
-
-// ESLint rules enforce proper patterns:
-const config = ConfigSchema.parse(process.env); // ✅ Validation required
-```
-
-**⚡ Different Development Velocity**
-
-- **Human pace**: Think → Code → Test → Review (minutes to hours)
-- **AI pace**: Generate → Validate → Iterate (seconds)
-- **Our solution**: Rapid feedback loops optimized for AI's iterative development
-
-This template implements **constraint-based development** where quality comes from systematic guardrails, not developer experience.
-
-### Primary Use Case
-
-Built for **fully autonomous AI development workflows** where AI agents generate complete applications while automated tooling provides type-safe client integration. The human role is limited to:
-
-- **Requirements collaboration** with AI agents (pulling from Linear via MCP)
-- **Final approval** of AI-generated implementations
-- **Deployment decisions** and production oversight
-
-**AI agents handle 100% of development:**
-
-- **Complete application development** (backend APIs, testing, documentation)
-- **Code generation, testing, and code review** using **Cursor IDE**, **Claude Code**, and **OpenAI Codex**
-
-**Automated SDK generation provides:**
-
-- **Type-safe client libraries** automatically generated from API specifications (via Fern)
-- **Zero client integration overhead** - consume APIs immediately with full IntelliSense
-- **Contract enforcement** - breaking API changes are caught at compile-time
-- **Rapid prototyping** - frontend teams get working client libraries instantly
-
-This eliminates the traditional bottleneck where backend teams must manually write and maintain client SDKs, documentation, and coordinate API changes with frontend teams.
-
-## 🚀 Deploy to Render
-
-Deploy your own instance of Airbolt in seconds:
+Deploy our production-ready LLM proxy to Render. You'll get your own private API that securely handles LLM calls:
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt)
 
-### Setup (< 60 seconds)
+**What this deploys:**
 
-1. **Click the button above**
-2. **Enter a unique name** (e.g., `airbolt-backend-123`)
-3. **Enter your OpenAI API key** when prompted
-4. **Click "Apply"**
+- Secure LLM proxy with JWT authentication
+- Rate limiting and abuse prevention
+- OpenAI integration with your API key
+- Production logging and error handling
 
-That's it! Your API will be live in ~3 minutes 🎉
+**What you need:**
 
-**Find your URL**: After deployment completes, click on your service name in the [Render Dashboard](https://dashboard.render.com). Your URL will be shown at the top (e.g., `https://airbolt-backend-123.onrender.com`)
+- Service name (this becomes your URL, e.g., `my-ai-backend` → `https://my-ai-backend.onrender.com`)
+- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
 
-### Using Your Deployed API
+After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
+
+Then add to your app:
+
+```bash
+npm install @airbolt/react-sdk
+```
+
+```tsx
+import { ChatWidget } from '@airbolt/react-sdk';
+
+function App() {
+  return (
+    <div>
+      <h1>My App</h1>
+      <ChatWidget baseURL="https://my-ai-backend.onrender.com" />
+    </div>
+  );
+}
+```
+
+That's it! Your app now has secure AI chat that can't be abused by random users.
+
+> **Coming soon**: Skip deployment entirely with our hosted solution. [Get early access](https://github.com/Airbolt-AI/airbolt/discussions)
+
+## What you get today
+
+**Secure LLM proxy** - Your OpenAI API key stays on the server. Frontend gets short-lived JWT tokens (15 min expiry) that can only access the chat endpoint.
+
+**How the security works**:
+
+1. Frontend requests a JWT token from `/api/tokens` endpoint
+2. Token is signed with a secret key (HS256 algorithm) only the server knows
+3. Frontend includes token in `Authorization: Bearer <token>` header
+4. Backend verifies the JWT signature on every request
+5. Invalid/expired tokens are rejected with 401 Unauthorized
+
+**Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Rate limiting (100 requests/minute) prevents runaway usage.
+
+**Pre-built backend** - We provide the backend, you just deploy it. One-click to Render or any Node.js hosting platform. No custom server code to write or maintain.
+
+**TypeScript SDKs** - Auto-generated Javascript and React libraries with full type safety. The SDK handles token refresh automatically.
+
+**Production-ready patterns** - Zod validation on all inputs, Fastify error handling, secure environment configuration, and structured logging.
+
+This is an MVP to validate the core concept. We're learning what the "Stripe for LLMs" should actually look like based on real developer feedback.
+
+## What's coming soon
+
+**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. Currently in private beta.
+
+**Auth provider integrations** - Connect your existing Auth0, Clerk, or Firebase Auth. Users automatically get secure AI access based on your app's authentication.
+
+**Streaming responses** - Real-time message streaming for better user experience.
+
+**Function calling** - Let AI models call your application functions and APIs.
+
+**Multi-provider support** - Anthropic Claude, Google Gemini, local models, and more.
+
+**Conversation management** - Persistent chat sessions, message history, and context management.
+
+The roadmap is driven by feedback from developers using Airbolt.
+
+## Examples
+
+### Basic usage
+
+```tsx
+<ChatWidget baseURL="https://my-ai-backend.onrender.com" />
+```
+
+### Custom system prompt and styling
+
+```tsx
+<ChatWidget
+  baseURL="https://my-ai-backend.onrender.com"
+  system="You are a helpful assistant for my e-commerce store. Help customers with orders, returns, and product questions."
+  title="Customer Support"
+  theme="dark"
+  position="fixed-bottom-right"
+/>
+```
+
+### Build your own chat interface
+
+```tsx
+import { useChat } from '@airbolt/react-sdk';
+
+function CustomChat() {
+  const { messages, input, setInput, send, isLoading } = useChat({
+    baseURL: 'https://my-ai-backend.onrender.com',
+    system:
+      'You are a coding assistant. Help users debug their code and suggest improvements.',
+  });
+
+  return (
+    <div className="chat-container">
+      <div className="messages">
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.role}`}>
+            <strong>{msg.role}:</strong> {msg.content}
+          </div>
+        ))}
+        {isLoading && <div className="typing">AI is thinking...</div>}
+      </div>
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          send();
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Ask me anything about your code..."
+          disabled={isLoading}
+        />
+        <button type="submit" disabled={isLoading || !input.trim()}>
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}
+```
+
+### Non-React applications
 
 ```javascript
-import { AirboltAPI } from '@airbolt/sdk';
+import { chat } from '@airbolt/sdk';
 
-const client = new AirboltAPI({
-  baseURL: 'https://your-service.onrender.com',
-});
+async function askAI(question) {
+  const response = await chat(
+    [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: question },
+    ],
+    {
+      baseURL: 'https://my-ai-backend.onrender.com',
+    }
+  );
+
+  return response;
+}
+
+// Usage
+const answer = await askAI('Explain how React hooks work');
+console.log(answer);
 ```
 
-> **Note**: Free tier services spin down after 15 minutes of inactivity. First request after sleep takes ~1 minute.
+**See more examples**:
 
-## Quick Start
+- [React Widget Example](packages/react-sdk/examples/react-widget/) - Pre-built chat widget
+- [React Hooks Example](packages/react-sdk/examples/react-hooks/) - Custom chat interface
+- [Node.js CLI Example](packages/sdk/examples/node-cli/) - Command-line chat
 
-### Prerequisites
+## Alternative deployment options
 
-- **Node.js** >= 20.0.0
-- **pnpm** >= 10.0.0
+### Self-hosting
 
-### Installation
+Deploy the Airbolt backend to any hosting platform:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Airbolt-AI/airbolt.git
+git clone https://github.com/Airbolt-AI/airbolt
 cd airbolt
+npm install
+npm run build
 
-# Setup development environment (includes GitLeaks security scanner)
-pnpm setup:dev
+# Set environment variables
+export OPENAI_API_KEY=sk-...
+export NODE_ENV=production
 
-# Verify setup
-pnpm ai:quick
+npm start
 ```
 
-#### Manual GitLeaks Installation
+## Roadmap
 
-If you need to install GitLeaks separately or the automatic installation fails:
+**Phase 1: Foundation** (Current)
 
-```bash
-# Install GitLeaks using the enterprise installation script
-pnpm setup:gitleaks
+- ✅ Core chat API with OpenAI integration
+- ✅ TypeScript SDKs for Node.js and React
+- ✅ One-click deployment to Render
+- ✅ Production-ready error handling and validation
 
-# Or manually via package manager:
-# macOS: brew install gitleaks
-# Ubuntu/Debian: sudo apt-get install gitleaks
-# RHEL/CentOS: sudo yum install gitleaks
-```
+**Phase 2: Developer Experience**
 
-> **Note**: GitLeaks is required for the pre-commit security scanning. The setup script automatically handles installation across different platforms.
+- 🚧 Hosted solution (private beta)
+- 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
+- 🚧 Response streaming for real-time chat
+- 🚧 Function calling and tool use
+- 🚧 Multi-provider support (Anthropic, Google, etc.)
 
-### Development
+**Phase 3: Production Scale**
 
-```bash
-# Start development server
-pnpm dev              # Start all apps in development mode
-
-# Build and test
-pnpm build            # Build all packages
-pnpm test             # Run all test suites
-pnpm type-check       # TypeScript compilation check
+- 📋 Conversation and session management
+- 📋 RAG integration for knowledge bases
+- 📋 Caching layer for cost optimization
+- 📋 Batch processing for high throughput
 
-# Quality assurance
-pnpm lint             # Code formatting and linting (ESLint + Prettier)
-pnpm clean            # Clean build artifacts
-```
+**Phase 4: Enterprise**
 
-## 🛡️ Local Validation - Prevent CI Failures
+- 📋 SSO/SAML authentication
+- 📋 Role-based access control
+- 📋 Usage quotas and billing management
+- 📋 Compliance tools (SOC2, GDPR, etc.)
 
-> **Critical**: Always validate locally before pushing. CI failures are expensive and slow.
+**Want to influence the roadmap?** [Share your use case](https://github.com/Airbolt-AI/airbolt/discussions). We prioritize features based on real developer needs.
 
-### ⚡ Quick Commands (Use Daily)
-
-```bash
-# 🚀 FASTEST: Match CI exactly (~30 seconds)
-pnpm ci:check         # Same validation as GitHub Actions
+## Architecture
 
-# 🔧 FIX: Auto-fix issues
-pnpm lint:fix         # Fix formatting + linting
+Built on modern TypeScript infrastructure:
 
-# 🎯 TARGETED: Specific checks
-pnpm lint             # ESLint errors
-pnpm type-check       # TypeScript compilation
-pnpm test             # Test suite
-pnpm build            # Production build
-```
-
-### 📊 Validation Levels
-
-| Command              | Speed | Use Case                     | What It Checks                   |
-| -------------------- | ----- | ---------------------------- | -------------------------------- |
-| `pnpm ai:quick`      | ~5s   | **Constantly during coding** | lint + type-check                |
-| `pnpm ci:check`      | ~30s  | **Before every commit**      | lint + type-check + test + build |
-| `pnpm ai:compliance` | ~5min | **Before important PRs**     | Full pipeline + mutation testing |
+- **Fastify backend** - High-performance, type-safe API server
+- **Zod validation** - Runtime type safety for all inputs and outputs
+- **Auto-generated SDKs** - Fern-based client generation from OpenAPI specs
+- **Comprehensive testing** - Unit, integration, and mutation testing with 90%+ coverage
+- **Quality automation** - Pre-commit hooks, CI/CD, security scanning
 
-### 🚨 Pre-Commit Safety
+The monorepo structure makes it easy to contribute and understand how everything works together. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development setup.
 
-Pre-commit hooks automatically run comprehensive validation:
+## Documentation
 
-- 🔒 Security scanning (GitLeaks)
-- 🎨 Code quality (ESLint + Prettier)
-- 🔷 Type safety (TypeScript)
-- 🧪 Test validation
-- 🏗️ Build verification
+- **[React SDK API Reference](packages/react-sdk/README.md)** - Complete guide to components and hooks
+- **[Core SDK API Reference](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
+- **[API Documentation](https://your-deployment.onrender.com/docs)** - Interactive OpenAPI documentation
+- **[Development Guide](docs/CONTRIBUTING.md)** - Set up the project locally and contribute
 
-**If pre-commit fails:**
+## Community
 
-```bash
-# Fix the issues
-pnpm lint:fix && pnpm ci:check
+- **[GitHub Discussions](https://github.com/Airbolt-AI/airbolt/discussions)** - Feature requests and roadmap input
+- **[Issues](https://github.com/Airbolt-AI/airbolt/issues)** - Bug reports and technical questions
 
-# Then commit normally (hooks will pass)
-git commit -m "your message"
-```
+## Why Airbolt?
 
-**Need to bypass? (Emergency only)**
+**Stop rebuilding the same AI plumbing.** Every AI-powered app needs the same backend infrastructure: secure API key storage, user authentication, rate limiting, logging, provider switching. You shouldn't have to rebuild this from scratch every time.
 
-```bash
-# Provides safety guidance and requires justification
-./scripts/safe-commit.sh --no-verify -m "emergency: detailed reason"
-```
+**Enable truly backend-free AI apps.** Just like you can build entire apps with Stripe + Auth0 + Firebase, you should be able to add AI without spinning up servers. Airbolt makes that possible.
 
-### 📖 Full Guide
+**Focus on the AI experience, not the infrastructure.** The hard part is building great AI interactions for your users. The proxy handles the boring production-ready bits so you can focus on what makes your app unique.
 
-See [docs/LOCAL_VALIDATION_GUIDE.md](docs/LOCAL_VALIDATION_GUIDE.md) for comprehensive troubleshooting and best practices.
-
-## Project Structure
-
-```
-airbolt/
-├── apps/                    # Applications ✅
-│   └── backend-api/         # Fastify backend API ✅
-├── packages/                # Shared packages ✅
-│   └── config/              # Configuration utilities ✅
-├── docs/                    # Documentation ✅
-│   ├── CONTRIBUTING.md      # Contributing guidelines ✅
-│   ├── DEVELOPMENT.md       # Development workflow ✅
-│   └── ARCHITECTURE.md      # Architecture overview ✅
-├── turbo.json              # TurboRepo configuration ✅
-├── pnpm-workspace.yaml     # pnpm workspace configuration ✅
-└── package.json            # Root package configuration ✅
-```
-
-## Technology Stack
-
-| Category                    | Tool                                 | Why Critical for AI                                                                                                   | Traditional Projects      |
-| --------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| **Fast streaming API**      | Fastify + fastify-sse                | AI needs real-time responses                                                                                          | Standard in many projects |
-| **Linting + Formatting**    | ESLint + Prettier (minimal config)   | **Runtime safety rules only** - focusing on what TypeScript can't catch                                               | Complex rulesets          |
-| **Early type safety**       | TypeScript (@tsconfig/strictest)     | AI can't use escape hatches like `any` - enforced by strictest preset                                                 | Often allows `any` types  |
-| **Schema validation**       | Zod (bodies & env)                   | **Mandatory** - AI doesn't know trust boundaries                                                                      | Often optional/selective  |
-| **Security scanning**       | GitLeaks + audit-ci                  | AI might commit secrets without realizing                                                                             | Manual review sufficient  |
-| **Guard against spaghetti** | dependency-cruiser                   | AI creates circular dependencies without understanding                                                                | Relies on code review     |
-| **High-trust tests**        | Vitest + Coverage                    | Basic foundation for testing                                                                                          | Same usage                |
-| **Mutation testing**        | Stryker (enterprise-grade standards) | **Catches AI's "fake tests" that achieve coverage but test nothing - ensures tests actually validate business logic** | Rarely used (expensive)   |
-| **Task caching**            | pnpm workspaces + TurboRepo          | Rapid feedback optimized for AI's iterative development                                                               | Same usage                |
-
-## Available Scripts
-
-### Core Development
-
-```bash
-# Development workflow
-pnpm dev              # Start all apps in development mode
-pnpm build            # Build all packages
-pnpm clean            # Clean build artifacts
-
-# Quality assurance
-pnpm test             # Run all test suites
-pnpm test:watch       # Run tests in watch mode
-pnpm test:coverage    # Run tests with coverage report
-pnpm type-check       # TypeScript compilation check
-```
-
-### Security & Quality Tools
-
-```bash
-# Enterprise-grade quality pipeline
-pnpm ai:quick         # Fast validation (lint + type-check)
-pnpm ai:check         # Standard validation (includes security)
-pnpm ai:compliance    # Full compliance validation
-pnpm ai:security      # Security audit of dependencies
-
-# Security scanning
-pnpm security:scan    # Run GitLeaks credential scanning
-pnpm setup:gitleaks   # Install/update GitLeaks scanner
-
-# Advanced Quality Gates
-pnpm lint             # Code formatting and linting (ESLint + Prettier)
-pnpm test:mutation    # Run mutation tests (enterprise-grade quality standards)
-```
-
-## Workspace Structure
-
-### Apps Directory (`apps/`)
-
-**Status: ✅ Active - Backend API implemented**
-
-Contains deployable applications:
-
-- **`backend-api/`** - Production-ready Fastify server with TypeScript
-- Each app has its own `package.json`
-- Apps can depend on packages but not other apps
-- Apps should be thin, delegating logic to packages
-
-### Packages Directory (`packages/`)
-
-**Status: ✅ Active - Configuration utilities implemented**
-
-Contains shared libraries:
-
-- Reusable code across apps
-- Can depend on other packages
-- Should have clear, focused responsibilities
-
-### Workspace Configuration
-
-```yaml
-# pnpm-workspace.yaml
-packages: ['apps/*', 'packages/*']
-```
-
-## Development Workflow
-
-### Adding New Packages
-
-```bash
-# Create new app
-mkdir apps/my-app
-cd apps/my-app
-pnpm init
-
-# Create new package
-mkdir packages/my-package
-cd packages/my-package
-pnpm init
-```
-
-### Working with Dependencies
-
-```bash
-# Add dependency to specific package
-pnpm add --filter my-app fastify
-
-# Add dev dependency to workspace root
-pnpm add -Dw typescript
-
-# Install dependencies for all packages
-pnpm install
-```
-
-## Architecture Principles
-
-### AI-First Design
-
-- **Constraint-driven development** guides AI toward correct patterns
-- **Immediate feedback loops** through fail-fast pipelines
-- **Clear architectural boundaries** prevent violations
-- **Comprehensive validation** catches AI-generated errors
-
-### Quality Gates (Implemented)
-
-- **Strict TypeScript** - Using @tsconfig/strictest preset for maximum safety with minimal configuration
-- **Runtime Validation** - Zod schemas for all environment variables and request inputs
-- **Import Graph Validation** - dependency-cruiser prevents circular dependencies and enforces architecture
-- **Comprehensive Testing** - Unit, integration tests with enterprise-grade mutation testing standards that catch logic errors traditional coverage metrics miss
-
-### Security First (Implemented)
-
-- Environment variable validation with Zod schemas
-- Input sanitization and validation at all API boundaries
-- GitLeaks pre-commit scanning for credential detection
-- Dependency vulnerability scanning with audit-ci
-
-## Current Status
-
-This template is in **active development**. Current state:
-
-✅ **Foundation Complete**
-
-- Monorepo structure with pnpm + TurboRepo
-- Comprehensive documentation
-- AI-first development guidelines
-
-✅ **Backend API Complete (MAR-11)**
-
-- Production-ready Fastify server with TypeScript
-- Strict TypeScript configuration with enterprise standards
-- Comprehensive test setup with Vitest
-- Development and production scripts
-
-✅ **Quality Tooling Complete**
-
-- dependency-cruiser for architectural validation
-- Mutation testing with Stryker (enterprise-grade standards ensure tests validate business logic, not just achieve coverage)
-- Zod validation patterns for environment and inputs
-- Comprehensive testing framework with Vitest
-- CI/CD pipeline with GitHub Actions
-
-## Troubleshooting
-
-### Common Issues
-
-**Fast Quality Validation**
-
-```bash
-# Quick validation during development
-pnpm ai:quick        # Lint + type-check (fast)
-pnpm ai:check        # + dependency validation
-pnpm ai:compliance   # Full quality pipeline
-```
-
-**Getting Started**
-
-- Follow the [Quick Start](#quick-start) guide above
-- The backend API is already implemented and ready to use
-- Refer to [docs/](docs/) for detailed development guidelines
-
-### Advanced Debugging
-
-```bash
-# Advanced turbo commands for debugging
-pnpm build --verbosity=2     # Verbose build output with detailed logs
-pnpm clean                   # Clear build artifacts and cache
-turbo build --dry-run         # See what would run without executing
-```
-
-## 🤖 AI-First Development Workflow
-
-This template is specifically designed for **autonomous AI development** where AI agents perform all coding tasks. We support three primary AI coding tools—**OpenAI Codex**, **Anthropic's Claude Code**, and **Cursor IDE**.
-
-### AI Agent Guidelines Distribution
-
-All AI coding agents receive the same comprehensive guidelines from `AGENTS.md`:
-
-- **OpenAI Codex**: Direct access to `@AGENTS.md`
-- **Cursor IDE**: Accesses via `@.cursor/rules/default.mdc` → references `AGENTS.md`
-- **Claude Code**: Accesses via `@CLAUDE.md` → imports `AGENTS.md`
-
-This ensures **100% consistency** across all AI coding tools with a single source of truth.
-
-### AI Agent Workflow
-
-1. **Requirements Gathering**: AI agents pull tickets from Linear (via MCP integration)
-2. **Complete Development**: AI agents generate full applications (APIs, tests, documentation) with full TypeScript safety
-3. **Automated SDK Generation**: Fern automatically generates type-safe client SDKs from API specifications
-4. **Quality Validation**: Comprehensive automated quality gates ensure code quality
-5. **AI Code Review**: AI agents perform thorough code review and validation
-6. **Human Approval**: Humans review final output and approve for deployment
-
-**Key Principle**: Humans specify requirements and approve results. AI agents handle 100% of development implementation, while automated tooling provides seamless client integration.
-
-### Quality Integration
-
-Guidelines integrate with our quality pipeline:
-
-```bash
-pnpm ai:quick      # Quick validation (lint + type-check)
-pnpm ai:check      # Standard validation (includes security)
-pnpm ai:compliance # Full compliance validation
-```
-
-_Always edit AGENTS.md for shared guidelines. Tool-specific files should remain minimal imports/references._
-
-### Getting Help
-
-- 📖 [Documentation](docs/)
-- 🦀 [Rust Patterns Analysis](docs/RUST_PATTERNS_ANALYSIS.md) - How we achieve Rust-like safety in TypeScript
-- 🐛 [Issue Tracker](https://github.com/Airbolt-AI/airbolt/issues)
-- 💬 [Discussions](https://github.com/Airbolt-AI/airbolt/discussions)
-
-## Contributing
-
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+As Andrej Karpathy said: "The code was actually the easy part… all of this DevOps stuff was… extremely slow." We're here to fix that.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT © [Airbolt AI](https://github.com/Airbolt-AI)
 
 ---
 
-**Ready to build AI-powered applications?** This template provides the complete foundation you need with a production-ready Fastify backend, comprehensive testing, and AI-optimized development workflows.
+**Airbolt is in active development.** We're a small team building thoughtfully based on real developer feedback. If you're using Airbolt in production, we'd love to hear about your experience and help you succeed.
+
+<!-- Alternative tagline options for consideration:
+1. "A production-ready backend for calling LLMs from your frontend securely."
+2. "The secure proxy between your frontend and OpenAI."
+3. "Deploy once, call LLMs safely from any frontend."
+4. "Your OpenAI API key stays secret. Your frontend stays simple."
+5. "The missing backend for frontend AI apps."
+6. "Stop exposing API keys. Start shipping AI features."
+7. "A JWT-secured proxy for OpenAI APIs."
+8. "The auth layer for LLM APIs you don't want to build."
+9. "Frontend AI without the API key nightmares."
+10. "Open-source backend for secure LLM access."
+-->

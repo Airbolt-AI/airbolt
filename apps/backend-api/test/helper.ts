@@ -1,11 +1,7 @@
 // This file contains code that we reuse between our tests.
-import Fastify, {
-  type FastifyInstance,
-  type LightMyRequestResponse,
-} from 'fastify';
-import fp from 'fastify-plugin';
+import { type FastifyInstance, type LightMyRequestResponse } from 'fastify';
 
-import App, { type AppOptions } from '../src/app.js';
+import { type AppOptions } from '../src/app.js';
 
 // Default test configuration
 const defaultConfig: Partial<AppOptions> = {
@@ -19,16 +15,10 @@ const defaultConfig: Partial<AppOptions> = {
 export async function build(
   config: Partial<AppOptions> = {}
 ): Promise<FastifyInstance> {
-  const app = Fastify({
-    ...defaultConfig,
-    ...config,
-  });
-
-  // Register our application
-  await app.register(fp(App));
-
-  // Ensure the app is ready before returning
-  await app.ready();
+  // Use the buildApp function from app.ts instead of manually building
+  // This ensures we get the same configuration as the main app
+  const mergedConfig = { ...defaultConfig, ...config };
+  const app = await import('../src/app.js').then(m => m.buildApp(mergedConfig));
 
   return app;
 }

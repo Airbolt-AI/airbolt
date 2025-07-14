@@ -7,7 +7,7 @@
  * significantly less code to maintain.
  */
 
-import { AirboltAPIClient, AirboltAPI } from '../../generated/browser/index.js';
+import { AirboltAPIClient, AirboltAPI } from '../../generated/index.js';
 import { TokenManager } from './token-manager.js';
 
 export interface Message {
@@ -134,4 +134,4 @@ export const UnauthorizedError = AirboltAPI.UnauthorizedError;
 export const BadRequestError = AirboltAPI.BadRequestError;
 export const TooManyRequestsError = AirboltAPI.TooManyRequestsError;
 export const ServiceUnavailableError = AirboltAPI.ServiceUnavailableError;
-export { AirboltAPIError } from '../../generated/browser/index.js';
+export { AirboltAPIError } from '../../generated/index.js';

@@ -1,31 +1,26 @@
 # @airbolt/react-sdk
 
-React hooks and utilities for the Airbolt API with built-in state management.
+> Add secure AI chat to your React app in one line of code
 
-## Installation
+Part of **[Airbolt](https://github.com/Airbolt-AI/airbolt)** - A production-ready backend for calling LLMs from your frontend securely.
 
 ```bash
 npm install @airbolt/react-sdk
-# or
-yarn add @airbolt/react-sdk
-# or
-pnpm add @airbolt/react-sdk
 ```
 
-## Requirements
-
-- React 16.8 or higher (hooks support required)
-- Node.js 18.0.0 or higher
+**Just want to get started?** See the [main README](../../README.md) for the 3-step quickstart guide.
 
 ## Quick Start
 
-### Option 1: Use the Pre-built ChatWidget (Zero Configuration)
+First, deploy the Airbolt backend following the [main README](../../README.md#getting-started). You'll need the API URL from your deployment.
+
+### Option 1: Use the Pre-built ChatWidget
 
 ```tsx
 import { ChatWidget } from '@airbolt/react-sdk';
 
 function App() {
-  return <ChatWidget />;
+  return <ChatWidget baseURL="https://your-deployment.onrender.com" />;
 }
 ```
 
@@ -36,6 +31,7 @@ import { useChat } from '@airbolt/react-sdk';
 
 function ChatComponent() {
   const { messages, input, setInput, send, isLoading } = useChat({
+    baseURL: 'https://your-deployment.onrender.com',
     system: 'You are a helpful assistant',
   });
 
@@ -77,7 +73,7 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 
 | Prop           | Type                               | Default               | Description                                        |
 | -------------- | ---------------------------------- | --------------------- | -------------------------------------------------- |
-| `baseURL`      | `string`                           | -                     | Optional. Base URL for the Airbolt API             |
+| `baseURL`      | `string`                           | -                     | **Required**. Base URL for your Airbolt backend    |
 | `system`       | `string`                           | -                     | Optional. System prompt to guide the AI's behavior |
 | `placeholder`  | `string`                           | `"Type a message..."` | Placeholder text for the input field               |
 | `title`        | `string`                           | `"AI Assistant"`      | Title displayed in the widget header               |
@@ -91,11 +87,12 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 #### Example Usage
 
 ```tsx
-// Zero configuration
-<ChatWidget />
+// Minimal configuration
+<ChatWidget baseURL="https://your-deployment.onrender.com" />
 
 // With custom configuration
 <ChatWidget
+  baseURL="https://your-deployment.onrender.com"
   title="Support Chat"
   theme="dark"
   position="fixed-bottom-right"
@@ -104,6 +101,7 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 
 // With CSS custom properties (recommended)
 <ChatWidget
+  baseURL="https://your-deployment.onrender.com"
   minimalTheme={{
     primary: '#FF6B6B',    // --chat-primary
     surface: '#F8F9FA',    // --chat-surface
@@ -131,11 +129,11 @@ function useChat(options?: UseChatOptions): UseChatReturn;
 
 #### Options
 
-| Option            | Type        | Description                                                                                 |
-| ----------------- | ----------- | ------------------------------------------------------------------------------------------- |
-| `baseURL`         | `string`    | Optional. Base URL for the Airbolt API. Defaults to environment variable or production URL. |
-| `system`          | `string`    | Optional. System prompt to include with the messages.                                       |
-| `initialMessages` | `Message[]` | Optional. Initial messages to populate the chat history.                                    |
+| Option            | Type        | Description                                              |
+| ----------------- | ----------- | -------------------------------------------------------- |
+| `baseURL`         | `string`    | **Required**. Base URL for your Airbolt backend.         |
+| `system`          | `string`    | Optional. System prompt to include with the messages.    |
+| `initialMessages` | `Message[]` | Optional. Initial messages to populate the chat history. |
 
 #### Return Value
 
@@ -158,7 +156,7 @@ interface Message {
 }
 
 interface UseChatOptions {
-  baseURL?: string;
+  baseURL: string;
   system?: string;
   initialMessages?: Message[];
 }
@@ -172,7 +170,9 @@ interface UseChatOptions {
 import { useChat } from '@airbolt/react-sdk';
 
 function SimpleChatApp() {
-  const { messages, input, setInput, send, isLoading, error } = useChat();
+  const { messages, input, setInput, send, isLoading, error } = useChat({
+    baseURL: 'https://your-deployment.onrender.com',
+  });
 
   return (
     <div className="chat-container">
@@ -211,6 +211,7 @@ function SimpleChatApp() {
 
 ```tsx
 const { messages, input, setInput, send, isLoading } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
   system:
     'You are a knowledgeable assistant specializing in React development.',
 });
@@ -220,17 +221,10 @@ const { messages, input, setInput, send, isLoading } = useChat({
 
 ```tsx
 const { messages, input, setInput, send, isLoading } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
   initialMessages: [
     { role: 'assistant', content: 'Hello! How can I help you today?' },
   ],
-});
-```
-
-### With Custom API Endpoint
-
-```tsx
-const { messages, input, setInput, send, isLoading } = useChat({
-  baseURL: 'https://api.custom-domain.com',
 });
 ```
 
@@ -241,6 +235,7 @@ import { useChat } from '@airbolt/react-sdk';
 
 function AdvancedChat() {
   const { messages, input, setInput, send, clear, isLoading, error } = useChat({
+    baseURL: 'https://your-deployment.onrender.com',
     system: 'You are a helpful coding assistant.',
   });
 
@@ -304,7 +299,9 @@ The hook provides built-in error handling. When an error occurs:
 3. The input will be restored so the user can retry
 
 ```tsx
-const { error, send } = useChat();
+const { error, send } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
+});
 
 // Display error to user
 {
@@ -327,18 +324,20 @@ const { error, send } = useChat();
 
 ## Migration from Vanilla SDK
 
-If you're currently using the vanilla JavaScript SDK:
+If you're currently using the vanilla JavaScript SDK (`@airbolt/sdk`):
 
 ```javascript
 // Before (vanilla SDK)
 import { chat } from '@airbolt/sdk';
 
 const response = await chat([{ role: 'user', content: 'Hello' }], {
+  baseURL: 'https://your-deployment.onrender.com',
   system: 'You are helpful',
 });
 
 // After (React SDK)
 const { messages, input, setInput, send } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
   system: 'You are helpful',
 });
 // Use the hook's managed state and functions
@@ -359,6 +358,14 @@ The widget inherits typography (font-family, font-size, line-height) from its pa
 
 This package is written in TypeScript and provides full type definitions. All exports are properly typed for an excellent development experience.
 
+## More Examples
+
+Check out our example applications:
+
+- **[React Widget Example](examples/react-widget/)** - Shows how to use the pre-built ChatWidget
+- **[React Hooks Example](examples/react-hooks/)** - Demonstrates building a custom chat interface with useChat
+- **[Node.js CLI Example](../sdk/examples/node-cli/)** - Command-line chat using the core SDK
+
 ## License
 
-MIT © Airbolt AI
+MIT © [Airbolt AI](https://github.com/Airbolt-AI)

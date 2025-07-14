@@ -12,7 +12,7 @@ describe('Fern Generated Client Usage', () => {
     it('should successfully import error classes', async () => {
       // Test that generated infrastructure works
       const { AirboltAPIError, AirboltAPITimeoutError } = await import(
-        '../generated/browser/index.js'
+        '../generated/index.js'
       );
 
       expect(AirboltAPIError).toBeDefined();
@@ -32,7 +32,7 @@ describe('Fern Generated Client Usage', () => {
 
     it('should have sophisticated fetcher infrastructure', async () => {
       const { fetcherImpl } = await import(
-        '../generated/browser/core/fetcher/Fetcher.js'
+        '../generated/core/fetcher/Fetcher.js'
       );
 
       expect(fetcherImpl).toBeDefined();
@@ -42,7 +42,7 @@ describe('Fern Generated Client Usage', () => {
 
   describe('Generated Client Validation', () => {
     it('should have all expected exports from Fern generation', async () => {
-      const mainExports = await import('../generated/browser/index.js');
+      const mainExports = await import('../generated/index.js');
 
       // Should have the complete set of exports from Fern
       const exportKeys = Object.keys(mainExports);
@@ -63,7 +63,7 @@ describe('Fern Generated Client Usage', () => {
 
   describe('Infrastructure Quality Assessment', () => {
     it('should have production-ready error handling', async () => {
-      const { AirboltAPIError } = await import('../generated/browser/index.js');
+      const { AirboltAPIError } = await import('../generated/index.js');
 
       const error = new AirboltAPIError({
         message: 'API Error',
@@ -82,7 +82,7 @@ describe('Fern Generated Client Usage', () => {
     it('should have modern TypeScript patterns', async () => {
       // Dynamic import to check types at runtime
       const fetcherModule = await import(
-        '../generated/browser/core/fetcher/Fetcher.js'
+        '../generated/core/fetcher/Fetcher.js'
       );
 
       // Should have proper exports structure

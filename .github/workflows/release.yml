@@ -1,0 +1,41 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-project
+
+      # Generate SDK from latest OpenAPI
+      - run: pnpm generate
+
+      # Configure npm
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      # Publish to npm
+      - run: |
+          cd packages/sdk
+          npm version ${GITHUB_REF#refs/tags/v}
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Create GitHub Release
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            **Backend**: Deploy using the Render button in README
+            **SDK**: `npm install @airbolt/sdk@${GITHUB_REF#refs/tags/v}`
+
+            Version compatibility: Backend and SDK versions must match.
