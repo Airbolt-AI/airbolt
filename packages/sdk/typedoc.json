@@ -3,7 +3,6 @@
   "out": "../../docs/api/core",
   "readme": "README.md",
   "name": "@airbolt/sdk",
-  "plugin": ["typedoc-plugin-markdown"],
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeProtected": true,
