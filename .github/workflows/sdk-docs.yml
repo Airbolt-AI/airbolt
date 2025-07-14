@@ -43,11 +43,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build SDKs
-        run: |
-          cd packages/sdk && pnpm build
-          cd ../react-sdk && pnpm build
-
       - name: Generate documentation
         run: |
           cd packages/sdk && pnpm docs

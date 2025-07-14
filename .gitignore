@@ -89,3 +89,6 @@ test-results/
 
 # Fern-generated SDK code (prebuild generation)
 packages/sdk/generated/
+
+# Generated documentation (GitHub Actions builds these)
+docs/api/
