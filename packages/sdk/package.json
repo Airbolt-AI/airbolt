@@ -31,7 +31,7 @@
     "prepublishOnly": "pnpm run generate && echo 'SDK package ready for publishing'",
     "example": "cd examples/vanilla && pnpm start",
     "example:ts": "cd examples/vanilla && pnpm start:ts",
-    "docs": "typedoc"
+    "docs:build": "typedoc"
   },
   "keywords": [
     "sdk",

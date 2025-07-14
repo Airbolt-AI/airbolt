@@ -26,7 +26,7 @@
     "lint": "eslint .",
     "prepublishOnly": "pnpm run build && echo 'React SDK package ready for publishing'",
     "demo": "cd examples && npx http-server -p 8080 --cors -o standalone-demo.html",
-    "docs": "typedoc"
+    "docs:build": "typedoc"
   },
   "keywords": [
     "react",
