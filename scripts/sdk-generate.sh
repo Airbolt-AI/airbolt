@@ -2,6 +2,11 @@
 # SDK Generation Script - Smart Caching Version
 set -euo pipefail
 
+# Ensure we're running from the project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -117,7 +122,7 @@ generate_sdk() {
     
     # Generate SDK
     echo -e "${BLUE}🚀 Generating browser SDK...${NC}"
-    if ! pnpm exec fern generate --local; then
+    if ! pnpm exec fern generate --local --force; then
         echo -e "${RED}❌ SDK generation failed${NC}"
         return 1
     fi

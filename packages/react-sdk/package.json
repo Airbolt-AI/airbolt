@@ -26,7 +26,7 @@
     "lint": "eslint .",
     "prepublishOnly": "pnpm run build && echo 'React SDK package ready for publishing'",
     "demo": "cd examples && npx http-server -p 8080 --cors -o standalone-demo.html",
-    "docs": "typedoc"
+    "docs:build": "typedoc"
   },
   "keywords": [
     "react",
@@ -73,6 +73,7 @@
     "@types/react-dom": "^18.0.0",
     "@types/testing-library__jest-dom": "^6.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
+    "fast-check": "^4.1.1",
     "happy-dom": "^12.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -80,6 +81,6 @@
     "typedoc": "^0.28.7",
     "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^3.2.4"
   }
 }

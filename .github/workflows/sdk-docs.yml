@@ -45,8 +45,8 @@ jobs:
 
       - name: Generate documentation
         run: |
-          cd packages/sdk && pnpm docs
-          cd ../react-sdk && pnpm docs
+          cd packages/sdk && pnpm docs:build
+          cd ../react-sdk && pnpm docs:build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -25,8 +25,8 @@
     "test": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest run",
     "test:watch": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest",
     "test:coverage": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest run --coverage",
-    "test:workspace": "cd ../.. && NODE_OPTIONS='--import tsx' vitest run --reporter=json --outputFile=test-results/workspace-results.json apps/backend-api/test/utils/*.test.ts",
-    "test:mutation-config": "cd ../.. && NODE_OPTIONS='--import tsx' vitest run -c vitest.mutation.config.ts --reporter=json --outputFile=test-results/mutation-results.json apps/backend-api/test/utils/*.test.ts",
+    "test:workspace": "cd ../.. && NODE_OPTIONS='--import tsx' vitest run --reporter=json --outputFile=test-results/workspace-results.json apps/backend-api/test/**/*.test.ts",
+    "test:mutation-config": "cd ../.. && NODE_OPTIONS='--import tsx' vitest run -c vitest.mutation.config.ts --reporter=json --outputFile=test-results/mutation-results.json apps/backend-api/test/**/*.test.ts",
     "test:verify-configs": "cd ../.. && node -e \"const w=require('./test-results/workspace-results.json');const m=require('./test-results/mutation-results.json');const fail=[];if(w.numTotalTests!==m.numTotalTests)fail.push('Total tests: '+w.numTotalTests+' vs '+m.numTotalTests);if(w.numPassedTests!==m.numPassedTests)fail.push('Passed tests: '+w.numPassedTests+' vs '+m.numPassedTests);if(w.numFailedTests!==m.numFailedTests)fail.push('Failed tests: '+w.numFailedTests+' vs '+m.numFailedTests);if(fail.length){console.error('❌ Config mismatch!\\n'+fail.join('\\n'));process.exit(1);}console.log('✅ Configs match: '+w.numTotalTests+' tests')\"",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
@@ -75,6 +75,7 @@
     "fastify-tsconfig": "^3.0.0",
     "openapi-types": "^12.1.3",
     "pino-pretty": "^13.0.0",
-    "ts-node": "^10.4.0"
+    "ts-node": "^10.4.0",
+    "vitest": "^3.2.4"
   }
 }

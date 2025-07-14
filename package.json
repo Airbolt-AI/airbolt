@@ -56,7 +56,7 @@
     "sdk:generate": "bash scripts/sdk-generate.sh",
     "fern:check": "npx fern-api check",
     "prepare": "husky",
-    "docs:generate": "cd packages/sdk && pnpm docs && cd ../react-sdk && pnpm docs"
+    "docs:generate": "cd packages/sdk && pnpm docs:build && cd ../react-sdk && pnpm docs:build"
   },
   "keywords": [
     "fastify",
@@ -65,7 +65,6 @@
     "template",
     "backend",
     "monorepo",
-    "turborepo",
     "pnpm"
   ],
   "author": {
@@ -101,7 +100,6 @@
     "@stryker-mutator/typescript-checker": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.1.0",
     "@vitest/coverage-v8": "^3.2.3",
     "audit-ci": "^7.1.0",
@@ -120,7 +118,6 @@
     "prettier": "^3.4.2",
     "semver": "^7.7.2",
     "tsx": "^4.20.3",
-    "turbo": "^2.5.4",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.35.0",
     "vitest": "^3.2.3"
@@ -133,8 +130,5 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "jsonwebtoken": "^9.0.2"
   }
 }

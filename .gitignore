@@ -32,8 +32,9 @@ pids
 coverage/
 *.lcov
 
-# TurboRepo
-.turbo/
+# Nx monorepo cache
+.nx/cache/
+.nx/workspace-data/
 
 # TypeScript build cache
 *.tsbuildinfo
@@ -71,8 +72,6 @@ reports/performance/
 
 
 
-.nx/cache
-.nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 # Test result comparison files
@@ -86,6 +85,9 @@ test-results/
 
 # SDK generation cache and backups
 .sdk-cache/
+*.backup
+*.tmp
+*.cache
 
 # Fern-generated SDK code (prebuild generation)
 packages/sdk/generated/

@@ -14,7 +14,6 @@ export default tseslint.config(
       '**/build',
       '**/*.d.ts',
       '**/coverage',
-      '**/.turbo',
       '**/.stryker-tmp',
       '**/reports',
       'examples/**', // Documentation examples may have intentional type issues

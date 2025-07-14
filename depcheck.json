@@ -4,7 +4,6 @@
   "ignoreMatches": [
     "@types/*",
     "typescript",
-    "turbo",
     "prettier",
     "eslint*",
     "@eslint/*",
@@ -13,7 +12,7 @@
     "audit-ci",
     "depcheck"
   ],
-  "ignorePatterns": ["node_modules", "dist", "build", ".turbo", "coverage"],
+  "ignorePatterns": ["node_modules", "dist", "build", "coverage"],
   "parsers": {
     "*.js": "es6",
     "*.ts": "typescript",

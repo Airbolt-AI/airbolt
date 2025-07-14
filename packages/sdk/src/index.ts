@@ -6,7 +6,7 @@
  * 2. Generated clients (from Fern)
  * 3. High-level utilities (vanilla JS API, React hooks)
  *
- * @version 1.0.0
+ * @since 1.0.0
  * @author Mark Watson
  * @license MIT
  */
