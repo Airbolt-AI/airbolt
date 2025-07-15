@@ -10,14 +10,8 @@ const config = {
     command: 'NODE_OPTIONS="--import tsx" pnpm exec vitest run --config vitest.mutation.config.ts',
   },
   
-  coverageAnalysis: 'off', // Command runner doesn't support coverage analysis
-  
-  // Increase parallelization for faster execution
-  concurrency: 8,
-  
-  // Use checkers to run faster
-  checkers: ['typescript'],
-  tsconfigFile: 'tsconfig.json',
+  // Command runner doesn't support coverage analysis or incremental mode
+  coverageAnalysis: 'off',
   
   // Faster timeouts
   timeoutMS: 15000,
@@ -63,7 +57,8 @@ const config = {
   },
 
   // Performance optimizations
-  concurrency: 2, // Lower for surgical approach
+  // Use 4 workers locally, 2 in CI for optimal performance
+  concurrency: process.env.CI ? 2 : 4,
   tempDirName: '.stryker-tmp',
   cleanTempDir: true,
 

@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"🗓️ Today's date: $(date '+%B %d, %Y')\" >&2"
+          }
+        ]
+      }
     ]
   }
 }
