@@ -11,6 +11,17 @@ const config = {
   },
   
   coverageAnalysis: 'off', // Command runner doesn't support coverage analysis
+  
+  // Increase parallelization for faster execution
+  concurrency: 8,
+  
+  // Use checkers to run faster
+  checkers: ['typescript'],
+  tsconfigFile: 'tsconfig.json',
+  
+  // Faster timeouts
+  timeoutMS: 15000,
+  timeoutFactor: 1.25,
 
   // Ignore patterns for Stryker
   ignorePatterns: [

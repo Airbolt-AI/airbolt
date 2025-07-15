@@ -103,7 +103,7 @@ jobs:
   mutation-test:
     name: Mutation Testing
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     needs: validate
     if: github.event_name == 'pull_request'
     steps:
