@@ -337,6 +337,7 @@ describe('Environment Plugin Direct Tests', () => {
       const app = Fastify({ logger: false });
       process.env = {
         ...originalEnv,
+        NODE_ENV: 'test',
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: invalidOrigin,
       };
@@ -579,13 +580,13 @@ describe('Environment Plugin Direct Tests', () => {
       // Find the warning log about auto-generation
       // Pino uses numeric levels: 30 = warn
       const warningLog = logs.find(
-        log => log.msg && log.msg.includes('JWT_SECRET not provided')
+        log => log.msg && log.msg.includes('JWT_SECRET auto-generated')
       );
 
       expect(warningLog).toBeDefined();
       expect(warningLog.JWT_SECRET).toBe('[REDACTED - auto-generated]');
-      expect(warningLog.msg).toContain('development use only');
-      expect(warningLog.msg).toContain('stable tokens across restarts');
+      expect(warningLog.msg).toContain('auto-generated for development');
+      expect(warningLog.msg).toContain('stable tokens');
     } finally {
       process.env = originalEnv;
       await app.close();

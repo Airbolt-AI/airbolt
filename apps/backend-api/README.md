@@ -48,7 +48,7 @@ All environment variables are validated using Zod schemas for type safety and ru
 | `HOST`                   | Server host                                    | `localhost`             | Any valid hostname                                 |
 | `LOG_LEVEL`              | Logging verbosity                              | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
 | `JWT_SECRET`             | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
-| `ALLOWED_ORIGIN`         | CORS allowed origins (comma-separated)         | `http://localhost:5173` | Valid HTTP(S) URLs                                 |
+| `ALLOWED_ORIGIN`         | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
 | `SYSTEM_PROMPT`          | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
 | `RATE_LIMIT_MAX`         | Max requests per window                        | `100`                   | Positive integer                                   |
 | `RATE_LIMIT_TIME_WINDOW` | Rate limit window (ms)                         | `60000` (1 minute)      | Positive integer (milliseconds)                    |
@@ -63,15 +63,22 @@ All environment variables are validated using Zod schemas for type safety and ru
   - All sensitive environment variables (API keys, secrets) are automatically redacted in logs
   - Never commit `.env` files to version control
 
-### Multiple Origins Example
+### CORS Configuration
+
+The API supports flexible CORS configuration for different deployment scenarios:
 
 ```bash
+# Allow all origins (SDK deployment model)
+ALLOWED_ORIGIN=*
+
 # Single origin
 ALLOWED_ORIGIN=https://example.com
 
 # Multiple origins (comma-separated)
 ALLOWED_ORIGIN=https://example.com,https://app.example.com,http://localhost:3000
 ```
+
+**Note**: The wildcard (`*`) is allowed in all environments to support the SDK deployment model where users deploy their own API instances. Security is handled through JWT tokens and rate limiting.
 
 ### Rate Limiting Examples
 
