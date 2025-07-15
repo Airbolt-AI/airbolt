@@ -110,7 +110,7 @@ describe('TokenManager', () => {
       // All tokens should be the same
       expect(tokens[0]).toBe(tokens[1]);
       expect(tokens[1]).toBe(tokens[2]);
-      
+
       // Only one fetch should have been made
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
@@ -171,7 +171,7 @@ describe('TokenManager', () => {
 
       await tokenManager.getToken();
       const info = tokenManager.getTokenInfo();
-      
+
       expect(info.expiresAt).toBeInstanceOf(Date);
       expect(info.expiresAt!.getTime()).toBeGreaterThan(Date.now());
     });
@@ -203,7 +203,9 @@ describe('TokenManager', () => {
 
         // Allow for some timing variance
         expect(actualExpiry).toBeGreaterThanOrEqual(expectedExpiry - 100);
-        expect(actualExpiry).toBeLessThanOrEqual(afterTime + testCase.expectedSeconds * 1000);
+        expect(actualExpiry).toBeLessThanOrEqual(
+          afterTime + testCase.expectedSeconds * 1000
+        );
 
         tokenManager.clearToken();
         vi.clearAllMocks();
@@ -334,6 +336,91 @@ describe('TokenManager', () => {
     });
   });
 
+  describe('URL construction', () => {
+    it('should handle baseURL with trailing slash correctly', async () => {
+      const baseURLWithSlash = 'https://airbolt.onrender.com/';
+      const manager = new TokenManager({
+        baseURL: baseURLWithSlash,
+        userId: 'test-user',
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockTokenResponse),
+      });
+
+      await manager.getToken();
+
+      // Should construct URL without double slashes
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://airbolt.onrender.com/api/tokens',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle baseURL without trailing slash correctly', async () => {
+      const baseURLNoSlash = 'https://airbolt.onrender.com';
+      const manager = new TokenManager({
+        baseURL: baseURLNoSlash,
+        userId: 'test-user',
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockTokenResponse),
+      });
+
+      await manager.getToken();
+
+      // Should construct URL with proper slash
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://airbolt.onrender.com/api/tokens',
+        expect.any(Object)
+      );
+    });
+
+    it('should never create double slashes in URLs', async () => {
+      const testCases = [
+        'https://api.example.com/',
+        'https://api.example.com//',
+        'https://api.example.com///',
+        'http://localhost:3000/',
+        'http://localhost:3000//',
+      ];
+
+      for (const testUrl of testCases) {
+        const manager = new TokenManager({
+          baseURL: testUrl,
+          userId: 'test-user',
+        });
+
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue(mockTokenResponse),
+        });
+
+        await manager.getToken();
+
+        const calledUrl = mockFetch.mock.calls[
+          mockFetch.mock.calls.length - 1
+        ]?.[0] as string;
+
+        // Check URL doesn't contain double slashes (except after protocol)
+        const withoutProtocol = calledUrl.replace(/^https?:\/\//, '');
+        expect(withoutProtocol).not.toContain('//');
+
+        // Verify correct final URL (should always be normalized)
+        const normalizedBase = testUrl
+          .replace(/\/+$/, '')
+          .replace(/^(https?:\/\/)/, '$1');
+        const expectedUrl = `${normalizedBase}/api/tokens`;
+        expect(calledUrl).toBe(expectedUrl);
+
+        vi.clearAllMocks();
+      }
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle empty response gracefully', async () => {
       mockFetch.mockResolvedValueOnce({
@@ -373,7 +460,7 @@ describe('TokenManager', () => {
       });
 
       await noBufferManager.getToken();
-      
+
       // Token should be considered expired immediately
       expect(noBufferManager.hasValidToken()).toBe(false);
     });
