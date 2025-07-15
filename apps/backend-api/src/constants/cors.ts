@@ -41,13 +41,46 @@ export function isValidURL(origin: string): boolean {
 }
 
 /**
- * Validates origins based on environment
+ * Validates origins based on environment and returns detailed error message
  * Note: nodeEnv is passed from the env plugin where it's already validated
  */
-export function validateOrigins(origins: string[], nodeEnv?: string): boolean {
-  if (nodeEnv === 'production') {
-    return origins.every(isValidProductionOrigin);
+export function validateOrigins(
+  origins: string[],
+  nodeEnv?: string
+): { valid: boolean; error?: string } {
+  // Check for empty origins (including URLs that are just protocols)
+  const emptyOrigins = origins.filter(origin => {
+    const trimmed = origin.trim();
+    return !trimmed || trimmed === 'http://' || trimmed === 'https://';
+  });
+
+  if (emptyOrigins.length > 0) {
+    return {
+      valid: false,
+      error:
+        'ALLOWED_ORIGIN contains empty values. Remove empty entries from comma-separated list.',
+    };
   }
 
-  return origins.every(isValidURL);
+  if (nodeEnv === 'production') {
+    const invalidOrigins = origins.filter(
+      origin => !isValidProductionOrigin(origin)
+    );
+    if (invalidOrigins.length > 0) {
+      return {
+        valid: false,
+        error: `Production requires explicit HTTPS origins (no wildcard, localhost, or HTTP). Invalid origins: ${invalidOrigins.join(', ')}`,
+      };
+    }
+  } else {
+    const invalidOrigins = origins.filter(origin => !isValidURL(origin));
+    if (invalidOrigins.length > 0) {
+      return {
+        valid: false,
+        error: `ALLOWED_ORIGIN must contain valid HTTP(S) URLs. Invalid origins: ${invalidOrigins.join(', ')}`,
+      };
+    }
+  }
+
+  return { valid: true };
 }

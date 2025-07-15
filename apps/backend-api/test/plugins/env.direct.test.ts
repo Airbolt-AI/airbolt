@@ -326,16 +326,14 @@ describe('Environment Plugin Direct Tests', () => {
   it('should validate ALLOWED_ORIGIN contains valid URLs', async () => {
     const originalEnv = process.env;
 
-    const invalidOrigins = [
+    const invalidUrlOrigins = [
       'not-a-url',
       'ftp://invalid-protocol.com',
       'javascript:alert(1)',
       'file:///etc/passwd',
-      'http://,https://example.com', // Empty origin
-      'http://example.com, , https://app.com', // Contains empty
     ];
 
-    for (const invalidOrigin of invalidOrigins) {
+    for (const invalidOrigin of invalidUrlOrigins) {
       const app = Fastify({ logger: false });
       process.env = {
         ...originalEnv,
@@ -344,7 +342,33 @@ describe('Environment Plugin Direct Tests', () => {
       };
 
       await expect(app.register(envPlugin).ready()).rejects.toThrow(
-        /ALLOWED_ORIGIN.*valid HTTP\(S\) URLs/
+        /ALLOWED_ORIGIN must contain valid HTTP\(S\) URLs/
+      );
+
+      await app.close();
+    }
+
+    process.env = originalEnv;
+  });
+
+  it('should validate ALLOWED_ORIGIN does not contain empty values', async () => {
+    const originalEnv = process.env;
+
+    const emptyOrigins = [
+      'http://,https://example.com', // Empty origin
+      'http://example.com, , https://app.com', // Contains empty
+    ];
+
+    for (const invalidOrigin of emptyOrigins) {
+      const app = Fastify({ logger: false });
+      process.env = {
+        ...originalEnv,
+        OPENAI_API_KEY: validApiKey,
+        ALLOWED_ORIGIN: invalidOrigin,
+      };
+
+      await expect(app.register(envPlugin).ready()).rejects.toThrow(
+        /ALLOWED_ORIGIN contains empty values/
       );
 
       await app.close();
@@ -454,7 +478,7 @@ describe('Environment Plugin Direct Tests', () => {
     };
 
     await expect(app2.register(envPlugin).ready()).rejects.toThrow(
-      /Invalid CORS configuration/
+      /ALLOWED_ORIGIN contains empty values/
     );
     await app2.close();
 
@@ -514,6 +538,7 @@ describe('Environment Plugin Direct Tests', () => {
       ...originalEnv,
       NODE_ENV: 'development',
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'http://localhost:3000', // Explicitly set to avoid default processing
       // No JWT_SECRET
     };
     delete process.env['JWT_SECRET'];
@@ -544,6 +569,7 @@ describe('Environment Plugin Direct Tests', () => {
       ...originalEnv,
       NODE_ENV: 'development',
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'http://localhost:3000', // Explicitly set to avoid default processing
       // No JWT_SECRET provided
     };
     delete process.env['JWT_SECRET'];

@@ -55,33 +55,7 @@ export const EnvSchema = z
       .optional(),
 
     // CORS origins (environment-aware defaults, see constants/cors.ts for details)
-    ALLOWED_ORIGIN: z
-      .string()
-      .default(() => {
-        const env = process.env['NODE_ENV'];
-        if (env === 'production') {
-          throw new Error(
-            'ALLOWED_ORIGIN required in production. Example: ALLOWED_ORIGIN=https://yourdomain.com'
-          );
-        }
-        return env === 'test' ? DEFAULT_TEST_ORIGINS : '*';
-      })
-      .transform(origins => {
-        const list = origins.split(',').map(s => s.trim());
-
-        // Auto-enhance development with common ports (unless wildcard)
-        if (process.env['NODE_ENV'] === 'development' && !list.includes('*')) {
-          const newPorts = COMMON_DEV_PORTS.filter(
-            port => !list.includes(port)
-          );
-          return [...list, ...newPorts];
-        }
-        return list;
-      })
-      .refine(
-        origins => validateOrigins(origins, process.env['NODE_ENV']),
-        'Invalid CORS configuration'
-      ),
+    ALLOWED_ORIGIN: z.string().optional(),
 
     SYSTEM_PROMPT: z
       .string({
@@ -115,12 +89,43 @@ export const EnvSchema = z
   .transform(data => {
     // Auto-generate JWT_SECRET in non-production environments when not provided
     if (!data.JWT_SECRET && data.NODE_ENV !== 'production') {
-      return {
+      data = {
         ...data,
         JWT_SECRET: randomBytes(32).toString('hex'),
       };
     }
-    return data;
+
+    // Set ALLOWED_ORIGIN defaults based on NODE_ENV being parsed
+    if (!data.ALLOWED_ORIGIN) {
+      if (data.NODE_ENV === 'production') {
+        throw new Error(
+          'ALLOWED_ORIGIN required in production. Example: ALLOWED_ORIGIN=https://yourdomain.com'
+        );
+      }
+      data.ALLOWED_ORIGIN =
+        data.NODE_ENV === 'test' ? DEFAULT_TEST_ORIGINS : '*';
+    }
+
+    // Parse and transform ALLOWED_ORIGIN
+    const origins = data.ALLOWED_ORIGIN.split(',').map(s => s.trim());
+
+    // Auto-enhance development with common ports (unless wildcard)
+    let finalOrigins = origins;
+    if (data.NODE_ENV === 'development' && !origins.includes('*')) {
+      const newPorts = COMMON_DEV_PORTS.filter(port => !origins.includes(port));
+      finalOrigins = [...origins, ...newPorts];
+    }
+
+    // Validate origins based on environment
+    const validationResult = validateOrigins(finalOrigins, data.NODE_ENV);
+    if (!validationResult.valid) {
+      throw new Error(validationResult.error || 'Invalid CORS configuration');
+    }
+
+    return {
+      ...data,
+      ALLOWED_ORIGIN: finalOrigins,
+    };
   })
   .refine(
     data => {
