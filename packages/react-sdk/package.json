@@ -1,6 +1,6 @@
 {
   "name": "@airbolt/react-sdk",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "React hooks and utilities for the Airbolt API with built-in state management",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -62,7 +62,7 @@
     "react": ">=16.8.0"
   },
   "dependencies": {
-    "@airbolt/sdk": "workspace:*"
+    "@airbolt/sdk": "^0.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

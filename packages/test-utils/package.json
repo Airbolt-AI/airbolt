@@ -1,6 +1,7 @@
 {
   "name": "@airbolt/test-utils",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "description": "Testing utilities for the Airbolt monorepo",
   "main": "dist/index.js",

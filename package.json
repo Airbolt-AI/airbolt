@@ -55,7 +55,14 @@
     "sdk:generate": "bash scripts/sdk-generate.sh",
     "fern:check": "npx fern-api check",
     "prepare": "husky",
-    "docs:generate": "cd packages/sdk && pnpm docs:build && cd ../react-sdk && pnpm docs:build"
+    "docs:generate": "cd packages/sdk && pnpm docs:build && cd ../react-sdk && pnpm docs:build",
+    "changeset": "changeset",
+    "changeset:add": "changeset add",
+    "changeset:status": "changeset status",
+    "changeset:validate": "node scripts/validate-changeset-safety.js",
+    "version-packages": "pnpm changeset:validate && changeset version",
+    "release:beta": "pnpm build && changeset publish --tag beta",
+    "release:stable": "echo 'Stable releases require manual approval - see RELEASES.md'"
   },
   "keywords": [
     "fastify",
@@ -125,5 +132,9 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.5"
   }
 }

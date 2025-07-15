@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0
+
+### Minor Changes
+
+- Initial public beta release with core SDK and React hooks
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @airbolt/sdk@0.1.0
+
 All notable changes to the `@airbolt/react-sdk` package will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
