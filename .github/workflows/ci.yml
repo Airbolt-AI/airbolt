@@ -127,6 +127,12 @@ jobs:
             echo "Mutation testing skipped - no critical logic changes"
           fi
 
+      - name: Generate SDK for mutation testing
+        if: steps.check-mutation.outputs.needed == 'true'
+        run: |
+          echo "📦 Generating SDK for mutation testing..."
+          pnpm --filter @airbolt/sdk run generate
+
       - name: Run mutation testing
         if: steps.check-mutation.outputs.needed == 'true'
         env:
