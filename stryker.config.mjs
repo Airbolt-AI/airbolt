@@ -1,18 +1,27 @@
 // @ts-check
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 const config = {
   packageManager: 'pnpm',
   reporters: ['html', 'clear-text', 'progress'],
-  testRunner: 'command',
+  testRunner: 'vitest',
+  plugins: ['@stryker-mutator/vitest-runner'],
   
-  // Run vitest directly with TypeScript support
-  commandRunner: {
-    command: 'NODE_OPTIONS="--import tsx" pnpm exec vitest run --config vitest.mutation.config.ts',
+  // TypeScript support via vitest.setup.mutation.ts
+  testRunnerNodeArgs: ['--import', require.resolve('tsx')],
+  
+  vitest: {
+    configFile: 'vitest.mutation.config.ts',
   },
   
-  coverageAnalysis: 'off', // Command runner doesn't support coverage analysis
-
-  // Ignore patterns for Stryker
+  // Performance optimizations
+  timeoutMS: 5000,
+  timeoutFactor: 1.5,
+  concurrency: process.env.CI ? 2 : 12,  // Increase for local development
+  disableTypeChecks: true,  // Skip TypeScript checking on mutants for speed
+  
   ignorePatterns: [
     'node_modules',
     '.stryker-tmp',
@@ -21,41 +30,34 @@ const config = {
     'test/**',
   ],
 
-  // Focus on critical decision points only
+  // MUTATION TARGETS
   mutate: [
-    // Core LLM service - retry and error handling logic
     'apps/backend-api/src/services/openai.ts',
-    
-    // Token management - refresh and expiry logic
-    'packages/sdk/src/core/token-manager.ts',
-    
-    // Rate limiting key generation (custom logic)
+    'packages/sdk/src/core/token-manager.ts', 
     'apps/backend-api/src/plugins/rate-limit.ts',
   ],
 
-  // Skip mutations that don't affect logic
+  // FOCUS ON LOGIC MUTATIONS ONLY
   mutator: {
     excludedMutations: [
-      'StringLiteral', // Don't mutate error messages
-      'ObjectLiteral', // Don't mutate config objects
-      'ArrayDeclaration', // Don't mutate data structures
-      'BlockStatement', // Don't remove blocks
-      'ConditionalExpression', // Focus on if/else not ternary
+      'StringLiteral',
+      'ObjectLiteral',
+      'ArrayDeclaration',
+      'BlockStatement',
     ],
   },
 
-  // Thresholds for critical logic only
   thresholds: {
-    high: 90, // Excellent - critical paths should be well tested
-    low: 85, // Minimum for decision logic
-    break: 85, // Fail if critical paths aren't well tested
+    high: 90,
+    low: 85,
+    break: 85,
   },
 
-  // Performance optimizations
-  concurrency: 2, // Lower for surgical approach
+  // Incremental mode: ~80-95% faster on repeat runs
+  incremental: true,
+
   tempDirName: '.stryker-tmp',
   cleanTempDir: true,
-
 };
 
 export default config;

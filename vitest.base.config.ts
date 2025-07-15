@@ -55,6 +55,7 @@ export const baseConfig: InlineConfig = {
     alias: {
       '@airbolt/config': path.resolve(__dirname, 'packages/config/src'),
       '@airbolt/types': path.resolve(__dirname, 'packages/types/src'),
+      '@airbolt/test-utils': path.resolve(__dirname, 'packages/test-utils/src'),
     },
     extensionAlias: {
       '.js': ['.ts', '.js'],
@@ -72,7 +73,7 @@ export const CRITICAL_SYNC_PROPERTIES = [
   'test.environment',
   'test.testTimeout',
   'test.hookTimeout',
-  'test.setupFiles',
+  // Note: setupFiles moved to ALLOWED_DIFFERENCES for mutation config
   'resolve.alias',
   'resolve.extensionAlias',
 ] as const;
@@ -85,4 +86,5 @@ export const ALLOWED_DIFFERENCES = [
   'test.include',
   'test.pool',
   'test.poolOptions',
+  'test.setupFiles', // Mutation config needs additional setup for tsx loader
 ] as const;

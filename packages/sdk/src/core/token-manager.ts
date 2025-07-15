@@ -172,10 +172,26 @@ export class TokenManager {
   }
 
   /**
+   * Join URL segments properly, handling trailing slashes
+   */
+  private joinUrl(base: string, ...segments: string[]): string {
+    // Remove all trailing slashes from base
+    const cleanBase = base.replace(/\/+$/, '');
+
+    // Join segments with forward slashes
+    const path = segments.join('/');
+
+    // Ensure path starts with forward slash
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${cleanBase}${cleanPath}`;
+  }
+
+  /**
    * Fetch a new token from the API
    */
   private async fetchToken(): Promise<object> {
-    const url = `${this.options.baseURL}/api/tokens`;
+    const url = this.joinUrl(this.options.baseURL, 'api/tokens');
     const body = JSON.stringify({ userId: this.options.userId });
 
     // Use appropriate fetch implementation based on environment

@@ -38,6 +38,7 @@ export default tseslint.config(
             'vitest.config.ts',
             'vitest.workspace.ts',
             'vite.config.ts',
+            'vitest.setup.mutation.ts',
           ],
         },
         tsconfigRootDir: import.meta.dirname,

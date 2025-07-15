@@ -1,48 +1,32 @@
 /**
- * Separate Vitest config for mutation testing
- * Required due to Stryker incompatibility with Vitest workspace mode
- * TODO: Remove when https://github.com/stryker-mutator/stryker-js/issues/[workspace-support] is fixed
+ * Vitest config for mutation testing with Stryker
  *
- * ⚠️  WARNING: This config MUST stay synchronized with vitest.base.config.ts
- *
- * Shared properties are imported from vitest.base.config.ts to ensure consistency.
- * Only mutation-testing-specific overrides are defined here.
- *
- * Run `pnpm test:config:verify` after making changes to ensure consistency.
+ * Key features:
+ * - Registers tsx loader via setupFiles for all worker processes
+ * - Disables workspace mode (Stryker limitation)
+ * - Imports shared config from vitest.base.config.ts
  */
 import { defineConfig, mergeConfig } from 'vitest/config';
 import { baseConfig } from './vitest.base.config';
 
-export default mergeConfig(
-  baseConfig,
-  defineConfig({
-    test: {
-      // Disable workspace mode for Stryker compatibility
-      workspace: undefined,
+export default defineConfig({
+  ...baseConfig,
+  test: {
+    ...baseConfig.test,
+    // Register tsx loader in every worker process (in addition to base setup)
+    setupFiles: [
+      ...(baseConfig.test?.setupFiles || []),
+      './vitest.setup.mutation.ts',
+    ],
 
-      // Directly include test files instead of using workspace
-      include: [
-        // Core LLM business logic tests
-        'apps/backend-api/test/services/openai.unit.test.ts',
+    // Disable workspace mode (Stryker requirement)
+    workspace: undefined,
 
-        // Token management tests
-        'packages/sdk/test/core/token-manager.test.ts',
-
-        // Rate limiting tests
-        'apps/backend-api/test/plugins/rate-limit.test.ts',
-      ],
-
-      // Use forks to support NODE_OPTIONS
-      pool: 'forks',
-      poolOptions: {
-        forks: {
-          singleFork: true,
-          execArgv: ['--import', 'tsx'],
-        },
-      },
-    },
-
-    // Note: resolve config is inherited from baseConfig
-    // This ensures module resolution stays synchronized
-  })
-);
+    // Target specific test files for mutation testing
+    include: [
+      'apps/backend-api/test/services/openai.unit.test.ts',
+      'packages/sdk/test/core/token-manager.test.ts',
+      'apps/backend-api/test/plugins/rate-limit.test.ts',
+    ],
+  },
+});
