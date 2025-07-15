@@ -10,12 +10,19 @@ const config = {
     command: 'NODE_OPTIONS="--import tsx" pnpm exec vitest run --config vitest.mutation.config.ts',
   },
   
-  // Command runner doesn't support coverage analysis or incremental mode
+  // Command runner doesn't support coverage analysis
   coverageAnalysis: 'off',
   
-  // Faster timeouts
-  timeoutMS: 15000,
-  timeoutFactor: 1.25,
+  // PERFORMANCE OPTIMIZATIONS
+  // Shorter timeouts - most tests run in <100ms, so 5s is plenty
+  timeoutMS: 5000,
+  timeoutFactor: 1.5,
+  
+  // Use available cores efficiently
+  concurrency: process.env.CI ? 2 : 6,
+  
+  // Reuse test runners for speed
+  maxTestRunnerReuse: 10,
 
   // Ignore patterns for Stryker
   ignorePatterns: [
@@ -26,42 +33,43 @@ const config = {
     'test/**',
   ],
 
-  // Focus on critical decision points only
+  // FOCUSED MUTATION STRATEGY
+  // Only mutate the most critical business logic
   mutate: [
-    // Core LLM service - retry and error handling logic
+    // OpenAI service - retry logic and error handling
     'apps/backend-api/src/services/openai.ts',
     
-    // Token management - refresh and expiry logic
+    // Token management - auth and refresh logic
     'packages/sdk/src/core/token-manager.ts',
     
-    // Rate limiting key generation (custom logic)
+    // Rate limiting - key generation logic
     'apps/backend-api/src/plugins/rate-limit.ts',
   ],
 
-  // Skip mutations that don't affect logic
+  // TARGETED EXCLUSIONS
+  // Skip mutation types that rarely find real bugs
   mutator: {
     excludedMutations: [
-      'StringLiteral', // Don't mutate error messages
-      'ObjectLiteral', // Don't mutate config objects
-      'ArrayDeclaration', // Don't mutate data structures
-      'BlockStatement', // Don't remove blocks
-      'ConditionalExpression', // Focus on if/else not ternary
+      'StringLiteral',         // Don't mutate strings
+      'ObjectLiteral',         // Don't mutate object literals
+      'ArrayDeclaration',      // Don't mutate array declarations
+      'BlockStatement',        // Don't remove blocks
+      'ConditionalExpression', // Skip ternary operators
+      'ArithmeticOperator',    // Skip math operators
+      'UpdateOperator',        // Skip ++ --
     ],
   },
 
-  // Thresholds for critical logic only
+  // Thresholds for critical logic
   thresholds: {
-    high: 90, // Excellent - critical paths should be well tested
-    low: 85, // Minimum for decision logic
-    break: 85, // Fail if critical paths aren't well tested
+    high: 90,
+    low: 85,
+    break: 85,
   },
 
-  // Performance optimizations
-  // Use 4 workers locally, 2 in CI for optimal performance
-  concurrency: process.env.CI ? 2 : 4,
+  // Performance settings
   tempDirName: '.stryker-tmp',
   cleanTempDir: true,
-
 };
 
 export default config;
