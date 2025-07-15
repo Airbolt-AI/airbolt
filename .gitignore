@@ -66,8 +66,6 @@ temp/
 **/.stryker-tmp/
 .stryker-cache/
 
-# Dev-only configs (not for CI)
-stryker.dev.config.mjs
 
 # Generated reports (build artifacts, not source)
 reports/mutation/mutation.html
