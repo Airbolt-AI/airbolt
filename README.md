@@ -64,7 +64,7 @@ function App() {
 
 That's it! Your app now has secure AI chat that can't be abused by random users.
 
-> **Coming soon**: Skip deployment entirely with our hosted solution. [Get early access](https://github.com/Airbolt-AI/airbolt/discussions)
+> **Coming soon**: Skip deployment entirely with our hosted solution. [Sign up for the closed beta](https://forms.gle/2yWKszvJBZReN6kf7)
 
 ## What you get today
 
@@ -90,7 +90,7 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 ## What's coming soon
 
-**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. Currently in private beta.
+**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. [Currently in private beta](https://forms.gle/2yWKszvJBZReN6kf7).
 
 **Auth provider integrations** - Connect your existing Auth0, Clerk, or Firebase Auth. Users automatically get secure AI access based on your app's authentication.
 
@@ -228,7 +228,7 @@ npm start
 
 **Phase 2: Developer Experience**
 
-- 🚧 Hosted solution (private beta)
+- 🚧 Hosted solution ([private beta](https://forms.gle/2yWKszvJBZReN6kf7))
 - 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
 - 🚧 Response streaming for real-time chat
 - 🚧 Function calling and tool use
