@@ -29,8 +29,8 @@ const config = {
     // Token management - refresh and expiry logic
     'packages/sdk/src/core/token-manager.ts',
     
-    // Note: rate-limit.ts temporarily removed due to test-utils import issues
-    // TODO: Fix monorepo dependency handling in Stryker sandbox
+    // Rate limiting key generation (custom logic)
+    'apps/backend-api/src/plugins/rate-limit.ts',
   ],
 
   // Skip mutations that don't affect logic

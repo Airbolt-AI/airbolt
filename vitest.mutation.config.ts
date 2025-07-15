@@ -28,20 +28,8 @@ export default mergeConfig(
         // Token management tests
         'packages/sdk/test/core/token-manager.test.ts',
 
-        // Note: rate-limit.test.ts temporarily removed due to @airbolt/test-utils
-        // import issues in Stryker sandbox. TODO: Fix monorepo deps in mutation testing
-      ],
-
-      // Exclude all other test files to prevent discovery
-      exclude: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/generated/**',
-        // Exclude all tests except the ones explicitly included above
-        '**/*.test.ts',
-        '**/*.test.js',
-        '!apps/backend-api/test/services/openai.unit.test.ts',
-        '!packages/sdk/test/core/token-manager.test.ts',
+        // Rate limiting tests
+        'apps/backend-api/test/plugins/rate-limit.test.ts',
       ],
 
       // Use forks to support NODE_OPTIONS
