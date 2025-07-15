@@ -1,6 +1,6 @@
 {
   "name": "airbolt-hooks-demo",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "type": "module",
   "description": "Example of using @airbolt/react-sdk useChat hook",
