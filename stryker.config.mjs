@@ -1,20 +1,26 @@
 // @ts-check
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 const config = {
   packageManager: 'pnpm',
   reporters: ['html', 'clear-text', 'progress'],
-  testRunner: 'command',
+  testRunner: 'vitest',
+  plugins: ['@stryker-mutator/vitest-runner'],
   
-  commandRunner: {
-    command: 'NODE_OPTIONS="--import tsx" pnpm exec vitest run --config vitest.mutation.config.ts',
+  // TypeScript support via vitest.setup.mutation.ts
+  testRunnerNodeArgs: ['--import', require.resolve('tsx')],
+  
+  vitest: {
+    configFile: 'vitest.mutation.config.ts',
   },
   
-  coverageAnalysis: 'off',
-  
-  // SIMPLE PERFORMANCE SETTINGS
+  // Performance optimizations
   timeoutMS: 5000,
   timeoutFactor: 1.5,
-  concurrency: process.env.CI ? 2 : 8,  // Max local parallelism
+  concurrency: process.env.CI ? 2 : 12,  // Increase for local development
+  disableTypeChecks: true,  // Skip TypeScript checking on mutants for speed
   
   ignorePatterns: [
     'node_modules',
@@ -46,6 +52,9 @@ const config = {
     low: 85,
     break: 85,
   },
+
+  // Incremental mode: ~80-95% faster on repeat runs
+  incremental: true,
 
   tempDirName: '.stryker-tmp',
   cleanTempDir: true,

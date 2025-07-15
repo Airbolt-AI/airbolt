@@ -73,7 +73,7 @@ export const CRITICAL_SYNC_PROPERTIES = [
   'test.environment',
   'test.testTimeout',
   'test.hookTimeout',
-  'test.setupFiles',
+  // Note: setupFiles moved to ALLOWED_DIFFERENCES for mutation config
   'resolve.alias',
   'resolve.extensionAlias',
 ] as const;
@@ -86,4 +86,5 @@ export const ALLOWED_DIFFERENCES = [
   'test.include',
   'test.pool',
   'test.poolOptions',
+  'test.setupFiles', // Mutation config needs additional setup for tsx loader
 ] as const;
