@@ -60,8 +60,12 @@
     "changeset:add": "changeset add",
     "changeset:status": "changeset status",
     "changeset:validate": "node scripts/validate-changeset-safety.js",
-    "version-packages": "pnpm changeset:validate && changeset version",
-    "release:beta": "pnpm build && changeset publish --tag beta",
+    "lockfile:check": "node scripts/check-lockfile-sync.js",
+    "version-packages": "pnpm changeset:validate && changeset version && pnpm install",
+    "release:prepare": "pnpm changeset:validate && changeset version && pnpm install && git add . && echo '✅ Ready to commit and tag'",
+    "release:beta": "pnpm release:prepare && echo 'Run: git commit && git tag v0.x.y-beta.z && git push origin v0.x.y-beta.z'",
+    "changeset:manual": "changeset version && pnpm install",
+    "release:publish": "pnpm build && changeset publish --tag beta",
     "release:stable": "echo 'Stable releases require manual approval - see RELEASES.md'"
   },
   "keywords": [

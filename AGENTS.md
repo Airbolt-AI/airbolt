@@ -38,6 +38,11 @@ pnpm affected:lint     # Lint only changed packages
 pnpm affected:test     # Test only changed packages
 pnpm affected:build    # Build only changed packages
 pnpm affected:all      # Run all tasks on changed packages
+
+# Release management commands (automated)
+pnpm release:prepare   # Version + lockfile sync + stage (foolproof)
+pnpm release:beta      # Full beta release preparation
+pnpm changeset:manual  # Manual version + lockfile sync (debugging)
 ```
 
 **Fix issues immediately:**

@@ -1,5 +1,12 @@
 # airbolt-node-cli-example
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @airbolt/sdk@0.2.0
+
 ## 1.0.1
 
 ### Patch Changes

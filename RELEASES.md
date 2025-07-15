@@ -6,22 +6,28 @@
 
 ```bash
 # After making changes
-pnpm changeset add
-# Choose: patch (fixes) | minor (features/breaking changes)
-# Write: concise summary
-
+pnpm changeset add              # Add changeset after changes
 git commit -m "feat: your change + changeset"
 ```
 
-### Publishing Beta
+### Publishing Beta (Automated)
 
 ```bash
-# Tag and push triggers automatic release
-git tag v0.x.y-beta.z
-git push origin v0.x.y-beta.z
+# Prepare release (handles everything automatically)
+pnpm release:prepare            # Version + lockfile + stage (foolproof)
+git commit -m "chore: version packages"
+git tag v0.x.y-beta.z && git push origin v0.x.y-beta.z
 
-# Publishes to npm with @beta tag
-# Creates GitHub prerelease
+# Alternative: Full automation
+pnpm release:beta               # Guides you through entire process
+```
+
+### Manual Override (Debugging)
+
+```bash
+pnpm changeset:manual           # Version + lockfile sync only
+pnpm changeset:validate         # Check for premature major bumps
+pnpm lockfile:check            # Verify lockfile sync
 ```
 
 ### Version Strategy
@@ -85,3 +91,6 @@ npm install @airbolt/sdk @airbolt/react-sdk
 - ✅ Beta releases tagged separately
 - ✅ Workspace dependencies resolved automatically
 - ✅ Separate workflows for beta vs stable
+- ✅ Pre-commit hooks prevent lockfile drift
+- ✅ CI auto-fixes lockfile issues
+- ✅ Automated release preparation (foolproof)

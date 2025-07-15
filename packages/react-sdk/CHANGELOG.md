@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- Test release preparation automation
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @airbolt/sdk@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

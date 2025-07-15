@@ -1,0 +1,49 @@
+name: Auto-fix Lockfile
+
+on:
+  pull_request:
+    paths: ['**/package.json']
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/setup-project
+
+      # Try frozen install first (should succeed due to setup-project validation)
+      - name: Check lockfile sync
+        id: lockfile-check
+        run: |
+          if pnpm install --frozen-lockfile; then
+            echo "sync=true" >> $GITHUB_OUTPUT
+          else
+            echo "sync=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Auto-fix if needed (fallback safety net)
+      - name: Auto-fix lockfile
+        if: steps.lockfile-check.outputs.sync == 'false'
+        run: |
+          echo "🔧 Auto-fixing lockfile sync issue..."
+          pnpm install
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pnpm-lock.yaml
+          git commit -m "chore: sync lockfile with package.json changes [skip ci]"
+          git push
+
+      - name: Report status
+        run: |
+          if [ "${{ steps.lockfile-check.outputs.sync }}" = "true" ]; then
+            echo "✅ Lockfile is in sync"
+          else
+            echo "🔧 Auto-fixed lockfile sync"
+          fi
