@@ -363,137 +363,30 @@ gh pr create --title "feat(auth): implement user authentication (LIN-123)" \
 
 ## 🚨 CRITICAL: Environment Handling Standards
 
-**Principle**: Consistent, reliable environment detection across all layers prevents CI failures and ensures predictable behavior.
-
-### Environment Detection (Source Code)
-
-**MANDATORY**: Use centralized utilities from `@airbolt/config` (ESLint enforced):
+**MANDATORY**: Use centralized utilities (ESLint enforced):
 
 ```typescript
-// ✅ CORRECT: Use centralized utilities
+// ✅ Source code: Use @airbolt/config utilities
 import { isDevelopment, isProduction, isTest } from '@airbolt/config';
-
 if (isDevelopment()) {
-  // Development-specific code
+  /* dev logic */
 }
 
-if (isProduction()) {
-  // Production-specific validation
-}
+// ✅ Tests: Use @airbolt/test-utils standardized setup
+import { createTestEnv, TEST_ENV_PRESETS } from '@airbolt/test-utils';
+beforeEach(() => createTestEnv()); // Standard test setup
+beforeEach(() => TEST_ENV_PRESETS.production()); // Test prod behavior
 
-// ❌ WRONG: Direct environment checks
+// ❌ WRONG: Direct environment checks (ESLint error)
 if (process.env.NODE_ENV === 'development') {
   /* NO */
 }
-if (fastify.config?.NODE_ENV === 'production') {
-  /* NO */
-}
+process.env.NODE_ENV = 'test'; // Manual setup - inconsistent
 ```
 
-**Environment Variants Supported**:
+**Environment Mapping**: `production|prod` → `production`, `test` → `test`, `dev|development|undefined|*` → `development`
 
-- `production`, `prod` → `production`
-- `test` → `test`
-- `development`, `dev`, `undefined`, anything else → `development`
-
-### Test Environment Setup
-
-**MANDATORY**: Use standardized utilities from `@airbolt/test-utils` (ESLint enforced):
-
-```typescript
-// ✅ CORRECT: Standardized test environment
-import { createTestEnv, TEST_ENV_PRESETS } from '@airbolt/test-utils';
-
-beforeEach(() => {
-  createTestEnv(); // Comprehensive defaults
-});
-
-// ✅ CORRECT: Environment-specific testing
-beforeEach(() => {
-  createTestEnv({ RATE_LIMIT_MAX: '5' }); // Custom overrides
-});
-
-// ✅ CORRECT: Preset environments
-beforeEach(() => {
-  TEST_ENV_PRESETS.production(); // Test production behavior
-});
-
-// ❌ WRONG: Manual environment setup
-process.env.NODE_ENV = 'test'; // Inconsistent and error-prone
-```
-
-**Test Environment Patterns by Use Case**:
-
-| Pattern                           | Use Case                             | Example                   |
-| --------------------------------- | ------------------------------------ | ------------------------- |
-| `createTestEnv()`                 | Standard unit/integration tests      | Most test files           |
-| `createTestEnv({ KEY: 'value' })` | Tests needing specific config        | Rate limiting, CORS tests |
-| `TEST_ENV_PRESETS.production()`   | Testing production-specific behavior | Security validation tests |
-| `TEST_ENV_PRESETS.development()`  | Testing development features         | Response validation tests |
-
-### Environment-Dependent Services
-
-**Pattern**: Inject behavior based on environment at service creation:
-
-```typescript
-// ✅ GOOD: Environment-dependent service configuration
-import { isDevelopment } from '@airbolt/config';
-
-export function createCorsConfig(): CorsConfig {
-  if (isDevelopment()) {
-    return { allowWildcard: true, autoAddPorts: true };
-  }
-  return { allowWildcard: false, strictOrigins: true };
-}
-
-// ❌ BAD: Scattered environment checks in business logic
-function handleRequest() {
-  if (process.env.NODE_ENV === 'development') {
-    /* scattered logic */
-  }
-}
-```
-
-### Testing Environment-Dependent Logic
-
-**For Environment Detection** (test the utilities themselves):
-
-```typescript
-describe.each([
-  ['production', 'production'],
-  ['prod', 'production'],
-  ['test', 'test'],
-  ['development', 'development'],
-  [undefined, 'development'],
-])('getEnvironment("%s")', (input, expected) => {
-  it(`should return ${expected}`, () => {
-    vi.stubEnv('NODE_ENV', input);
-    expect(getEnvironment()).toBe(expected);
-  });
-});
-```
-
-**For Business Logic** (mock the utilities):
-
-```typescript
-describe('CORS behavior', () => {
-  it('should allow wildcard in development', () => {
-    vi.mocked(isDevelopment).mockReturnValue(true);
-    const config = createCorsConfig();
-    expect(config.allowWildcard).toBe(true);
-  });
-});
-```
-
-**For Integration Testing** (use preset environments):
-
-```typescript
-describe('Rate limit integration', () => {
-  beforeEach(() => {
-    TEST_ENV_PRESETS.rateLimiting(); // Explicit environment setup
-  });
-});
-```
+**Test Patterns**: `createTestEnv()` (standard), `createTestEnv({KEY: 'val'})` (custom), `TEST_ENV_PRESETS.production()` (behavior testing)
 
 ## ESLint Runtime Safety Rules
 
