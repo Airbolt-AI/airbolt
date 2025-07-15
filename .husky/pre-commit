@@ -5,3 +5,21 @@ if git diff --cached --name-only | grep -E "vitest\.(config|mutation|base)\.ts";
   echo "🔍 Vitest config changes detected, validating consistency..."
   node scripts/validate-vitest-configs.js
 fi
+
+# Check for package.json changes without lockfile sync
+if git diff --cached --name-only | grep -E "package\.json$" > /dev/null; then
+  # Check if lockfile has actual changes or if versions were changed
+  if git diff --cached --name-only | grep -q "pnpm-lock.yaml" || git diff --quiet pnpm-lock.yaml; then
+    echo "✅ Package.json and lockfile are in sync"
+  else
+    echo "❌ package.json changed but pnpm-lock.yaml needs updating"
+    echo "💡 Run: pnpm release:prepare"
+    echo "💡 Or manual: pnpm install && git add pnpm-lock.yaml"
+    exit 1
+  fi
+fi
+
+# Validate changeset safety if changesets modified
+if git diff --cached --name-only | grep -q "\.changeset/.*\.md$"; then
+  pnpm changeset:validate
+fi

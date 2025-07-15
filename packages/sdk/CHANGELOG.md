@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- Test release preparation automation
+
+## 0.1.0
+
+### Minor Changes
+
+- Initial public beta release with core SDK and React hooks
+
 All notable changes to the AI Fastify Template SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

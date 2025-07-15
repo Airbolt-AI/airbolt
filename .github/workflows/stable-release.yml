@@ -1,8 +1,8 @@
-name: Beta Release
+name: Stable Release
 
 on:
   push:
-    tags: ['v0.*'] # Only beta versions
+    tags: ['v[1-9]*'] # Only 1.x.x and above
 
 jobs:
   release:
@@ -17,14 +17,15 @@ jobs:
 
       - uses: ./.github/actions/setup-project
 
-      # Validate this is a beta release
-      - name: Validate Beta Release
+      # Extra validation for stable releases
+      - name: Validate Stable Release Readiness
         run: |
-          if [[ ! "${GITHUB_REF#refs/tags/v}" =~ ^0\. ]]; then
-            echo "❌ This workflow only handles beta releases (0.x.x)"
-            echo "For stable releases, use the stable release workflow"
-            exit 1
-          fi
+          echo "🔍 Validating stable release readiness..."
+          # Add additional checks here
+          # - Test coverage thresholds
+          # - Documentation completeness  
+          # - Breaking change review
+          pnpm ai:compliance
 
       # Generate SDK from latest OpenAPI
       - run: pnpm generate
@@ -32,32 +33,27 @@ jobs:
       # Build all packages
       - run: pnpm build
 
-      # Validate changesets
-      - run: pnpm changeset:validate
-
       # Configure npm
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
 
-      # Publish with beta tag
-      - run: pnpm changeset publish --tag beta
+      # Publish to latest tag
+      - run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
-      # Create GitHub Release (prerelease)
+      # Create GitHub Release (stable)
       - uses: softprops/action-gh-release@v2
         with:
-          prerelease: true
           generate_release_notes: true
           body: |
-            ## 🚧 Beta Release
+            ## 🎉 Stable Release
 
             **Installation**:
             ```bash
-            npm install @airbolt/sdk@beta
-            npm install @airbolt/react-sdk@beta
+            npm install @airbolt/sdk @airbolt/react-sdk
             ```
 
             **Specific Version**:
@@ -66,4 +62,4 @@ jobs:
             npm install @airbolt/react-sdk@${GITHUB_REF#refs/tags/v}
             ```
 
-            ⚠️ **Beta Notice**: This is a pre-release version. APIs may change.
+            🔒 **Stable API**: This release follows semantic versioning.
