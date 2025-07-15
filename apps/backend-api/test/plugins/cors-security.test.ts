@@ -136,22 +136,26 @@ describe('CORS Security Validation', () => {
       }
     });
 
-    it('prevents wildcard usage in production', async () => {
-      // This test ensures that wildcard (*) is never allowed in production
-      // Our validation now correctly blocks this at configuration time
+    it('allows wildcard usage in production for SDK deployment model', async () => {
+      // Wildcard is now allowed in production to support SDK deployment model
+      const app = await createApp('production', '*');
 
-      let validationError: Error | null = null;
       try {
-        await createApp('production', '*');
-      } catch (error) {
-        validationError = error as Error;
-      }
+        // Should successfully create app with wildcard in production
+        const testOrigin = 'https://random-app.example.com';
+        const response = await app.inject({
+          method: 'GET',
+          url: '/test',
+          headers: { origin: testOrigin },
+        });
 
-      // Should fail to create app with wildcard in production
-      expect(validationError).not.toBeNull();
-      expect(validationError?.message).toContain(
-        'Wildcard (*) not allowed in production'
-      );
+        expect(response.statusCode).toBe(200);
+        expect(response.headers['access-control-allow-origin']).toBe(
+          testOrigin
+        );
+      } finally {
+        await app.close();
+      }
     });
 
     it('prevents localhost origins in production', async () => {
@@ -227,7 +231,7 @@ describe('CORS Security Validation', () => {
       const scenarios = [
         { env: 'development', allowsWildcard: true, shouldWork: true },
         { env: 'test', allowsWildcard: true, shouldWork: true },
-        { env: 'production', allowsWildcard: false, shouldWork: false },
+        { env: 'production', allowsWildcard: true, shouldWork: true },
       ];
 
       for (const scenario of scenarios) {
@@ -248,19 +252,6 @@ describe('CORS Security Validation', () => {
           } finally {
             await app.close();
           }
-        } else {
-          // Production should block wildcard at configuration time
-          let validationError: Error | null = null;
-          try {
-            await createApp(scenario.env, '*');
-          } catch (error) {
-            validationError = error as Error;
-          }
-
-          expect(validationError).not.toBeNull();
-          expect(validationError?.message).toContain(
-            'Wildcard (*) not allowed in production'
-          );
         }
       }
     });

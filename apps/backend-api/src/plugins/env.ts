@@ -59,7 +59,7 @@ export const EnvSchema = z
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
       .optional(),
 
-    // CORS origins (environment-aware defaults, see constants/cors.ts for details)
+    // CORS allowed origins (comma-separated list or * for all origins)
     ALLOWED_ORIGIN: z.string().optional(),
 
     SYSTEM_PROMPT: z
@@ -118,9 +118,8 @@ export const EnvSchema = z
 
     for (const origin of origins) {
       if (origin === '*') {
-        if (data.NODE_ENV === 'production') {
-          throw new Error('Wildcard (*) not allowed in production');
-        }
+        // Wildcard is allowed in all environments for SDK deployment model
+        // Security is handled via JWT tokens and rate limiting
       } else {
         try {
           const url = new URL(origin);
@@ -206,12 +205,11 @@ export default fp(
     try {
       const config = EnvSchema.parse(process.env);
 
-      // Log if JWT_SECRET was auto-generated (check if it's the expected length and NODE_ENV is development)
+      // Warn about auto-generated JWT_SECRET in development
       if (config.NODE_ENV === 'development' && !process.env['JWT_SECRET']) {
         fastify.log.warn(
           { JWT_SECRET: '[REDACTED - auto-generated]' },
-          'JWT_SECRET not provided. Auto-generated for development use only. ' +
-            'Set JWT_SECRET environment variable in production for stable tokens across restarts.'
+          'JWT_SECRET auto-generated for development. Set JWT_SECRET for stable tokens.'
         );
       }
 
