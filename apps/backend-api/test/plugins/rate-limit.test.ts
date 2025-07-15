@@ -20,6 +20,7 @@ describe('Rate Limit Plugin Integration', () => {
     });
 
     // Mock environment variables
+    process.env['NODE_ENV'] = 'test';
     process.env['OPENAI_API_KEY'] = 'sk-test123';
     process.env['RATE_LIMIT_MAX'] = String(rateLimitMax);
     process.env['RATE_LIMIT_TIME_WINDOW'] = String(rateLimitTimeWindow);
