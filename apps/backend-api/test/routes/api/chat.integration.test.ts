@@ -16,6 +16,7 @@ describe('Chat Route Integration Tests', () => {
     vi.stubEnv('OPENAI_API_KEY', 'sk-test123456789012345678901234567890');
     vi.stubEnv('JWT_SECRET', 'test-secret-key-for-integration-tests-32');
     vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('ALLOWED_ORIGIN', 'http://localhost:3000,http://localhost:3001');
 
     // Create mock OpenAI service
     mockOpenAIService = {
@@ -215,7 +216,8 @@ describe('Chat Route Integration Tests', () => {
     });
 
     it('should handle CORS preflight requests correctly', async () => {
-      // Use an allowed origin from the default configuration
+      // Use an allowed origin from the test configuration
+      // In test environment, default is 'http://localhost:3000,http://localhost:3001'
       const allowedOrigin = 'http://localhost:3000';
 
       const response = await app.inject({

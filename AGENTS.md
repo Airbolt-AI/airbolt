@@ -361,6 +361,33 @@ gh pr create --title "feat(auth): implement user authentication (LIN-123)" \
              --body "## Summary\n- Add user authentication\n\n## Testing\n- Unit tests added\n\nCloses LIN-123"
 ```
 
+## 🚨 CRITICAL: Environment Handling Standards
+
+**MANDATORY**: Use centralized utilities (ESLint enforced):
+
+```typescript
+// ✅ Source code: Use @airbolt/config utilities
+import { isDevelopment, isProduction, isTest } from '@airbolt/config';
+if (isDevelopment()) {
+  /* dev logic */
+}
+
+// ✅ Tests: Use @airbolt/test-utils standardized setup
+import { createTestEnv, TEST_ENV_PRESETS } from '@airbolt/test-utils';
+beforeEach(() => createTestEnv()); // Standard test setup
+beforeEach(() => TEST_ENV_PRESETS.production()); // Test prod behavior
+
+// ❌ WRONG: Direct environment checks (ESLint error)
+if (process.env.NODE_ENV === 'development') {
+  /* NO */
+}
+process.env.NODE_ENV = 'test'; // Manual setup - inconsistent
+```
+
+**Environment Mapping**: `production|prod` → `production`, `test` → `test`, `dev|development|undefined|*` → `development`
+
+**Test Patterns**: `createTestEnv()` (standard), `createTestEnv({KEY: 'val'})` (custom), `TEST_ENV_PRESETS.production()` (behavior testing)
+
 ## ESLint Runtime Safety Rules
 
 Our ESLint is **minimal** (~40 lines) and focused on runtime safety that TypeScript can't catch:
@@ -385,6 +412,14 @@ fastify.post(
 fastify.post('/users', async req => {
   const data = req.body; // ESLint error
 });
+
+// ✅ Environment utilities enforced
+import { isDevelopment } from '@airbolt/config';
+
+// ❌ Direct checks forbidden in source code
+if (process.env.NODE_ENV === 'development') {
+  /* ESLint warning */
+}
 ```
 
 ## Monorepo Structure Rules

@@ -18,7 +18,7 @@ describe('Environment Schema Validation', () => {
         expect(result.NODE_ENV).toBe('development');
         expect(result.PORT).toBe(3000);
         expect(result.LOG_LEVEL).toBe('info');
-        expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+        expect(result.ALLOWED_ORIGIN).toEqual(['*']);
         expect(result.SYSTEM_PROMPT).toBe('');
         expect(result.RATE_LIMIT_MAX).toBe(60);
         expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
@@ -47,6 +47,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         NODE_ENV: 'production',
         JWT_SECRET: 'a'.repeat(32), // Required in production
+        ALLOWED_ORIGIN: 'https://example.com', // Required in production
       });
       expect(result.NODE_ENV).toBe('production');
     });
@@ -235,6 +236,7 @@ describe('Environment Schema Validation', () => {
           EnvSchema.parse({
             OPENAI_API_KEY: validApiKey,
             NODE_ENV: 'production',
+            ALLOWED_ORIGIN: 'https://example.com', // Required in production
             // No JWT_SECRET provided
           })
         ).toThrow(
@@ -248,6 +250,7 @@ describe('Environment Schema Validation', () => {
           OPENAI_API_KEY: validApiKey,
           NODE_ENV: 'production',
           JWT_SECRET: validSecret,
+          ALLOWED_ORIGIN: 'https://example.com', // Required in production
         });
 
         expect(result.JWT_SECRET).toBe(validSecret);
@@ -288,12 +291,23 @@ describe('Environment Schema Validation', () => {
   });
 
   describe('ALLOWED_ORIGIN validation', () => {
-    it('should use default localhost origin', () => {
-      const result = EnvSchema.parse({
-        OPENAI_API_KEY: validApiKey,
-        JWT_SECRET: randomBytes(32).toString('hex'),
-      });
-      expect(result.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+    it('should use default wildcard origin in development', () => {
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
+
+      try {
+        const result = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          JWT_SECRET: randomBytes(32).toString('hex'),
+        });
+        expect(result.ALLOWED_ORIGIN).toEqual(['*']);
+      } finally {
+        if (originalEnv !== undefined) {
+          process.env['NODE_ENV'] = originalEnv;
+        } else {
+          delete process.env['NODE_ENV'];
+        }
+      }
     });
 
     it('should parse single origin', () => {
@@ -301,6 +315,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: 'https://example.com',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual(['https://example.com']);
     });
@@ -311,6 +326,7 @@ describe('Environment Schema Validation', () => {
         ALLOWED_ORIGIN:
           'https://example.com, http://localhost:3000, https://app.example.com',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
@@ -324,6 +340,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: '  https://example.com  ,  http://localhost:3000  ',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
@@ -338,7 +355,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'not-a-url',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('valid HTTP(S) URLs or * for all origins');
+      ).toThrow('Invalid URL format');
     });
 
     it('should reject non-HTTP(S) protocols', () => {
@@ -348,7 +365,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'ftp://example.com',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('valid HTTP(S) URLs or * for all origins');
+      ).toThrow('Invalid origin protocol');
     });
 
     it('should accept wildcard * for all origins', () => {

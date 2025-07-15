@@ -98,7 +98,77 @@ module.exports = {
       },
     },
 
-    // Rule 3: Require property tests for business logic functions
+    // Rule 3: Enforce centralized environment utilities
+    'prefer-environment-utils': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description:
+            'Prefer centralized environment utilities over direct checks',
+          category: 'Best Practices',
+          recommended: true,
+        },
+        messages: {
+          useEnvironmentUtils:
+            'Use centralized environment utilities (isDevelopment, isProduction, isTest) instead of direct NODE_ENV checks',
+          useTestUtils:
+            'Use @airbolt/test-utils (createTestEnv) instead of manual process.env manipulation in tests',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          BinaryExpression(node) {
+            const filename = context.getFilename();
+            const sourceCode = context.getSourceCode();
+
+            // Skip test files for NODE_ENV checks (they can use test utilities)
+            if (
+              filename.includes('.test.') ||
+              filename.includes('.spec.') ||
+              filename.includes('/test/') ||
+              filename.includes('env.ts') // Allow in env utility files
+            ) {
+              return;
+            }
+
+            // Check for NODE_ENV comparisons in source code
+            if (
+              node.operator === '===' &&
+              ((node.left.type === 'MemberExpression' &&
+                sourceCode.getText(node.left).includes('NODE_ENV')) ||
+                (node.right.type === 'MemberExpression' &&
+                  sourceCode.getText(node.right).includes('NODE_ENV')))
+            ) {
+              context.report({
+                node,
+                messageId: 'useEnvironmentUtils',
+              });
+            }
+          },
+          AssignmentExpression(node) {
+            const filename = context.getFilename();
+            const sourceCode = context.getSourceCode();
+
+            // Check for manual env assignments in test files
+            if (
+              (filename.includes('.test.') ||
+                filename.includes('.spec.') ||
+                filename.includes('/test/')) &&
+              node.left.type === 'MemberExpression' &&
+              sourceCode.getText(node.left).includes('process.env')
+            ) {
+              context.report({
+                node,
+                messageId: 'useTestUtils',
+              });
+            }
+          },
+        };
+      },
+    },
+
+    // Rule 4: Require property tests for business logic functions
     'require-property-tests': {
       meta: {
         type: 'problem',

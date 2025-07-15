@@ -1,4 +1,4 @@
-import { getPort, isDevelopment } from '@airbolt/config';
+import { isDevelopment } from '@airbolt/config';
 
 import { buildApp } from './app.js';
 
@@ -6,8 +6,6 @@ const isDev: boolean = isDevelopment();
 
 const start = async (): Promise<void> => {
   try {
-    const port: number = getPort();
-
     // Build the app with appropriate logger configuration
     const server = await buildApp({
       logger: isDev
@@ -22,8 +20,10 @@ const start = async (): Promise<void> => {
           },
     });
 
-    await server.listen({ port, host: '0.0.0.0' });
-    server.log.info(`Server listening on http://0.0.0.0:${String(port)}`);
+    await server.listen({ port: server.config!.PORT, host: '0.0.0.0' });
+    server.log.info(
+      `Server listening on http://0.0.0.0:${server.config!.PORT}`
+    );
 
     // Graceful shutdown handling
     const gracefulShutdown = async (): Promise<void> => {

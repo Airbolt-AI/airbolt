@@ -1,6 +1,16 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
+// CORS constants inlined for simplicity
+const COMMON_DEV_PORTS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:4200',
+  'http://localhost:8080',
+] as const;
+
+const DEFAULT_TEST_ORIGINS = 'http://localhost:3000,http://localhost:3001';
 
 export const EnvSchema = z
   .object({
@@ -49,34 +59,8 @@ export const EnvSchema = z
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
       .optional(),
 
-    ALLOWED_ORIGIN: z
-      .string({
-        required_error: 'ALLOWED_ORIGIN is required for CORS configuration',
-        invalid_type_error: 'ALLOWED_ORIGIN must be a string',
-      })
-      .min(1, 'ALLOWED_ORIGIN cannot be empty')
-      .default('http://localhost:5173')
-      .transform(origins => {
-        // Support comma-separated origins and trim whitespace
-        return origins.split(',').map(origin => origin.trim());
-      })
-      .refine(
-        origins =>
-          origins.every(origin => {
-            // Allow wildcard for all origins
-            if (origin === '*') {
-              return true;
-            }
-            try {
-              // Validate each origin is a valid URL
-              const url = new URL(origin);
-              return url.protocol === 'http:' || url.protocol === 'https:';
-            } catch {
-              return false;
-            }
-          }),
-        'ALLOWED_ORIGIN must contain valid HTTP(S) URLs or * for all origins'
-      ),
+    // CORS origins (environment-aware defaults, see constants/cors.ts for details)
+    ALLOWED_ORIGIN: z.string().optional(),
 
     SYSTEM_PROMPT: z
       .string({
@@ -110,12 +94,64 @@ export const EnvSchema = z
   .transform(data => {
     // Auto-generate JWT_SECRET in non-production environments when not provided
     if (!data.JWT_SECRET && data.NODE_ENV !== 'production') {
-      return {
+      data = {
         ...data,
         JWT_SECRET: randomBytes(32).toString('hex'),
       };
     }
-    return data;
+
+    // Set ALLOWED_ORIGIN defaults and validate
+    if (!data.ALLOWED_ORIGIN) {
+      if (data.NODE_ENV === 'production') {
+        throw new Error(
+          'ALLOWED_ORIGIN required in production. Example: ALLOWED_ORIGIN=https://yourdomain.com'
+        );
+      }
+      data.ALLOWED_ORIGIN =
+        data.NODE_ENV === 'test' ? DEFAULT_TEST_ORIGINS : '*';
+    }
+
+    // Parse and validate origins
+    const origins = data.ALLOWED_ORIGIN.split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    for (const origin of origins) {
+      if (origin === '*') {
+        if (data.NODE_ENV === 'production') {
+          throw new Error('Wildcard (*) not allowed in production');
+        }
+      } else {
+        try {
+          const url = new URL(origin);
+          if (data.NODE_ENV === 'production') {
+            if (
+              url.protocol !== 'https:' ||
+              url.hostname.includes('localhost')
+            ) {
+              throw new Error(
+                `Production requires HTTPS origins (no localhost). Invalid: ${origin}`
+              );
+            }
+          } else if (!['http:', 'https:'].includes(url.protocol)) {
+            throw new Error(`Invalid origin protocol: ${origin}`);
+          }
+        } catch (err) {
+          if (err instanceof TypeError) {
+            throw new Error(`Invalid URL format: ${origin}`);
+          }
+          throw err;
+        }
+      }
+    }
+
+    // Auto-enhance development with common ports
+    const finalOrigins =
+      data.NODE_ENV === 'development' && !origins.includes('*')
+        ? [...new Set([...origins, ...COMMON_DEV_PORTS])]
+        : origins;
+
+    return { ...data, ALLOWED_ORIGIN: finalOrigins };
   })
   .refine(
     data => {

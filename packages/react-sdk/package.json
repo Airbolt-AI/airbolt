@@ -67,19 +67,15 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.0.0",
-    "@testing-library/react-hooks": "^8.0.1",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@types/testing-library__jest-dom": "^6.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "fast-check": "^4.1.1",
     "happy-dom": "^12.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-test-renderer": "^18.0.0",
     "typedoc": "^0.28.7",
-    "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.0.0",
     "vitest": "^3.2.4"
   }

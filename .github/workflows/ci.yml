@@ -62,6 +62,8 @@ jobs:
         run: pnpm generate
 
       - name: Run unit and property tests
+        env:
+          NODE_ENV: test
         run: |
           echo "🧪 Stage 2: Unit and property tests..."
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -127,6 +129,8 @@ jobs:
 
       - name: Run mutation testing
         if: steps.check-mutation.outputs.needed == 'true'
+        env:
+          NODE_ENV: test
         run: |
           echo "🧬 Stage 4: Mutation testing on critical logic..."
           pnpm test:mutation

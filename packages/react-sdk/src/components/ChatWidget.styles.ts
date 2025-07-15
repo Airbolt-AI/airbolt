@@ -218,3 +218,33 @@ export function getMergedStyles(
     typing: { ...baseStyles['typing'] },
   };
 }
+
+/**
+ * Detect theme preference from system
+ */
+export function detectSystemTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  return mediaQuery.matches ? 'dark' : 'light';
+}
+
+/**
+ * Default themes for light and dark modes using minimal properties
+ */
+export const defaultThemes = {
+  light: {
+    primary: '#007aff',
+    surface: '#f5f5f5',
+    border: '#e0e0e0',
+    text: '#000000',
+  },
+  dark: {
+    primary: '#0a84ff',
+    surface: '#2a2a2a',
+    border: '#3a3a3a',
+    text: '#ffffff',
+  },
+} as const;

@@ -87,28 +87,6 @@ describe('ChatWidget Styling', () => {
         lineHeight: 'inherit',
       });
     });
-
-    it('should support legacy customTheme for backward compatibility', () => {
-      const { container } = render(
-        <ChatWidget
-          customTheme={{
-            userMessage: '#FF6B6B',
-            assistantMessage: '#4ECDC4',
-            border: '#DEE2E6',
-            text: '#212529',
-          }}
-        />
-      );
-
-      const widget = container.querySelector('[data-testid="chat-widget"]');
-      const style = widget?.getAttribute('style') || '';
-
-      // Legacy theme should be converted to CSS variables
-      expect(style).toContain('--chat-primary: #FF6B6B');
-      expect(style).toContain('--chat-surface: #4ECDC4');
-      expect(style).toContain('--chat-border: #DEE2E6');
-      expect(style).toContain('--chat-text: #212529');
-    });
   });
 
   describe('Position Modes', () => {

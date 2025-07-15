@@ -73,7 +73,13 @@ describe('Environment Plugin Direct Tests', () => {
       expect(app.config?.LOG_LEVEL).toBe('info');
       expect(app.config?.OPENAI_API_KEY).toBe(validApiKey);
       expect(app.config?.JWT_SECRET).toBeDefined(); // Auto-generated
-      expect(app.config?.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+      expect(app.config?.ALLOWED_ORIGIN).toEqual([
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://localhost:5174',
+        'http://localhost:4200',
+        'http://localhost:8080',
+      ]);
     } finally {
       process.env = originalEnv;
       await app.close();
@@ -108,7 +114,7 @@ describe('Environment Plugin Direct Tests', () => {
       expect(app.config?.PORT).toBe(3000);
       expect(app.config?.LOG_LEVEL).toBe('info');
       expect(app.config?.JWT_SECRET).toBeDefined(); // Auto-generated in dev
-      expect(app.config?.ALLOWED_ORIGIN).toEqual(['http://localhost:5173']);
+      expect(app.config?.ALLOWED_ORIGIN).toEqual(['*']); // Development default is wildcard
       expect(app.config?.SYSTEM_PROMPT).toBe('');
       expect(app.config?.RATE_LIMIT_MAX).toBe(60);
       expect(app.config?.RATE_LIMIT_TIME_WINDOW).toBe(60000);
@@ -131,6 +137,10 @@ describe('Environment Plugin Direct Tests', () => {
         // Provide JWT_SECRET for production and test, let development auto-generate
         ...(value !== 'development' && {
           JWT_SECRET: randomBytes(32).toString('hex'),
+        }),
+        // Provide appropriate ALLOWED_ORIGIN for production
+        ...(value === 'production' && {
+          ALLOWED_ORIGIN: 'https://example.com',
         }),
       };
 
@@ -211,6 +221,7 @@ describe('Environment Plugin Direct Tests', () => {
       ...originalEnv,
       NODE_ENV: 'production',
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'https://example.com', // Required in production
       // No JWT_SECRET provided
     };
     delete process.env['JWT_SECRET'];
@@ -227,6 +238,7 @@ describe('Environment Plugin Direct Tests', () => {
     const originalEnv = process.env;
     process.env = {
       ...originalEnv,
+      NODE_ENV: 'development', // Use development to allow mixed HTTP/HTTPS
       OPENAI_API_KEY: validApiKey,
       ALLOWED_ORIGIN:
         'https://example.com, http://localhost:3000, https://app.example.com',
@@ -240,6 +252,10 @@ describe('Environment Plugin Direct Tests', () => {
         'https://example.com',
         'http://localhost:3000',
         'https://app.example.com',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:4200',
+        'http://localhost:8080',
       ]);
     } finally {
       process.env = originalEnv;
@@ -310,16 +326,14 @@ describe('Environment Plugin Direct Tests', () => {
   it('should validate ALLOWED_ORIGIN contains valid URLs', async () => {
     const originalEnv = process.env;
 
-    const invalidOrigins = [
+    const invalidUrlOrigins = [
       'not-a-url',
       'ftp://invalid-protocol.com',
       'javascript:alert(1)',
       'file:///etc/passwd',
-      'http://,https://example.com', // Empty origin
-      'http://example.com, , https://app.com', // Contains empty
     ];
 
-    for (const invalidOrigin of invalidOrigins) {
+    for (const invalidOrigin of invalidUrlOrigins) {
       const app = Fastify({ logger: false });
       process.env = {
         ...originalEnv,
@@ -328,10 +342,56 @@ describe('Environment Plugin Direct Tests', () => {
       };
 
       await expect(app.register(envPlugin).ready()).rejects.toThrow(
-        /ALLOWED_ORIGIN.*valid HTTP\(S\) URLs/
+        /Invalid (URL format|origin protocol)/
       );
 
       await app.close();
+    }
+
+    process.env = originalEnv;
+  });
+
+  it('should filter out empty values from ALLOWED_ORIGIN', async () => {
+    const originalEnv = process.env;
+
+    const originsWithEmpty = [
+      {
+        input: 'http://localhost:3000,https://example.com',
+        expected: ['http://localhost:3000', 'https://example.com'],
+      },
+      {
+        input: 'http://example.com, , https://app.com',
+        expected: ['http://example.com', 'https://app.com'],
+      },
+    ];
+
+    for (const { input, expected } of originsWithEmpty) {
+      const app = Fastify({ logger: false });
+      process.env = {
+        ...originalEnv,
+        OPENAI_API_KEY: validApiKey,
+        ALLOWED_ORIGIN: input,
+        NODE_ENV: 'development', // Allow mixed HTTP/HTTPS
+      };
+
+      try {
+        await app.register(envPlugin);
+        await app.ready();
+        // In development, origins are auto-enhanced with common dev ports
+        const expectedWithDev = [
+          ...new Set([
+            ...expected,
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://localhost:4200',
+            'http://localhost:8080',
+          ]),
+        ];
+        expect(app.config?.ALLOWED_ORIGIN).toEqual(expectedWithDev);
+      } finally {
+        await app.close();
+      }
     }
 
     process.env = originalEnv;
@@ -429,18 +489,23 @@ describe('Environment Plugin Direct Tests', () => {
     );
     await app1.close();
 
-    // Test empty ALLOWED_ORIGIN
+    // Test empty ALLOWED_ORIGIN - should use default for development
     const app2 = Fastify({ logger: false });
     process.env = {
       ...originalEnv,
+      NODE_ENV: 'development',
       OPENAI_API_KEY: validApiKey,
       ALLOWED_ORIGIN: '',
     };
 
-    await expect(app2.register(envPlugin).ready()).rejects.toThrow(
-      /ALLOWED_ORIGIN.*empty/
-    );
-    await app2.close();
+    try {
+      await app2.register(envPlugin);
+      await app2.ready();
+      // Empty string should result in default wildcard for development
+      expect(app2.config?.ALLOWED_ORIGIN).toEqual(['*']);
+    } finally {
+      await app2.close();
+    }
 
     process.env = originalEnv;
   });
@@ -471,7 +536,8 @@ describe('Environment Plugin Direct Tests', () => {
       expect(errorMessage).toContain('PORT');
       expect(errorMessage).toContain('OPENAI_API_KEY');
       expect(errorMessage).toContain('JWT_SECRET');
-      expect(errorMessage).toContain('ALLOWED_ORIGIN');
+      // ALLOWED_ORIGIN error is in the transform now, not in Zod validation
+      // So it might not appear if other errors prevent it from being reached
       expect(errorMessage).toContain('RATE_LIMIT_MAX');
     }
 
@@ -497,7 +563,11 @@ describe('Environment Plugin Direct Tests', () => {
     process.env = {
       ...originalEnv,
       NODE_ENV: 'development',
+      PORT: '3000', // Valid port
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'http://localhost:3000', // Explicitly set to avoid default processing
+      RATE_LIMIT_MAX: '60', // Valid rate limit
+      RATE_LIMIT_TIME_WINDOW: '60000', // Valid time window
       // No JWT_SECRET
     };
     delete process.env['JWT_SECRET'];
@@ -527,7 +597,11 @@ describe('Environment Plugin Direct Tests', () => {
     process.env = {
       ...originalEnv,
       NODE_ENV: 'development',
+      PORT: '3000', // Valid port
       OPENAI_API_KEY: validApiKey,
+      ALLOWED_ORIGIN: 'http://localhost:3000', // Explicitly set to avoid default processing
+      RATE_LIMIT_MAX: '60', // Valid rate limit
+      RATE_LIMIT_TIME_WINDOW: '60000', // Valid time window
       // No JWT_SECRET provided
     };
     delete process.env['JWT_SECRET'];

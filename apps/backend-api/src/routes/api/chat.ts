@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
+import { isDevelopment } from '@airbolt/config';
 import { MessageSchema, ChatResponseSchema } from '../../services/openai.js';
 import { OpenAIServiceError } from '../../services/openai.js';
 
@@ -199,7 +200,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
         );
 
         // Validate response in development
-        if (fastify.config?.NODE_ENV === 'development') {
+        if (isDevelopment()) {
           ChatResponseSchema.parse(response);
         }
 

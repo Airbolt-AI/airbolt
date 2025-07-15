@@ -80,7 +80,6 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 | `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)        |
 | `position`     | `'inline' \| 'fixed-bottom-right'` | `'inline'`            | Widget positioning mode                            |
 | `className`    | `string`                           | -                     | Additional CSS class for custom styling            |
-| `customTheme`  | `Partial<ThemeColors>`             | -                     | Legacy theme colors (backward compatibility)       |
 | `minimalTheme` | `MinimalTheme`                     | -                     | New minimal theme using CSS custom properties      |
 | `customStyles` | `object`                           | -                     | Custom styles for widget elements                  |
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
+import { createTestEnv } from '@airbolt/test-utils';
 
 import envPlugin from '../../src/plugins/env.js';
 import corsPlugin from '../../src/plugins/cors.js';
@@ -7,6 +8,7 @@ import corsPlugin from '../../src/plugins/cors.js';
 describe('CORS Plugin Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   const createApp = async (allowedOrigin = 'http://localhost:3000') => {
@@ -14,9 +16,10 @@ describe('CORS Plugin Integration', () => {
       logger: false,
     });
 
-    // Mock environment variables
-    process.env['OPENAI_API_KEY'] = 'sk-test123';
-    process.env['ALLOWED_ORIGIN'] = allowedOrigin;
+    // Setup test environment
+    createTestEnv({
+      ALLOWED_ORIGIN: allowedOrigin,
+    });
 
     await app.register(envPlugin);
     await app.register(corsPlugin);
@@ -87,49 +90,23 @@ describe('CORS Plugin Integration', () => {
   });
 
   describe('Multiple origins support', () => {
-    it('should handle comma-separated origins', async () => {
+    it.each([
+      ['first origin', 'https://example.com'],
+      ['second origin', 'http://localhost:3000'],
+      ['third origin', 'https://app.example.com'],
+    ])('should handle comma-separated origins: %s', async (_, origin) => {
       const app = await createApp(
         'https://example.com, http://localhost:3000, https://app.example.com'
       );
 
-      // Test first origin
-      const response1 = await app.inject({
+      const response = await app.inject({
         method: 'GET',
         url: '/test',
-        headers: {
-          origin: 'https://example.com',
-        },
+        headers: { origin },
       });
-      expect(response1.statusCode).toBe(200);
-      expect(response1.headers['access-control-allow-origin']).toBe(
-        'https://example.com'
-      );
 
-      // Test second origin
-      const response2 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'http://localhost:3000',
-        },
-      });
-      expect(response2.statusCode).toBe(200);
-      expect(response2.headers['access-control-allow-origin']).toBe(
-        'http://localhost:3000'
-      );
-
-      // Test third origin
-      const response3 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'https://app.example.com',
-        },
-      });
-      expect(response3.statusCode).toBe(200);
-      expect(response3.headers['access-control-allow-origin']).toBe(
-        'https://app.example.com'
-      );
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['access-control-allow-origin']).toBe(origin);
 
       await app.close();
     });
@@ -272,67 +249,88 @@ describe('CORS Plugin Integration', () => {
     });
   });
 
+  describe('Development auto-enhancement', () => {
+    it('should auto-add common dev ports in development mode', async () => {
+      // Create app with development environment
+      vi.unstubAllEnvs();
+      createTestEnv({
+        NODE_ENV: 'development',
+        ALLOWED_ORIGIN: 'http://localhost:5173',
+      });
+
+      const app = Fastify({ logger: false });
+      await app.register(envPlugin);
+      await app.register(corsPlugin);
+      app.get('/test', async () => ({ hello: 'world' }));
+
+      const commonPorts = [5173, 5174, 3000, 4200, 8080];
+
+      for (const port of commonPorts) {
+        const response = await app.inject({
+          method: 'OPTIONS',
+          url: '/test',
+          headers: {
+            origin: `http://localhost:${port}`,
+            'access-control-request-method': 'POST',
+          },
+        });
+
+        expect(response.statusCode).toBe(204);
+      }
+
+      await app.close();
+    });
+  });
+
   describe('Edge cases', () => {
-    it('should handle localhost with different ports', async () => {
-      const app = await createApp(
-        'http://localhost:3000, http://localhost:5173'
-      );
+    it.each([
+      ['allowed port 3000', 'http://localhost:3000', 200],
+      ['allowed port 5173', 'http://localhost:5173', 200],
+      ['auto-enhanced port 8080', 'http://localhost:8080', 200], // Now auto-enhanced in development
+      ['blocked non-common port 9999', 'http://localhost:9999', 500],
+    ])(
+      'should handle localhost ports: %s',
+      async (_, origin, expectedStatus) => {
+        // Use development environment for auto-enhancement testing
+        vi.unstubAllEnvs();
+        createTestEnv({
+          NODE_ENV: 'development',
+          ALLOWED_ORIGIN: 'http://localhost:3000, http://localhost:5173',
+        });
 
-      const response1 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'http://localhost:3000',
-        },
-      });
-      expect(response1.statusCode).toBe(200);
+        const app = Fastify({ logger: false });
+        await app.register(envPlugin);
+        await app.register(corsPlugin);
+        app.get('/test', async () => ({ hello: 'world' }));
 
-      const response2 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'http://localhost:5173',
-        },
-      });
-      expect(response2.statusCode).toBe(200);
+        const response = await app.inject({
+          method: 'GET',
+          url: '/test',
+          headers: { origin },
+        });
 
-      // Different port should be rejected
-      const response3 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'http://localhost:8080',
-        },
-      });
-      expect(response3.statusCode).toBe(500);
+        expect(response.statusCode).toBe(expectedStatus);
+        await app.close();
+      }
+    );
 
-      await app.close();
-    });
+    it.each([
+      ['HTTPS allowed', 'https://example.com', 200],
+      ['HTTP blocked', 'http://example.com', 500],
+    ])(
+      'should handle protocol correctly: %s',
+      async (_, origin, expectedStatus) => {
+        const app = await createApp('https://example.com');
 
-    it('should handle HTTPS vs HTTP correctly', async () => {
-      const app = await createApp('https://example.com');
+        const response = await app.inject({
+          method: 'GET',
+          url: '/test',
+          headers: { origin },
+        });
 
-      // HTTPS should be allowed
-      const response1 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'https://example.com',
-        },
-      });
-      expect(response1.statusCode).toBe(200);
-
-      // HTTP should be rejected (different protocol)
-      const response2 = await app.inject({
-        method: 'GET',
-        url: '/test',
-        headers: {
-          origin: 'http://example.com',
-        },
-      });
-      expect(response2.statusCode).toBe(500);
-
-      await app.close();
-    });
+        expect(response.statusCode).toBe(expectedStatus);
+        await app.close();
+      }
+    );
   });
 });

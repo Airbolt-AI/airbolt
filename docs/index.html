@@ -334,7 +334,7 @@
                         <span class="sdk-icon">⚛️</span>
                         React SDK
                     </h2>
-                    <p>React hooks and components for building AI chat interfaces. Includes a pre-built ChatWidget and useChat hook.</p>
+                    <p>React hooks and components for building AI chat interfaces. The ChatWidget automatically inherits your app's styling (fonts, colors) and provides minimal CSS custom properties for theming.</p>
                     <div class="sdk-links">
                         <a href="api/react/" class="btn btn-primary">API Reference</a>
                         <a href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk" class="btn btn-secondary">Source</a>
@@ -359,18 +359,32 @@ npm install @airbolt/sdk</code></pre>
             </div>
 
             <div style="margin-top: 2rem;">
-                <span class="code-lang">React</span>
+                <span class="code-lang">React - Inherits Your App's Styling</span>
                 <div class="code-block">
                     <pre><code><span class="token-import">import</span> { ChatWidget } <span class="token-import">from</span> <span class="token-string">'@airbolt/react-sdk'</span>;
 
 <span class="token-keyword">function</span> <span class="token-function">App</span>() {
   <span class="token-keyword">return</span> (
-    <span class="token-string">&lt;ChatWidget 
-      baseURL="https://your-api.onrender.com"
-      title="AI Assistant"
-      theme="dark"
-    /&gt;</span>
+    <span class="token-comment">// ChatWidget inherits fonts, colors from parent</span>
+    <span class="token-string">&lt;div className="my-app-container"&gt;
+      &lt;ChatWidget baseURL="https://your-api.onrender.com" /&gt;
+    &lt;/div&gt;</span>
   );
+}</code></pre>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <span class="code-lang">Optional: CSS Custom Properties for Theming</span>
+                <div class="code-block">
+                    <pre><code><span class="token-comment">/* Your existing CSS - ChatWidget adapts automatically */</span>
+<span class="token-selector">.my-app-container</span> {
+  <span class="token-property">font-family</span>: <span class="token-string">'Inter', sans-serif</span>;
+  <span class="token-property">color</span>: <span class="token-string">#333</span>;
+  
+  <span class="token-comment">/* Optional: Override chat-specific colors */</span>
+  <span class="token-property">--chat-primary</span>: <span class="token-string">#007aff</span>;
+  <span class="token-property">--chat-surface</span>: <span class="token-string">#f5f5f5</span>;
 }</code></pre>
                 </div>
             </div>
