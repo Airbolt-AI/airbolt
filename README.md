@@ -1,8 +1,8 @@
 # Airbolt
 
-**A production-ready backend for calling LLMs from your frontend securely.**
+**Never put API keys in frontend code. Airbolt is the secure backend for calling LLMs from your React, Vue, or vanilla JS apps.**
 
-Stripe removed payment rails. Auth0 removed login flows. Airbolt removes AI plumbing.
+Just like you'd never put Stripe keys in frontend code, you need a backend for OpenAI too. One-click deploy, then just `<ChatWidget baseURL='...' />`
 
 ## Why You Need This
 
@@ -23,7 +23,7 @@ Stripe removed payment rails. Auth0 removed login flows. Airbolt removes AI plum
 
 ## Getting Started
 
-**Deploy the Airbolt backend **
+**Deploy the Airbolt backend**
 
 Deploy our production-ready LLM proxy to Render. You'll get your own private API that securely handles LLM calls:
 
