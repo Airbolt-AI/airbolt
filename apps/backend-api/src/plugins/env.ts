@@ -1,11 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
-import {
-  COMMON_DEV_PORTS,
-  DEFAULT_TEST_ORIGINS,
-  validateOrigins,
-} from '../constants/cors.js';
+import { COMMON_DEV_PORTS, DEFAULT_TEST_ORIGINS } from '../constants/cors.js';
 
 export const EnvSchema = z
   .object({
@@ -95,7 +91,7 @@ export const EnvSchema = z
       };
     }
 
-    // Set ALLOWED_ORIGIN defaults based on NODE_ENV being parsed
+    // Set ALLOWED_ORIGIN defaults and validate
     if (!data.ALLOWED_ORIGIN) {
       if (data.NODE_ENV === 'production') {
         throw new Error(
@@ -106,26 +102,46 @@ export const EnvSchema = z
         data.NODE_ENV === 'test' ? DEFAULT_TEST_ORIGINS : '*';
     }
 
-    // Parse and transform ALLOWED_ORIGIN
-    const origins = data.ALLOWED_ORIGIN.split(',').map(s => s.trim());
+    // Parse origins
+    const origins = data.ALLOWED_ORIGIN.split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
 
-    // Auto-enhance development with common ports (unless wildcard)
-    let finalOrigins = origins;
-    if (data.NODE_ENV === 'development' && !origins.includes('*')) {
-      const newPorts = COMMON_DEV_PORTS.filter(port => !origins.includes(port));
-      finalOrigins = [...origins, ...newPorts];
+    // Validate origins
+    for (const origin of origins) {
+      if (origin !== '*') {
+        try {
+          const url = new URL(origin);
+          if (data.NODE_ENV === 'production') {
+            if (
+              !url.protocol.startsWith('https:') ||
+              url.hostname.includes('localhost')
+            ) {
+              throw new Error(
+                `Production requires HTTPS origins (no localhost). Invalid: ${origin}`
+              );
+            }
+          } else if (!['http:', 'https:'].includes(url.protocol)) {
+            throw new Error(`Invalid origin protocol: ${origin}`);
+          }
+        } catch (err) {
+          if (err instanceof TypeError) {
+            throw new Error(`Invalid URL format: ${origin}`);
+          }
+          throw err;
+        }
+      } else if (data.NODE_ENV === 'production') {
+        throw new Error('Wildcard (*) not allowed in production');
+      }
     }
 
-    // Validate origins based on environment
-    const validationResult = validateOrigins(finalOrigins, data.NODE_ENV);
-    if (!validationResult.valid) {
-      throw new Error(validationResult.error || 'Invalid CORS configuration');
-    }
+    // Auto-enhance development with common ports
+    const finalOrigins =
+      data.NODE_ENV === 'development' && !origins.includes('*')
+        ? [...new Set([...origins, ...COMMON_DEV_PORTS])]
+        : origins;
 
-    return {
-      ...data,
-      ALLOWED_ORIGIN: finalOrigins,
-    };
+    return { ...data, ALLOWED_ORIGIN: finalOrigins };
   })
   .refine(
     data => {

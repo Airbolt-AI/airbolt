@@ -349,7 +349,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'not-a-url',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('ALLOWED_ORIGIN must contain valid HTTP(S) URLs');
+      ).toThrow('Invalid URL format');
     });
 
     it('should reject non-HTTP(S) protocols', () => {
@@ -359,7 +359,7 @@ describe('Environment Schema Validation', () => {
           ALLOWED_ORIGIN: 'ftp://example.com',
           JWT_SECRET: randomBytes(32).toString('hex'),
         })
-      ).toThrow('ALLOWED_ORIGIN must contain valid HTTP(S) URLs');
+      ).toThrow('Invalid origin protocol');
     });
 
     it('should accept wildcard * for all origins', () => {
