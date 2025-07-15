@@ -151,7 +151,7 @@ describe('CORS Security Validation', () => {
       // Should fail to create app with wildcard in production
       expect(validationError).not.toBeNull();
       expect(validationError?.message).toContain(
-        'Production requires explicit HTTPS origins (no wildcard, localhost, or HTTP)'
+        'Wildcard (*) not allowed in production'
       );
     });
 
@@ -172,7 +172,7 @@ describe('CORS Security Validation', () => {
       // Should fail to create app with localhost in production
       expect(validationError).not.toBeNull();
       expect(validationError?.message).toContain(
-        'Production requires explicit HTTPS origins (no wildcard, localhost, or HTTP)'
+        'Production requires HTTPS origins (no localhost)'
       );
     });
 
@@ -190,7 +190,7 @@ describe('CORS Security Validation', () => {
       // Should fail to create app with HTTP in production
       expect(validationError).not.toBeNull();
       expect(validationError?.message).toContain(
-        'Production requires explicit HTTPS origins (no wildcard, localhost, or HTTP)'
+        'Production requires HTTPS origins (no localhost)'
       );
     });
   });
@@ -260,7 +260,7 @@ describe('CORS Security Validation', () => {
 
           expect(validationError).not.toBeNull();
           expect(validationError?.message).toContain(
-            'Production requires explicit HTTPS origins (no wildcard, localhost, or HTTP)'
+            'Wildcard (*) not allowed in production'
           );
         }
       }

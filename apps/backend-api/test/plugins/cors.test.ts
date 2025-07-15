@@ -276,7 +276,8 @@ describe('CORS Plugin Integration', () => {
     it.each([
       ['allowed port 3000', 'http://localhost:3000', 200],
       ['allowed port 5173', 'http://localhost:5173', 200],
-      ['blocked port 8080', 'http://localhost:8080', 500],
+      ['auto-enhanced port 8080', 'http://localhost:8080', 200], // Now auto-enhanced in development
+      ['blocked non-common port 9999', 'http://localhost:9999', 500],
     ])(
       'should handle localhost ports: %s',
       async (_, origin, expectedStatus) => {

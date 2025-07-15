@@ -1,7 +1,16 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
-import { COMMON_DEV_PORTS, DEFAULT_TEST_ORIGINS } from '../constants/cors.js';
+// CORS constants inlined for simplicity
+const COMMON_DEV_PORTS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:4200',
+  'http://localhost:8080',
+] as const;
+
+const DEFAULT_TEST_ORIGINS = 'http://localhost:3000,http://localhost:3001';
 
 export const EnvSchema = z
   .object({
@@ -102,19 +111,22 @@ export const EnvSchema = z
         data.NODE_ENV === 'test' ? DEFAULT_TEST_ORIGINS : '*';
     }
 
-    // Parse origins
+    // Parse and validate origins
     const origins = data.ALLOWED_ORIGIN.split(',')
       .map(s => s.trim())
       .filter(Boolean);
 
-    // Validate origins
     for (const origin of origins) {
-      if (origin !== '*') {
+      if (origin === '*') {
+        if (data.NODE_ENV === 'production') {
+          throw new Error('Wildcard (*) not allowed in production');
+        }
+      } else {
         try {
           const url = new URL(origin);
           if (data.NODE_ENV === 'production') {
             if (
-              !url.protocol.startsWith('https:') ||
+              url.protocol !== 'https:' ||
               url.hostname.includes('localhost')
             ) {
               throw new Error(
@@ -130,8 +142,6 @@ export const EnvSchema = z
           }
           throw err;
         }
-      } else if (data.NODE_ENV === 'production') {
-        throw new Error('Wildcard (*) not allowed in production');
       }
     }
 

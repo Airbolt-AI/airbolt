@@ -47,6 +47,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         NODE_ENV: 'production',
         JWT_SECRET: 'a'.repeat(32), // Required in production
+        ALLOWED_ORIGIN: 'https://example.com', // Required in production
       });
       expect(result.NODE_ENV).toBe('production');
     });
@@ -235,6 +236,7 @@ describe('Environment Schema Validation', () => {
           EnvSchema.parse({
             OPENAI_API_KEY: validApiKey,
             NODE_ENV: 'production',
+            ALLOWED_ORIGIN: 'https://example.com', // Required in production
             // No JWT_SECRET provided
           })
         ).toThrow(
@@ -248,6 +250,7 @@ describe('Environment Schema Validation', () => {
           OPENAI_API_KEY: validApiKey,
           NODE_ENV: 'production',
           JWT_SECRET: validSecret,
+          ALLOWED_ORIGIN: 'https://example.com', // Required in production
         });
 
         expect(result.JWT_SECRET).toBe(validSecret);
@@ -312,6 +315,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: 'https://example.com',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual(['https://example.com']);
     });
@@ -322,6 +326,7 @@ describe('Environment Schema Validation', () => {
         ALLOWED_ORIGIN:
           'https://example.com, http://localhost:3000, https://app.example.com',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
@@ -335,6 +340,7 @@ describe('Environment Schema Validation', () => {
         OPENAI_API_KEY: validApiKey,
         ALLOWED_ORIGIN: '  https://example.com  ,  http://localhost:3000  ',
         JWT_SECRET: randomBytes(32).toString('hex'),
+        NODE_ENV: 'test', // Use test to avoid dev auto-enhancement
       });
       expect(result.ALLOWED_ORIGIN).toEqual([
         'https://example.com',
