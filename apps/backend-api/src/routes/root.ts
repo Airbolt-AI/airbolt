@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { isDevelopment } from '@airbolt/config';
 
 // Response schemas
 const HelloWorldResponseSchema = z.object({
@@ -62,7 +63,7 @@ const root: FastifyPluginAsync = async (fastify, _opts): Promise<void> => {
       const response = { message: 'Hello World!' };
 
       // Validate response against schema in development
-      if (fastify.config?.NODE_ENV === 'development') {
+      if (isDevelopment()) {
         HelloWorldResponseSchema.parse(response);
       }
 

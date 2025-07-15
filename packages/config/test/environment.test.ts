@@ -3,6 +3,7 @@ import {
   getEnvironment,
   isDevelopment,
   isProduction,
+  isTest,
 } from '../src/environment.js';
 
 describe('environment', () => {
@@ -19,24 +20,31 @@ describe('environment', () => {
   });
 
   describe('getEnvironment', () => {
-    it('should return development as default', () => {
-      delete process.env['NODE_ENV'];
-      expect(getEnvironment()).toBe('development');
-    });
-
-    it('should return production when NODE_ENV is production', () => {
-      process.env['NODE_ENV'] = 'production';
-      expect(getEnvironment()).toBe('production');
-    });
-
-    it('should return test when NODE_ENV is test', () => {
-      process.env['NODE_ENV'] = 'test';
-      expect(getEnvironment()).toBe('test');
-    });
-
-    it('should return development for unknown NODE_ENV values', () => {
-      process.env['NODE_ENV'] = 'staging';
-      expect(getEnvironment()).toBe('development');
+    // Test all environment variants systematically
+    describe.each([
+      ['production', 'production'],
+      ['PRODUCTION', 'production'],
+      ['prod', 'production'],
+      ['PROD', 'production'],
+      ['test', 'test'],
+      ['TEST', 'test'],
+      ['development', 'development'],
+      ['DEVELOPMENT', 'development'],
+      ['dev', 'development'],
+      ['DEV', 'development'],
+      ['staging', 'development'],
+      ['local', 'development'],
+      [undefined, 'development'],
+      ['', 'development'],
+    ])('with NODE_ENV="%s"', (input, expected) => {
+      it(`should return "${expected}"`, () => {
+        if (input === undefined) {
+          delete process.env['NODE_ENV'];
+        } else {
+          process.env['NODE_ENV'] = input;
+        }
+        expect(getEnvironment()).toBe(expected);
+      });
     });
   });
 
@@ -58,19 +66,41 @@ describe('environment', () => {
   });
 
   describe('isProduction', () => {
-    it('should return true in production', () => {
+    it('should return true for production variants', () => {
       process.env['NODE_ENV'] = 'production';
+      expect(isProduction()).toBe(true);
+
+      process.env['NODE_ENV'] = 'prod';
       expect(isProduction()).toBe(true);
     });
 
-    it('should return false in development', () => {
+    it('should return false for non-production environments', () => {
       process.env['NODE_ENV'] = 'development';
       expect(isProduction()).toBe(false);
-    });
 
-    it('should return false when NODE_ENV is unset', () => {
+      process.env['NODE_ENV'] = 'test';
+      expect(isProduction()).toBe(false);
+
       delete process.env['NODE_ENV'];
       expect(isProduction()).toBe(false);
+    });
+  });
+
+  describe('isTest', () => {
+    it('should return true in test environment', () => {
+      process.env['NODE_ENV'] = 'test';
+      expect(isTest()).toBe(true);
+    });
+
+    it('should return false for non-test environments', () => {
+      process.env['NODE_ENV'] = 'production';
+      expect(isTest()).toBe(false);
+
+      process.env['NODE_ENV'] = 'development';
+      expect(isTest()).toBe(false);
+
+      delete process.env['NODE_ENV'];
+      expect(isTest()).toBe(false);
     });
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
+import { createTestEnv } from '@airbolt/test-utils';
 
 import envPlugin from '../../src/plugins/env.js';
 import corsPlugin from '../../src/plugins/cors.js';
@@ -7,6 +8,7 @@ import corsPlugin from '../../src/plugins/cors.js';
 describe('CORS Plugin Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   const createApp = async (allowedOrigin = 'http://localhost:3000') => {
@@ -14,9 +16,10 @@ describe('CORS Plugin Integration', () => {
       logger: false,
     });
 
-    // Mock environment variables
-    process.env['OPENAI_API_KEY'] = 'sk-test123';
-    process.env['ALLOWED_ORIGIN'] = allowedOrigin;
+    // Setup test environment
+    createTestEnv({
+      ALLOWED_ORIGIN: allowedOrigin,
+    });
 
     await app.register(envPlugin);
     await app.register(corsPlugin);
@@ -248,9 +251,17 @@ describe('CORS Plugin Integration', () => {
 
   describe('Development auto-enhancement', () => {
     it('should auto-add common dev ports in development mode', async () => {
-      process.env['NODE_ENV'] = 'development';
+      // Create app with development environment
+      vi.unstubAllEnvs();
+      createTestEnv({
+        NODE_ENV: 'development',
+        ALLOWED_ORIGIN: 'http://localhost:5173',
+      });
 
-      const app = await createApp('http://localhost:5173'); // Explicit single port
+      const app = Fastify({ logger: false });
+      await app.register(envPlugin);
+      await app.register(corsPlugin);
+      app.get('/test', async () => ({ hello: 'world' }));
 
       const commonPorts = [5173, 5174, 3000, 4200, 8080];
 
@@ -268,7 +279,6 @@ describe('CORS Plugin Integration', () => {
       }
 
       await app.close();
-      delete process.env['NODE_ENV'];
     });
   });
 
@@ -281,9 +291,17 @@ describe('CORS Plugin Integration', () => {
     ])(
       'should handle localhost ports: %s',
       async (_, origin, expectedStatus) => {
-        const app = await createApp(
-          'http://localhost:3000, http://localhost:5173'
-        );
+        // Use development environment for auto-enhancement testing
+        vi.unstubAllEnvs();
+        createTestEnv({
+          NODE_ENV: 'development',
+          ALLOWED_ORIGIN: 'http://localhost:3000, http://localhost:5173',
+        });
+
+        const app = Fastify({ logger: false });
+        await app.register(envPlugin);
+        await app.register(corsPlugin);
+        app.get('/test', async () => ({ hello: 'world' }));
 
         const response = await app.inject({
           method: 'GET',

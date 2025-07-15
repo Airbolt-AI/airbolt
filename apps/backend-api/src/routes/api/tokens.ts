@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { isDevelopment } from '@airbolt/config';
 
 // Simple token request schema for development
 const TokenRequestSchema = z.object({
@@ -89,7 +90,7 @@ const tokens: FastifyPluginAsync = async (fastify): Promise<void> => {
         };
 
         // Validate response in development
-        if (fastify.config?.NODE_ENV === 'development') {
+        if (isDevelopment()) {
           TokenResponseSchema.parse(response);
         }
 

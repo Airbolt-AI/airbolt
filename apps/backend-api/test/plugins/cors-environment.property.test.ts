@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fc from 'fast-check';
 import Fastify from 'fastify';
+import { createTestEnv, createProductionTestEnv } from '@airbolt/test-utils';
 
 import envPlugin from '../../src/plugins/env.js';
 import corsPlugin from '../../src/plugins/cors.js';
@@ -8,6 +9,7 @@ import corsPlugin from '../../src/plugins/cors.js';
 describe('CORS Environment Property Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   const createApp = async (nodeEnv: string, allowedOrigin: string) => {
@@ -15,11 +17,17 @@ describe('CORS Environment Property Tests', () => {
       logger: false,
     });
 
-    // Mock environment variables
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = nodeEnv;
-    process.env['OPENAI_API_KEY'] = 'sk-test123';
-    process.env['ALLOWED_ORIGIN'] = allowedOrigin;
+    // Setup test environment
+    if (nodeEnv === 'production') {
+      createProductionTestEnv({
+        ALLOWED_ORIGIN: allowedOrigin,
+      });
+    } else {
+      createTestEnv({
+        NODE_ENV: nodeEnv,
+        ALLOWED_ORIGIN: allowedOrigin,
+      });
+    }
 
     await app.register(envPlugin);
     await app.register(corsPlugin);
@@ -28,12 +36,7 @@ describe('CORS Environment Property Tests', () => {
     app.get('/test', async () => ({ hello: 'world' }));
 
     // Cleanup function
-    const cleanup = () => {
-      process.env['NODE_ENV'] = originalEnv;
-      return app.close();
-    };
-
-    return { app, cleanup };
+    return app;
   };
 
   it('handles any environment + origin combination safely', async () => {
@@ -86,10 +89,7 @@ describe('CORS Environment Property Tests', () => {
             }
           }),
         async ({ nodeEnv, allowedOrigins }) => {
-          const { app, cleanup } = await createApp(
-            nodeEnv,
-            allowedOrigins.join(',')
-          );
+          const app = await createApp(nodeEnv, allowedOrigins.join(','));
 
           try {
             // Test both allowed and potentially disallowed origins
@@ -135,7 +135,7 @@ describe('CORS Environment Property Tests', () => {
               }
             }
           } finally {
-            await cleanup();
+            await app.close();
           }
         }
       ),
@@ -150,7 +150,7 @@ describe('CORS Environment Property Tests', () => {
         fc.constantFrom('development', 'test'), // Only non-production environments for localhost
         async (port, nodeEnv) => {
           const localhostOrigin = `http://localhost:${port}`;
-          const { app, cleanup } = await createApp(nodeEnv, localhostOrigin);
+          const app = await createApp(nodeEnv, localhostOrigin);
 
           try {
             // Test exact match
@@ -177,7 +177,7 @@ describe('CORS Environment Property Tests', () => {
             });
             expect(httpsVersion.statusCode).toBe(500);
           } finally {
-            await cleanup();
+            await app.close();
           }
         }
       ),
@@ -199,10 +199,7 @@ describe('CORS Environment Property Tests', () => {
           { minLength: 1, maxLength: 3 }
         ),
         async devOrigins => {
-          const { app, cleanup } = await createApp(
-            'development',
-            devOrigins.join(',')
-          );
+          const app = await createApp('development', devOrigins.join(','));
 
           try {
             // All specified origins should work
@@ -233,7 +230,7 @@ describe('CORS Environment Property Tests', () => {
             });
             expect(unspecifiedPort.statusCode).toBe(500);
           } finally {
-            await cleanup();
+            await app.close();
           }
         }
       ),
@@ -252,7 +249,7 @@ describe('CORS Environment Property Tests', () => {
           const allowedOrigin = 'https://myapp.com';
           const testOrigin = `${protocol}://${domain}`;
 
-          const { app, cleanup } = await createApp(nodeEnv, allowedOrigin);
+          const app = await createApp(nodeEnv, allowedOrigin);
 
           try {
             const response = await app.inject({
@@ -269,7 +266,7 @@ describe('CORS Environment Property Tests', () => {
               expect(response.body).toContain('Not allowed by CORS');
             }
           } finally {
-            await cleanup();
+            await app.close();
           }
         }
       ),

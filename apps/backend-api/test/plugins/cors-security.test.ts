@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
+import { createTestEnv, createProductionTestEnv } from '@airbolt/test-utils';
 
 import envPlugin from '../../src/plugins/env.js';
 import corsPlugin from '../../src/plugins/cors.js';
@@ -7,6 +8,7 @@ import corsPlugin from '../../src/plugins/cors.js';
 describe('CORS Security Validation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   const createApp = async (nodeEnv: string, allowedOrigin: string) => {
@@ -14,11 +16,17 @@ describe('CORS Security Validation', () => {
       logger: false,
     });
 
-    // Mock environment variables
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = nodeEnv;
-    process.env['OPENAI_API_KEY'] = 'sk-test123';
-    process.env['ALLOWED_ORIGIN'] = allowedOrigin;
+    // Setup test environment
+    if (nodeEnv === 'production') {
+      createProductionTestEnv({
+        ALLOWED_ORIGIN: allowedOrigin,
+      });
+    } else {
+      createTestEnv({
+        NODE_ENV: nodeEnv,
+        ALLOWED_ORIGIN: allowedOrigin,
+      });
+    }
 
     await app.register(envPlugin);
     await app.register(corsPlugin);
@@ -28,21 +36,12 @@ describe('CORS Security Validation', () => {
     app.post('/api/tokens', async () => ({ token: 'test' }));
     app.post('/api/chat', async () => ({ response: 'test' }));
 
-    // Cleanup function
-    const cleanup = () => {
-      process.env['NODE_ENV'] = originalEnv;
-      return app.close();
-    };
-
-    return { app, cleanup };
+    return app;
   };
 
   describe('Production Security', () => {
     it('blocks dangerous origins in production', async () => {
-      const { app, cleanup } = await createApp(
-        'production',
-        'https://myapp.com'
-      );
+      const app = await createApp('production', 'https://myapp.com');
 
       try {
         const maliciousOrigins = [
@@ -86,12 +85,12 @@ describe('CORS Security Validation', () => {
           expect(chatResponse.body).toContain('Not allowed by CORS');
         }
       } finally {
-        await cleanup();
+        await app.close();
       }
     });
 
     it('allows only explicitly configured production origins', async () => {
-      const { app, cleanup } = await createApp(
+      const app = await createApp(
         'production',
         'https://app.mycompany.com,https://dashboard.mycompany.com'
       );
@@ -133,7 +132,7 @@ describe('CORS Security Validation', () => {
           expect(response.body).toContain('Not allowed by CORS');
         }
       } finally {
-        await cleanup();
+        await app.close();
       }
     });
 
@@ -197,7 +196,7 @@ describe('CORS Security Validation', () => {
 
   describe('Development vs Production Behavior', () => {
     it('allows flexible configuration in development', async () => {
-      const { app, cleanup } = await createApp(
+      const app = await createApp(
         'development',
         'http://localhost:5173,http://localhost:3000,https://staging.myapp.com'
       );
@@ -220,7 +219,7 @@ describe('CORS Security Validation', () => {
           expect(response.headers['access-control-allow-origin']).toBe(origin);
         }
       } finally {
-        await cleanup();
+        await app.close();
       }
     });
 
@@ -234,7 +233,7 @@ describe('CORS Security Validation', () => {
       for (const scenario of scenarios) {
         if (scenario.shouldWork) {
           // Should work - test runtime behavior
-          const { app, cleanup } = await createApp(scenario.env, '*');
+          const app = await createApp(scenario.env, '*');
 
           try {
             const testOrigin = 'http://localhost:3000';
@@ -247,7 +246,7 @@ describe('CORS Security Validation', () => {
 
             expect(response.statusCode).toBe(200);
           } finally {
-            await cleanup();
+            await app.close();
           }
         } else {
           // Production should block wildcard at configuration time

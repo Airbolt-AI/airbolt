@@ -1,0 +1,55 @@
+{
+  "name": "@airbolt/test-utils",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Testing utilities for the Airbolt monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "test": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest run packages/test-utils/test/*.test.ts",
+    "test:watch": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest packages/test-utils/test/*.test.ts",
+    "test:coverage": "cd ../.. && NODE_OPTIONS='--import tsx' pnpm exec vitest run --coverage packages/test-utils/test/*.test.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "graph:validate": "echo 'No dependency validation needed for test-utils package'"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "keywords": [
+    "testing",
+    "utilities",
+    "typescript",
+    "monorepo",
+    "vitest"
+  ],
+  "author": {
+    "name": "Mark Watson",
+    "email": "mark@example.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@airbolt/config": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.3"
+  },
+  "peerDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

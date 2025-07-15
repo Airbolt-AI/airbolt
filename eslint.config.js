@@ -20,6 +20,7 @@ export default tseslint.config(
       '**/examples/**', // Examples in any package
       'packages/*/examples/**', // Package-specific examples
       'packages/sdk/generated/**', // Generated SDK files
+      'packages/sdk/vitest.config.ts', // SDK config not in project service
       '.sdk-cache/**', // SDK generation cache
       '.claude/**', // Claude Code commands/tools
     ],
@@ -61,6 +62,7 @@ export default tseslint.config(
       'runtime-safety/no-direct-env-access': 'error',
       'runtime-safety/require-zod-validation': 'error',
       'runtime-safety/require-property-tests': 'error',
+      'runtime-safety/prefer-environment-utils': 'warn',
 
       // 4. Module boundaries
       '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -137,6 +139,7 @@ export default tseslint.config(
       'runtime-safety/no-direct-env-access': 'off',
       'runtime-safety/require-zod-validation': 'off',
       'runtime-safety/require-property-tests': 'off',
+      'runtime-safety/prefer-environment-utils': 'off',
       'security/detect-object-injection': 'off',
     },
   }

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import { setTimeout } from 'node:timers/promises';
+import { createTestEnv } from '@airbolt/test-utils';
 
 import envPlugin from '../../src/plugins/env.js';
 import rateLimitPlugin from '../../src/plugins/rate-limit.js';
@@ -19,12 +20,12 @@ describe('Rate Limit Plugin Integration', () => {
       logger: false,
     });
 
-    // Mock environment variables
-    process.env['NODE_ENV'] = 'test';
-    process.env['OPENAI_API_KEY'] = 'sk-test123';
-    process.env['RATE_LIMIT_MAX'] = String(rateLimitMax);
-    process.env['RATE_LIMIT_TIME_WINDOW'] = String(rateLimitTimeWindow);
-    process.env['TRUST_PROXY'] = String(trustProxy);
+    // Set up test environment using standardized utilities
+    createTestEnv({
+      RATE_LIMIT_MAX: String(rateLimitMax),
+      RATE_LIMIT_TIME_WINDOW: String(rateLimitTimeWindow),
+      TRUST_PROXY: String(trustProxy),
+    });
 
     await app.register(envPlugin);
     await app.register(rateLimitPlugin);

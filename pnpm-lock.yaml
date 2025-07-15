@@ -125,6 +125,9 @@ importers:
         specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
+      '@airbolt/test-utils':
+        specifier: workspace:*
+        version: link:../../packages/test-utils
       '@stryker-mutator/core':
         specifier: ^9.0.1
         version: 9.0.1(@types/node@22.16.3)
@@ -286,6 +289,16 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.20.3
+
+  packages/test-utils:
+    dependencies:
+      '@airbolt/config':
+        specifier: workspace:*
+        version: link:../config
+    devDependencies:
+      vitest:
+        specifier: ^3.2.3
+        version: 3.2.4(@types/node@22.16.3)(happy-dom@15.11.7)
 
   packages/types:
     dependencies:
