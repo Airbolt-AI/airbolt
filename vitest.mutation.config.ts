@@ -25,8 +25,20 @@ export default defineConfig({
     // Target specific test files for mutation testing
     include: [
       'apps/backend-api/test/services/openai.unit.test.ts',
+      'apps/backend-api/test/services/openai.property.test.ts',
       'packages/sdk/test/core/token-manager.test.ts',
+      'packages/sdk/test/core/token-manager.property.test.ts',
       'apps/backend-api/test/plugins/rate-limit.test.ts',
+    ],
+
+    // Override the base exclusions to allow react-sdk tests
+    exclude: [
+      'node_modules/',
+      'dist/',
+      '**/*.d.ts',
+      '**/*.config.*',
+      '**/coverage/**',
+      '.stryker-tmp/**',
     ],
   },
 });

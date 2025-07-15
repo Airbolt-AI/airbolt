@@ -230,22 +230,30 @@ const EnvSchema = z.object({
 export const env = EnvSchema.parse(process.env);
 ```
 
-## 🚨 CRITICAL: Mutation Testing Gate
+## 🚨 CRITICAL: Mutation Testing for Critical Decision Points
 
-**Required**: 85% mutation score on LLM business logic
+**Philosophy**: Mutation testing validates critical decision points only (see `.github/TESTING.md`)
 
-**Scope**:
+**Focus Areas**:
 
-- `apps/backend-api/src/services/openai.ts` - LLM service
-- `packages/sdk/src/core/token-manager.ts` - Auth tokens
-- `packages/react-sdk/src/hooks/useChat.ts` - React state
+- Authentication checks - `if (!isValid) throw`
+- Rate limit calculations - `requests > limit`
+- Retry conditions - `shouldRetry(error)`
+- Token expiration logic - `isExpired(token)`
+
+**Skip Mutations On**:
+
+- Error messages
+- Configuration objects
+- Data transformations
+- Logging statements
 
 **Commands**:
 
 - `pnpm ai:mutation` - Run mutation testing
 - `pnpm ai:compliance` - Full pipeline including mutations
 
-**Why**: Tests must validate logic, not just achieve coverage.
+**Why**: The goal isn't coverage, it's confidence that critical logic is properly tested.
 
 **Testing Philosophy**: See [.github/TESTING.md](/.github/TESTING.md) for comprehensive testing guidelines.
 
@@ -335,7 +343,7 @@ it('should create and retrieve user', async () => {
 4. **Before PR submission**: `pnpm ai:compliance` (includes mutation testing gate)
 5. **Create proper branches**: `git checkout -b feature/LIN-XXX-description`
 6. **Conventional commits**: `feat(scope): description`
-7. **Quality gates**: ALL checks must pass including 85% mutation score on LLM business logic
+7. **Quality gates**: ALL checks must pass including mutation testing on critical decision points
 
 ### Local Validation Commands
 

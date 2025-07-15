@@ -1,17 +1,14 @@
 {
   "name": "backend-api",
-  "version": "1.0.0",
+  "version": "0.0.0-private",
   "private": true,
   "type": "module",
-  "description": "Production-ready Fastify backend API with TypeScript and comprehensive validation",
-  "main": "dist/server.js",
-  "types": "dist/server.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
-    }
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://no-registry.invalid",
+    "publish": false
   },
+  "description": "Production-ready Fastify backend API with TypeScript and comprehensive validation",
   "directories": {
     "src": "src",
     "build": "dist",

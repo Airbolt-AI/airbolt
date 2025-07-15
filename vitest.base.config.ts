@@ -37,6 +37,8 @@ export const baseConfig: InlineConfig = {
       'packages/*/test/**/*.test.ts',
       'apps/*/src/**/*.test.ts',
       'packages/*/src/**/*.test.ts',
+      'apps/*/test/**/*.property.test.ts',
+      'packages/*/test/**/*.property.test.ts',
     ],
 
     exclude: [

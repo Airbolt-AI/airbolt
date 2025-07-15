@@ -17,28 +17,36 @@ if (typeof globalThis.fetch === 'undefined') {
       arrayBuffer: async () => new ArrayBuffer(0),
     } as any;
   };
-  
+
   globalThis.Request = class MockRequest {
     constructor(_input: any, _init?: any) {}
   } as any;
-  
+
   globalThis.Response = class MockResponse {
     ok = true;
     status = 200;
     statusText = 'OK';
     headers = new Map();
-    
+
     constructor(_body?: any, init?: any) {
       if (init?.status) this.status = init.status;
       this.ok = this.status >= 200 && this.status < 300;
     }
-    
-    async json() { return {}; }
-    async text() { return '{}'; }
-    async blob() { return new Blob([]); }
-    async arrayBuffer() { return new ArrayBuffer(0); }
+
+    async json() {
+      return {};
+    }
+    async text() {
+      return '{}';
+    }
+    async blob() {
+      return new Blob([]);
+    }
+    async arrayBuffer() {
+      return new ArrayBuffer(0);
+    }
   } as any;
-  
+
   globalThis.Headers = class MockHeaders extends Map {
     constructor(_init?: any) {
       super();

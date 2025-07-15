@@ -9,6 +9,7 @@ const changesets = readdirSync(changesetDir).filter(
 );
 
 let hasMajorChanges = false;
+let hasBackendApi = false;
 
 for (const changeset of changesets) {
   const content = readFileSync(join(changesetDir, changeset), 'utf8');
@@ -23,10 +24,22 @@ for (const changeset of changesets) {
     console.error('For 1.0 release, see RELEASES.md');
     hasMajorChanges = true;
   }
+
+  // Check if backend-api is mentioned in changeset
+  if (content.includes('"backend-api":') || content.includes('backend-api:')) {
+    console.error(`❌ BLOCKED: backend-api found in changeset ${changeset}`);
+    console.error(
+      'backend-api is a private package and should never be published.'
+    );
+    console.error('Remove backend-api from the changeset.');
+    hasBackendApi = true;
+  }
 }
 
-if (hasMajorChanges) {
+if (hasMajorChanges || hasBackendApi) {
   process.exit(1);
 }
 
-console.log('✅ Changeset validation passed - no premature major bumps');
+console.log(
+  '✅ Changeset validation passed - no premature major bumps and no backend-api'
+);

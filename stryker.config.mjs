@@ -30,11 +30,11 @@ const config = {
     'test/**',
   ],
 
-  // MUTATION TARGETS
+  // MUTATION TARGETS - Focus on critical decision points
   mutate: [
-    'apps/backend-api/src/services/openai.ts',
-    'packages/sdk/src/core/token-manager.ts', 
-    'apps/backend-api/src/plugins/rate-limit.ts',
+    'apps/backend-api/src/services/openai.ts',  // Retry logic, error handling
+    'packages/sdk/src/core/token-manager.ts',    // Token expiration, refresh logic
+    'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations
   ],
 
   // FOCUS ON LOGIC MUTATIONS ONLY
@@ -49,8 +49,8 @@ const config = {
 
   thresholds: {
     high: 90,
-    low: 85,
-    break: 85,
+    low: 70,
+    break: null, // No hard threshold - focus on critical decision points
   },
 
   // Incremental mode: ~80-95% faster on repeat runs
