@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- a18111b: Initial public beta release
+  - Core SDK with TypeScript support and complete API client
+  - React SDK with chat widget and hooks
+  - Comprehensive documentation and examples
+  - Beta release (0.1.0-beta.1)
+
+### Patch Changes
+
+- Updated dependencies [a18111b]
+  - @airbolt/sdk@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
