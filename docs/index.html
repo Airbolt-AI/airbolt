@@ -18,6 +18,9 @@
         --text: #e2e8f0;
         --text-muted: #94a3b8;
         --border: #334155;
+        --beta-gradient-start: var(--primary);
+        --beta-gradient-end: var(--secondary);
+        --beta-border-radius: 16px;
       }
 
       * {
@@ -293,9 +296,9 @@
 
       /* Beta CTA Section */
       .beta-cta {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        background: linear-gradient(135deg, var(--beta-gradient-start), var(--beta-gradient-end));
         margin: 1.5rem 0 3rem 0;
-        border-radius: 16px;
+        border-radius: var(--beta-border-radius);
         padding: 3rem 2rem;
         text-align: center;
         position: relative;
@@ -311,6 +314,7 @@
         bottom: 0;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         z-index: 1;
       }
 
@@ -349,6 +353,7 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         margin-bottom: 1rem;
         border: 2px solid transparent;
+        will-change: transform, box-shadow;
       }
 
       .beta-cta-button:hover {
@@ -359,7 +364,7 @@
 
       .beta-cta-secondary {
         font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.9);
         margin-top: 1rem;
       }
 
@@ -409,6 +414,13 @@
       .token-import {
         color: #8be9fd;
       }
+
+      /* Print styles */
+      @media print {
+        .beta-cta {
+          display: none; /* Hide promotional content when printing docs */
+        }
+      }
     </style>
   </head>
   <body>
@@ -441,14 +453,18 @@
       </section>
 
       <section class="container">
-        <div class="beta-cta">
+        <div class="beta-cta" data-test-variant="zero-backend">
           <div class="beta-cta-content">
             <h2>🚀 Try Hosted Airbolt Beta</h2>
             <p>
               Skip the deployment! Get AI chat in your app with zero backend setup. 
               No servers, no configuration, no hassle.
             </p>
-            <a href="https://forms.gle/2yWKszvJBZReN6kf7" class="beta-cta-button" target="_blank" rel="noopener noreferrer">
+            <a href="https://forms.gle/2yWKszvJBZReN6kf7" 
+               class="beta-cta-button" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               aria-label="Join Airbolt private beta - opens in new tab">
               Join Private Beta
             </a>
             <div class="beta-cta-secondary">
