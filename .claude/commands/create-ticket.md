@@ -240,7 +240,7 @@ const ticket = await mcp__Linear__create_issue({
 
 After successful creation:
 
-1. **Show ticket URL**: "✅ Created ticket: [MAR-XXX: Title](url)"
+1. **Show ticket URL**: "✅ Created ticket: [MAR-XXX: Title](https://linear.app/markwatson/issue/MAR-XXX)"
 2. **Suggest next steps**:
    - "Ready to start work? Use `/start-ticket MAR-XXX`"
    - "Need to analyze further? Use `/analyze-ticket MAR-XXX`"

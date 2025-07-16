@@ -194,8 +194,8 @@ console.log(answer);
 
 **See more examples**:
 
-- [React Widget Example](packages/react-sdk/examples/react-widget/) - Pre-built chat widget
-- [React Hooks Example](packages/react-sdk/examples/react-hooks/) - Custom chat interface
+- [React Widget Example](packages/react-sdk/examples/widget-demo/) - Pre-built chat widget
+- [React Hooks Example](packages/react-sdk/examples/hooks-demo/) - Custom chat interface
 - [Node.js CLI Example](packages/sdk/examples/node-cli/) - Command-line chat
 
 ## Alternative deployment options
