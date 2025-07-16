@@ -9,6 +9,8 @@ If it can't be inferred, ask the user to supply one and stop.
 
 Ultrathink about the comprehensive discovery needed before implementation. What context, risks, and unknowns must be uncovered to ensure a successful implementation that passes review on the first attempt?
 
+**Core Principle**: The best code is no code. Before writing anything, ensure you're solving the right problem in the simplest way possible. Over-analysis beats over-engineering.
+
 ## 0. Prepare Fresh Environment
 
 Ensure you're starting from a clean, up-to-date state:

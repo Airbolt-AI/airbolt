@@ -313,6 +313,31 @@ const { error, send } = useChat({
 }
 ```
 
+### Cold Start Handling
+
+When using free tier deployments (like Render), servers sleep after inactivity. The SDK automatically handles this:
+
+```tsx
+const { error, isLoading } = useChat({
+  baseURL: 'https://your-app.onrender.com',
+});
+
+// Check for cold start
+if (error?.code === 'COLD_START') {
+  return (
+    <div className="info-message">
+      <span>🔄</span> Server is waking up... This happens with free tier
+      deployments. Please try again in a moment.
+    </div>
+  );
+}
+
+// Or show during loading
+if (isLoading) {
+  return <div>Sending message... (may take longer if server is waking up)</div>;
+}
+```
+
 ## Best Practices
 
 1. **Disable inputs while loading** to prevent multiple submissions

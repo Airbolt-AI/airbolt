@@ -41,6 +41,8 @@ Deploy our production-ready LLM proxy to Render. You'll get your own private API
 
 After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
 
+> **Note**: If using Render's free tier, the server sleeps after 15 minutes of inactivity. The SDK automatically handles this with smart retries and extended timeouts.
+
 Then add to your app:
 
 ```bash

@@ -1,5 +1,7 @@
 Ultrathink about what makes an exceptional code review—one that elevates both the code and the developer. Consider technical excellence, business impact, maintainability, and team growth.
 
+**Review Philosophy**: Champion simplicity over cleverness. The best suggestions reduce code while increasing clarity. Today's elegant abstraction is tomorrow's technical debt.
+
 ## 0. Gather Context (You're a Fresh Agent!)
 
 Since you're starting fresh, gather comprehensive context:

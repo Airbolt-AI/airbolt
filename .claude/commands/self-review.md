@@ -4,6 +4,8 @@ description: Perform comprehensive self-review and create PR if all checks pass
 
 Ultrathink about what a thorough self-review entails. You are your own first reviewer—catch issues before they waste others' time. Be critical, thorough, and honest about the quality of your work.
 
+**Review Mindset**: Would you want to maintain this code at 3am during an incident? Ruthlessly remove anything that doesn't directly serve the user or developer.
+
 ## 1. Run Full Quality Pipeline
 
 Execute comprehensive validation:

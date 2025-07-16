@@ -13,6 +13,8 @@ Note: Run /analyze-ticket first for complex tickets requiring discovery
 
 Focus on exceptional implementation that demonstrates software craftsmanship and passes review on the first attempt.
 
+**Implementation Philosophy**: After thorough analysis, implement the simplest solution that fully solves the problem. Every line of code is a liability—only add complexity when it delivers proportional user value.
+
 ## 1. Start Implementation
 
 Move **$ARGUMENTS** to 'In Progress' and create feature branch:
