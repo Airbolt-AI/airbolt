@@ -22,13 +22,14 @@ export default defineConfig({
     // Disable workspace mode (Stryker requirement)
     workspace: undefined,
 
-    // Target specific test files for mutation testing
+    // Include all test files (matches base config behavior for consistency)
     include: [
-      'apps/backend-api/test/services/openai.unit.test.ts',
-      'apps/backend-api/test/services/openai.property.test.ts',
-      'packages/sdk/test/core/token-manager.test.ts',
-      'packages/sdk/test/core/token-manager.property.test.ts',
-      'apps/backend-api/test/plugins/rate-limit.test.ts',
+      'apps/*/test/**/*.test.ts',
+      'packages/*/test/**/*.test.ts',
+      'apps/*/src/**/*.test.ts',
+      'packages/*/src/**/*.test.ts',
+      'apps/*/test/**/*.property.test.ts',
+      'packages/*/test/**/*.property.test.ts',
     ],
 
     // Override the base exclusions to allow react-sdk tests
