@@ -88,12 +88,14 @@ function createChatSession(options?: ChatOptions): ChatSession;
 The SDK provides clear error messages:
 
 ```typescript
-import { chat } from '@airbolt/sdk';
+import { chat, ColdStartError } from '@airbolt/sdk';
 
 try {
   const response = await chat([{ role: 'user', content: 'Hello!' }]);
 } catch (error) {
-  if (error.message.includes('fetch failed')) {
+  if (error instanceof ColdStartError) {
+    console.log('Server is waking up from sleep. This may take a moment...');
+  } else if (error.message.includes('fetch failed')) {
     console.error('Backend is not running. Start it with: pnpm dev');
   } else if (error.message.includes('401')) {
     console.error('Authentication failed. Token may be expired.');
@@ -102,6 +104,15 @@ try {
   }
 }
 ```
+
+### Cold Start Handling
+
+When using free tier deployments (like Render's free tier), servers sleep after inactivity. The SDK automatically handles this:
+
+- Detects timeout on first request
+- Retries with extended timeout (120s)
+- Shows helpful console message
+- Throws `ColdStartError` if server still doesn't respond
 
 ## Advanced Usage
 

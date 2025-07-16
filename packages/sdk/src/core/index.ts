@@ -30,3 +30,9 @@ export {
   // Backward compatibility alias
   AirboltAPIError as AirboltError,
 } from './fern-client.js';
+
+// Export SDK-specific errors
+export { ColdStartError } from './errors.js';
+
+// Export timeout utilities
+export { createTimeoutSignal, isTimeoutError } from './timeout-utils.js';
