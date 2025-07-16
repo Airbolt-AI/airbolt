@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1
+
+### Patch Changes
+
+- [#48](https://github.com/Airbolt-AI/airbolt/pull/48) [`1401611`](https://github.com/Airbolt-AI/airbolt/commit/14016111ed12d7e1c961c7e56f2ac5785e50278d) Thanks [@mkwatson](https://github.com/mkwatson)! - Fix URL construction when baseURL has trailing slashes
+  - Prevents double slashes (e.g., `//api/tokens`) when baseURL ends with `/`
+  - Handles multiple trailing slashes correctly
+  - Fixes 404 errors on deployed instances where users provide URLs with trailing slashes
+
 ## 0.3.0
 
 ### Minor Changes
