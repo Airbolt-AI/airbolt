@@ -291,6 +291,108 @@
         text-decoration: underline;
       }
 
+      /* Beta CTA Section */
+      .beta-cta {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        margin: 3rem 0;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .beta-cta::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        z-index: 1;
+      }
+
+      .beta-cta-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .beta-cta h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .beta-cta p {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .beta-cta-button {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--primary);
+        padding: 1rem 2.5rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        border: 2px solid transparent;
+      }
+
+      .beta-cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        background: white;
+      }
+
+      .beta-cta-secondary {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 1rem;
+      }
+
+      .beta-cta-secondary a {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: underline;
+      }
+
+      .beta-cta-secondary a:hover {
+        color: white;
+      }
+
+      /* Mobile responsiveness for beta CTA */
+      @media (max-width: 768px) {
+        .beta-cta {
+          margin: 2rem 0;
+          padding: 2rem 1rem;
+        }
+
+        .beta-cta h2 {
+          font-size: 2rem;
+        }
+
+        .beta-cta p {
+          font-size: 1.1rem;
+        }
+
+        .beta-cta-button {
+          padding: 0.875rem 2rem;
+          font-size: 1rem;
+        }
+      }
+
       /* Code highlighting */
       .token-keyword {
         color: #ff79c6;
@@ -336,6 +438,24 @@
           Build secure AI-powered applications with our TypeScript and React
           SDKs. Production-ready, type-safe, and designed for developers.
         </p>
+      </section>
+
+      <section class="container">
+        <div class="beta-cta">
+          <div class="beta-cta-content">
+            <h2>🚀 Try Hosted Airbolt Beta</h2>
+            <p>
+              Skip the deployment! Get AI chat in your app with zero backend setup. 
+              No servers, no configuration, no hassle.
+            </p>
+            <a href="https://forms.gle/2yWKszvJBZReN6kf7" class="beta-cta-button" target="_blank" rel="noopener noreferrer">
+              Join Private Beta
+            </a>
+            <div class="beta-cta-secondary">
+              Or <a href="#sdks">deploy your own version</a> below ↓
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="sdks" class="container">
