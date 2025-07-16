@@ -18,6 +18,7 @@ pnpm dev:sdk          # Watch and rebuild SDKs on changes
 pnpm lint             # Check code style
 pnpm test             # Run tests
 pnpm type-check       # Check TypeScript
+pnpm docs:check-links # Validate documentation links
 ```
 
 ## Project Structure

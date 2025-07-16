@@ -66,7 +66,9 @@
     "release:beta": "pnpm release:prepare && echo 'Run: git commit && git tag v0.x.y-beta.z && git push origin v0.x.y-beta.z'",
     "changeset:manual": "changeset version && pnpm install",
     "release:publish": "pnpm build && changeset publish --tag beta",
-    "release:stable": "echo 'Stable releases require manual approval - see RELEASES.md'"
+    "release:stable": "echo 'Stable releases require manual approval - see RELEASES.md'",
+    "docs:check-links": "node scripts/check-links.js",
+    "docs:check-links:verbose": "node scripts/check-links.js --verbose"
   },
   "keywords": [
     "fastify",
@@ -122,6 +124,7 @@
     "fern-api": "^0.64.15",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
+    "markdown-link-check": "^3.13.7",
     "nx": "21.2.1",
     "prettier": "^3.4.2",
     "tsx": "^4.20.3",

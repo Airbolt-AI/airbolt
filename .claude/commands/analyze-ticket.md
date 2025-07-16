@@ -77,7 +77,18 @@ Analyze **$ARGUMENTS** deeply:
 - Plan for edge cases and error scenarios
 - If manual testing seems necessary, ask: "How can we automate this?"
 
-## 7. Implementation Plan
+## 7. Testing Strategy
+
+When planning implementation, identify test strategy early:
+
+- **Property tests** for complex logic (retry, concurrency, data transformations)
+- **Integration tests** for complete workflows (auth flows, API contracts)
+- **Unit tests** for pure functions only (calculations, validations)
+- **Mutation tests** for critical decisions (auth checks, rate limits)
+
+Focus on behavior over implementation - avoid coverage theatre.
+
+## 8. Implementation Plan
 
 - Break down into logical implementation steps
 - Identify the optimal order of changes

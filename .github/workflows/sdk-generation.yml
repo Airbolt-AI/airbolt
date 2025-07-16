@@ -35,7 +35,7 @@ jobs:
         run: |
           # Generate SDK
           pnpm sdk:generate
-          
+
           # Check if there are changes
           if ! git diff --quiet HEAD -- packages/sdk/generated; then
             echo "❌ Generated SDK is out of date!"
@@ -43,5 +43,5 @@ jobs:
             git diff --name-status packages/sdk/generated
             exit 1
           fi
-          
+
           echo "✅ SDK is up-to-date"

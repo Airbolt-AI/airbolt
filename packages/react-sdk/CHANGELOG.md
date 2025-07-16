@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- feat(sdk): add smart timeout handling for Render free tier cold starts
+  - Add automatic retry with progressive timeout (60s → 120s) when cold start is detected
+  - Add browser-compatible AbortSignal.timeout() polyfill for wide browser support
+  - Create ColdStartError class for clear error identification
+  - Add timeoutSeconds and onColdStartDetected options to AirboltClient
+  - Implement session-scoped retry state (retries once per session)
+  - Add comprehensive test coverage for timeout scenarios
+  - Update documentation with cold start handling examples
+
+  This improves UX for free tier deployments by gracefully handling server wake-up times without requiring backend changes.
+  EOF < /dev/null
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @airbolt/sdk@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

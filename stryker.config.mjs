@@ -8,20 +8,20 @@ const config = {
   reporters: ['html', 'clear-text', 'progress'],
   testRunner: 'vitest',
   plugins: ['@stryker-mutator/vitest-runner'],
-  
+
   // TypeScript support via vitest.setup.mutation.ts
   testRunnerNodeArgs: ['--import', require.resolve('tsx')],
-  
+
   vitest: {
     configFile: 'vitest.mutation.config.ts',
   },
-  
+
   // Performance optimizations
   timeoutMS: 5000,
   timeoutFactor: 1.5,
-  concurrency: process.env.CI ? 2 : 12,  // Increase for local development
-  disableTypeChecks: true,  // Skip TypeScript checking on mutants for speed
-  
+  concurrency: process.env.CI ? 2 : 12, // Increase for local development
+  disableTypeChecks: true, // Skip TypeScript checking on mutants for speed
+
   ignorePatterns: [
     'node_modules',
     '.stryker-tmp',
@@ -32,8 +32,8 @@ const config = {
 
   // MUTATION TARGETS - Focus on critical decision points
   mutate: [
-    'apps/backend-api/src/services/openai.ts',  // Retry logic, error handling
-    'packages/sdk/src/core/token-manager.ts',    // Token expiration, refresh logic
+    'apps/backend-api/src/services/openai.ts', // Retry logic, error handling
+    'packages/sdk/src/core/token-manager.ts', // Token expiration, refresh logic
     'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations
   ],
 

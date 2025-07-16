@@ -7,7 +7,7 @@
   },
   "exclude": [
     "dist",
-    "generated", 
+    "generated",
     "node_modules",
     "**/*.test.ts",
     "**/*.spec.ts",

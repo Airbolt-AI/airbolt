@@ -386,8 +386,8 @@ This package is written in TypeScript and provides full type definitions. All ex
 
 Check out our example applications:
 
-- **[React Widget Example](examples/react-widget/)** - Shows how to use the pre-built ChatWidget
-- **[React Hooks Example](examples/react-hooks/)** - Demonstrates building a custom chat interface with useChat
+- **[React Widget Example](examples/widget-demo/)** - Shows how to use the pre-built ChatWidget
+- **[React Hooks Example](examples/hooks-demo/)** - Demonstrates building a custom chat interface with useChat
 - **[Node.js CLI Example](../sdk/examples/node-cli/)** - Command-line chat using the core SDK
 
 ## License

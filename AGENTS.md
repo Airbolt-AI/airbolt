@@ -96,6 +96,17 @@ git add . && git commit -m "fix: resolve validation errors"
 git push               # Pre-push will run again
 ```
 
+## 🧠 Decision-Making Philosophy
+
+**Before implementing any solution, pause to ultrathink:**
+
+- What are all the possible approaches to solve this?
+- Which approach is clearest and simplest?
+- Which delivers maximum value to users and developers?
+- Which minimizes technical debt and maintenance burden?
+
+**Choose the option that best balances these factors.** The best code is often the code you don't write.
+
 ## 🚨 MANDATORY Architecture Rules
 
 ### TypeScript: @tsconfig/strictest Preset
