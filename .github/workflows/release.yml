@@ -24,14 +24,31 @@ jobs:
 
       - uses: ./.github/actions/setup-project
 
-      # Validate this is a beta release
-      - name: Validate Beta Release
+      # Validate this is a beta release and tag exists
+      - name: Validate Beta Release and Tag
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
+
+          # Check beta version format
           if [[ ! "${TAG#v}" =~ ^0\. ]]; then
             echo "❌ This workflow only handles beta releases (0.x.x)"
             echo "For stable releases, use the stable release workflow"
             exit 1
+          fi
+
+          # Check if tag exists when manually triggered
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if ! git rev-parse --verify "$TAG" >/dev/null 2>&1; then
+              echo "❌ Tag $TAG does not exist in Git"
+              echo ""
+              echo "🔧 To fix this, run locally:"
+              echo "   git tag $TAG"
+              echo "   git push origin $TAG"
+              echo ""
+              echo "Then re-run this workflow"
+              exit 1
+            fi
+            echo "✅ Tag $TAG exists and is valid"
           fi
 
       # Generate SDK from latest OpenAPI
