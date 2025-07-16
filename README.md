@@ -1,8 +1,6 @@
 # Airbolt
 
-**Never put API keys in frontend code. Airbolt is the secure backend for calling LLMs from your React, Vue, or vanilla JS apps.**
-
-Just like you'd never put Stripe keys in frontend code, you need a backend for OpenAI too. One-click deploy, then just `<ChatWidget baseURL='...' />`
+**Never put API keys in frontend code. Airbolt is the secure backend for calling LLMs from your apps.**
 
 ## Why You Need This
 
