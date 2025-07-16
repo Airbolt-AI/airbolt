@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`1401611`](https://github.com/Airbolt-AI/airbolt/commit/14016111ed12d7e1c961c7e56f2ac5785e50278d)]:
+  - @airbolt/sdk@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
