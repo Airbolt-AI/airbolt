@@ -254,7 +254,6 @@ process.exit(1);`;
           }
         }
       }
-
     });
 
     it('should be suitable for SDK generation', () => {
