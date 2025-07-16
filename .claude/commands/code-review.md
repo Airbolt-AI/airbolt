@@ -58,23 +58,29 @@ Then Ultrathink about the specific context of the open PR:
    - Is error handling comprehensive?
    - Are edge cases properly handled?
 
-2. **Maintainability**
+2. **Test Quality Assessment**
+   - Follow testing pyramid: property (40%) > integration (35%) > unit (20%) > mutation (5%)
+   - Tests catch real production failures, not theoretical bugs
+   - Property tests for complex logic, integration for workflows, unit for pure functions
+   - Avoid coverage theatre - tests should fail when logic breaks
+
+3. **Maintainability**
    - Will future developers understand this easily?
    - Are complex sections well-documented?
    - Is the code DRY without being overly abstract?
 
-3. **Business Impact**
+4. **Business Impact**
    - Does it fully address the ticket requirements?
    - Are there any unintended side effects?
    - Is the user experience optimal?
 
-4. **Documentation Review**
+5. **Documentation Review**
    - Are code comments helpful and current?
    - Is API documentation complete?
    - Are README/setup guides updated?
    - Do examples work as shown?
 
-5. **What a Senior Architect Would Notice**
+6. **What a Senior Architect Would Notice**
    - Subtle performance implications
    - Security vulnerabilities
    - Architectural debt being introduced
