@@ -32,7 +32,7 @@ export default defineConfig({
       'packages/*/test/**/*.property.test.ts',
     ],
 
-    // Override the base exclusions to allow react-sdk tests
+    // Use base exclusions which properly exclude react-sdk tests
     exclude: [
       'node_modules/',
       'dist/',
@@ -40,6 +40,7 @@ export default defineConfig({
       '**/*.config.*',
       '**/coverage/**',
       '.stryker-tmp/**',
+      'packages/react-sdk/test/**',
     ],
   },
 });
