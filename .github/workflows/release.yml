@@ -3,6 +3,12 @@ name: Beta Release
 on:
   push:
     tags: ['v0.*'] # Only beta versions
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.3.1)'
+        required: true
+        type: string
 
 jobs:
   release:
@@ -14,13 +20,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: ./.github/actions/setup-project
 
       # Validate this is a beta release
       - name: Validate Beta Release
         run: |
-          if [[ ! "${GITHUB_REF#refs/tags/v}" =~ ^0\. ]]; then
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          if [[ ! "${TAG#v}" =~ ^0\. ]]; then
             echo "❌ This workflow only handles beta releases (0.x.x)"
             echo "For stable releases, use the stable release workflow"
             exit 1
