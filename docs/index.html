@@ -1,367 +1,405 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Airbolt SDK Documentation</title>
-    <meta name="description" content="Official documentation for Airbolt SDKs - Secure AI integration for your applications">
+    <meta
+      name="description"
+      content="Official documentation for Airbolt SDKs - Secure AI integration for your applications"
+    />
     <style>
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --secondary: #10b981;
-            --bg: #0f172a;
-            --bg-light: #1e293b;
-            --text: #e2e8f0;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
+      :root {
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --secondary: #10b981;
+        --bg: #0f172a;
+        --bg-light: #1e293b;
+        --text: #e2e8f0;
+        --text-muted: #94a3b8;
+        --border: #334155;
+      }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
 
-        /* Header */
-        header {
-            padding: 2rem 0;
-            border-bottom: 1px solid var(--border);
-        }
+      /* Header */
+      header {
+        padding: 2rem 0;
+        border-bottom: 1px solid var(--border);
+      }
 
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text);
-            text-decoration: none;
-        }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+        text-decoration: none;
+      }
 
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
 
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
+      .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
 
-        .nav-links a:hover {
-            color: var(--text);
-        }
+      .nav-links a:hover {
+        color: var(--text);
+      }
 
-        .github-link {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+      .github-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-        /* Hero Section */
-        .hero {
-            padding: 5rem 0;
-            text-align: center;
-        }
+      /* Hero Section */
+      .hero {
+        padding: 5rem 0;
+        text-align: center;
+      }
 
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+      .hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
 
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            margin-bottom: 3rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+      .hero p {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        margin-bottom: 3rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-        /* SDK Cards */
-        .sdk-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin: 4rem 0;
-        }
+      /* SDK Cards */
+      .sdk-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+      }
 
-        .sdk-card {
-            background: var(--bg-light);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            transition: transform 0.2s, border-color 0.2s;
-        }
+      .sdk-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
 
-        .sdk-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--primary);
-        }
+      .sdk-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary);
+      }
 
-        .sdk-card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+      .sdk-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-        .sdk-icon {
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 8px;
-        }
+      .sdk-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+      }
 
-        .sdk-card p {
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-        }
+      .sdk-card p {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+      }
 
-        .sdk-links {
-            display: flex;
-            gap: 1rem;
-        }
+      .sdk-links {
+        display: flex;
+        gap: 1rem;
+      }
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+      .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
 
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
+      .btn-primary:hover {
+        background: var(--primary-dark);
+      }
 
-        .btn-secondary {
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
+      .btn-secondary {
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
 
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
+      .btn-secondary:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
 
-        /* Quick Start */
-        .quick-start {
-            margin: 5rem 0;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+      /* Quick Start */
+      .quick-start {
+        margin: 5rem 0;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-        .quick-start h2 {
-            font-size: 2rem;
-            margin-bottom: 2rem;
-        }
+      .quick-start h2 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+      }
 
-        .code-block {
-            background: #0d1117;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            overflow-x: auto;
-        }
+      .code-block {
+        background: #0d1117;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+      }
 
-        .code-block pre {
-            margin: 0;
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
+      .code-block pre {
+        margin: 0;
+        font-family:
+          'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
 
-        .code-lang {
-            display: inline-block;
-            background: var(--border);
-            color: var(--text-muted);
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px 4px 0 0;
-            font-size: 0.8rem;
-            margin-bottom: -1px;
-        }
+      .code-lang {
+        display: inline-block;
+        background: var(--border);
+        color: var(--text-muted);
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px 4px 0 0;
+        font-size: 0.8rem;
+        margin-bottom: -1px;
+      }
 
-        /* Features */
-        .features {
-            margin: 5rem 0;
-        }
+      /* Features */
+      .features {
+        margin: 5rem 0;
+      }
 
-        .features h2 {
-            font-size: 2rem;
-            margin-bottom: 3rem;
-            text-align: center;
-        }
+      .features h2 {
+        font-size: 2rem;
+        margin-bottom: 3rem;
+        text-align: center;
+      }
 
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      }
 
-        .feature {
-            background: var(--bg-light);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-        }
+      .feature {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+      }
 
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
 
-        .feature h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
+      .feature h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
 
-        .feature p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
+      .feature p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
 
-        /* Footer */
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 3rem 0;
-            margin-top: 5rem;
-            text-align: center;
-            color: var(--text-muted);
-        }
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 3rem 0;
+        margin-top: 5rem;
+        text-align: center;
+        color: var(--text-muted);
+      }
 
-        footer a {
-            color: var(--primary);
-            text-decoration: none;
-        }
+      footer a {
+        color: var(--primary);
+        text-decoration: none;
+      }
 
-        footer a:hover {
-            text-decoration: underline;
-        }
+      footer a:hover {
+        text-decoration: underline;
+      }
 
-        /* Code highlighting */
-        .token-keyword { color: #ff79c6; }
-        .token-string { color: #f1fa8c; }
-        .token-function { color: #50fa7b; }
-        .token-comment { color: #6272a4; }
-        .token-import { color: #8be9fd; }
+      /* Code highlighting */
+      .token-keyword {
+        color: #ff79c6;
+      }
+      .token-string {
+        color: #f1fa8c;
+      }
+      .token-function {
+        color: #50fa7b;
+      }
+      .token-comment {
+        color: #6272a4;
+      }
+      .token-import {
+        color: #8be9fd;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <nav class="container">
-            <a href="/" class="logo">Airbolt SDK Docs</a>
-            <div class="nav-links">
-                <a href="#quick-start">Quick Start</a>
-                <a href="#sdks">SDKs</a>
-                <a href="#examples">Examples</a>
-                <a href="https://github.com/Airbolt-AI/airbolt" class="github-link">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    GitHub
-                </a>
-            </div>
-        </nav>
+      <nav class="container">
+        <a href="/" class="logo">Airbolt SDK Docs</a>
+        <div class="nav-links">
+          <a href="#quick-start">Quick Start</a>
+          <a href="#sdks">SDKs</a>
+          <a href="#examples">Examples</a>
+          <a href="https://github.com/Airbolt-AI/airbolt" class="github-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </nav>
     </header>
 
     <main>
-        <section class="hero container">
-            <h1>Airbolt SDK Documentation</h1>
-            <p>Build secure AI-powered applications with our TypeScript and React SDKs. Production-ready, type-safe, and designed for developers.</p>
-        </section>
+      <section class="hero container">
+        <h1>Airbolt SDK Documentation</h1>
+        <p>
+          Build secure AI-powered applications with our TypeScript and React
+          SDKs. Production-ready, type-safe, and designed for developers.
+        </p>
+      </section>
 
-        <section id="sdks" class="container">
-            <div class="sdk-grid">
-                <div class="sdk-card">
-                    <h2>
-                        <span class="sdk-icon">📦</span>
-                        Core SDK
-                    </h2>
-                    <p>TypeScript SDK for Node.js, browsers, and edge runtimes. Features automatic token management and full type safety.</p>
-                    <div class="sdk-links">
-                        <a href="api/core/" class="btn btn-primary">API Reference</a>
-                        <a href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/sdk" class="btn btn-secondary">Source</a>
-                    </div>
-                </div>
-
-                <div class="sdk-card">
-                    <h2>
-                        <span class="sdk-icon">⚛️</span>
-                        React SDK
-                    </h2>
-                    <p>React hooks and components for building AI chat interfaces. The ChatWidget automatically inherits your app's styling (fonts, colors) and provides minimal CSS custom properties for theming.</p>
-                    <div class="sdk-links">
-                        <a href="api/react/" class="btn btn-primary">API Reference</a>
-                        <a href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk" class="btn btn-secondary">Source</a>
-                    </div>
-                </div>
+      <section id="sdks" class="container">
+        <div class="sdk-grid">
+          <div class="sdk-card">
+            <h2>
+              <span class="sdk-icon">📦</span>
+              Core SDK
+            </h2>
+            <p>
+              TypeScript SDK for Node.js, browsers, and edge runtimes. Features
+              automatic token management and full type safety.
+            </p>
+            <div class="sdk-links">
+              <a href="api/core/" class="btn btn-primary">API Reference</a>
+              <a
+                href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/sdk"
+                class="btn btn-secondary"
+                >Source</a
+              >
             </div>
-        </section>
+          </div>
 
-        <section id="quick-start" class="quick-start container">
-            <h2>Quick Start</h2>
-            
-            <div>
-                <span class="code-lang">bash</span>
-                <div class="code-block">
-                    <pre><code># Install the SDK you need
+          <div class="sdk-card">
+            <h2>
+              <span class="sdk-icon">⚛️</span>
+              React SDK
+            </h2>
+            <p>
+              React hooks and components for building AI chat interfaces. The
+              ChatWidget automatically inherits your app's styling (fonts,
+              colors) and provides minimal CSS custom properties for theming.
+            </p>
+            <div class="sdk-links">
+              <a href="api/react/" class="btn btn-primary">API Reference</a>
+              <a
+                href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk"
+                class="btn btn-secondary"
+                >Source</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="quick-start" class="quick-start container">
+        <h2>Quick Start</h2>
+
+        <div>
+          <span class="code-lang">bash</span>
+          <div class="code-block">
+            <pre><code># Install the SDK you need
 <span class="token-comment"># For React applications</span>
 npm install @airbolt/react-sdk
 
 <span class="token-comment"># For Node.js or vanilla JavaScript</span>
 npm install @airbolt/sdk</code></pre>
-                </div>
-            </div>
+          </div>
+        </div>
 
-            <div style="margin-top: 2rem;">
-                <span class="code-lang">React - Inherits Your App's Styling</span>
-                <div class="code-block">
-                    <pre><code><span class="token-import">import</span> { ChatWidget } <span class="token-import">from</span> <span class="token-string">'@airbolt/react-sdk'</span>;
+        <div style="margin-top: 2rem">
+          <span class="code-lang">React - Inherits Your App's Styling</span>
+          <div class="code-block">
+            <pre><code><span class="token-import">import</span> { ChatWidget } <span class="token-import">from</span> <span class="token-string">'@airbolt/react-sdk'</span>;
 
 <span class="token-keyword">function</span> <span class="token-function">App</span>() {
   <span class="token-keyword">return</span> (
@@ -371,13 +409,15 @@ npm install @airbolt/sdk</code></pre>
     &lt;/div&gt;</span>
   );
 }</code></pre>
-                </div>
-            </div>
+          </div>
+        </div>
 
-            <div style="margin-top: 2rem;">
-                <span class="code-lang">Optional: CSS Custom Properties for Theming</span>
-                <div class="code-block">
-                    <pre><code><span class="token-comment">/* Your existing CSS - ChatWidget adapts automatically */</span>
+        <div style="margin-top: 2rem">
+          <span class="code-lang"
+            >Optional: CSS Custom Properties for Theming</span
+          >
+          <div class="code-block">
+            <pre><code><span class="token-comment">/* Your existing CSS - ChatWidget adapts automatically */</span>
 <span class="token-selector">.my-app-container</span> {
   <span class="token-property">font-family</span>: <span class="token-string">'Inter', sans-serif</span>;
   <span class="token-property">color</span>: <span class="token-string">#333</span>;
@@ -386,13 +426,13 @@ npm install @airbolt/sdk</code></pre>
   <span class="token-property">--chat-primary</span>: <span class="token-string">#007aff</span>;
   <span class="token-property">--chat-surface</span>: <span class="token-string">#f5f5f5</span>;
 }</code></pre>
-                </div>
-            </div>
+          </div>
+        </div>
 
-            <div style="margin-top: 2rem;">
-                <span class="code-lang">TypeScript</span>
-                <div class="code-block">
-                    <pre><code><span class="token-import">import</span> { chat } <span class="token-import">from</span> <span class="token-string">'@airbolt/sdk'</span>;
+        <div style="margin-top: 2rem">
+          <span class="code-lang">TypeScript</span>
+          <div class="code-block">
+            <pre><code><span class="token-import">import</span> { chat } <span class="token-import">from</span> <span class="token-string">'@airbolt/sdk'</span>;
 
 <span class="token-keyword">const</span> response = <span class="token-keyword">await</span> <span class="token-function">chat</span>([
   { role: <span class="token-string">'user'</span>, content: <span class="token-string">'Hello, AI!'</span> }
@@ -401,63 +441,91 @@ npm install @airbolt/sdk</code></pre>
 });
 
 console.<span class="token-function">log</span>(response.content);</code></pre>
-                </div>
-            </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <section class="features">
-            <div class="container">
-                <h2>Why Choose Airbolt SDKs?</h2>
-                <div class="feature-grid">
-                <div class="feature">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Secure by Default</h3>
-                    <p>JWT-based authentication with automatic token management. Your API keys stay safe on the server.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Production Ready</h3>
-                    <p>Battle-tested with comprehensive error handling, retries, and TypeScript support.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🎨</div>
-                    <h3>Customizable</h3>
-                    <p>Pre-built components or build your own with our hooks. Full theming support included.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">📚</div>
-                    <h3>Well Documented</h3>
-                    <p>Complete API references, examples, and guides to get you started quickly.</p>
-                </div>
-                </div>
+      <section class="features">
+        <div class="container">
+          <h2>Why Choose Airbolt SDKs?</h2>
+          <div class="feature-grid">
+            <div class="feature">
+              <div class="feature-icon">🔒</div>
+              <h3>Secure by Default</h3>
+              <p>
+                JWT-based authentication with automatic token management. Your
+                API keys stay safe on the server.
+              </p>
             </div>
-        </section>
-
-        <section id="examples" class="container" style="text-align: center;">
-            <h2 style="margin-bottom: 2rem;">More Examples</h2>
-            <div>
-                <a href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/sdk/examples" class="btn btn-secondary" style="margin-right: 1rem;">Core SDK Examples</a>
-                <a href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk/examples" class="btn btn-secondary">React SDK Examples</a>
+            <div class="feature">
+              <div class="feature-icon">🚀</div>
+              <h3>Production Ready</h3>
+              <p>
+                Battle-tested with comprehensive error handling, retries, and
+                TypeScript support.
+              </p>
             </div>
-        </section>
+            <div class="feature">
+              <div class="feature-icon">🎨</div>
+              <h3>Customizable</h3>
+              <p>
+                Pre-built components or build your own with our hooks. Full
+                theming support included.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">📚</div>
+              <h3>Well Documented</h3>
+              <p>
+                Complete API references, examples, and guides to get you started
+                quickly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <section class="container" style="margin-top: 3rem; text-align: center;">
-            <h2 style="margin-bottom: 2rem;">Contributing</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Want to contribute to Airbolt? Check out our development guide.</p>
-            <a href="contributing.html" class="btn btn-primary">Contributing Guide</a>
-        </section>
+      <section id="examples" class="container" style="text-align: center">
+        <h2 style="margin-bottom: 2rem">More Examples</h2>
+        <div>
+          <a
+            href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/sdk/examples"
+            class="btn btn-secondary"
+            style="margin-right: 1rem"
+            >Core SDK Examples</a
+          >
+          <a
+            href="https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk/examples"
+            class="btn btn-secondary"
+            >React SDK Examples</a
+          >
+        </div>
+      </section>
+
+      <section class="container" style="margin-top: 3rem; text-align: center">
+        <h2 style="margin-bottom: 2rem">Contributing</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem">
+          Want to contribute to Airbolt? Check out our development guide.
+        </p>
+        <a href="contributing.html" class="btn btn-primary"
+          >Contributing Guide</a
+        >
+      </section>
     </main>
 
     <footer>
-        <div class="container">
-            <p>
-                Built with ❤️ by the <a href="https://github.com/Airbolt-AI">Airbolt team</a>
-                <br>
-                <a href="https://github.com/Airbolt-AI/airbolt">GitHub</a> • 
-                <a href="https://github.com/Airbolt-AI/airbolt/issues">Issues</a> • 
-                <a href="https://github.com/Airbolt-AI/airbolt/discussions">Discussions</a>
-            </p>
-        </div>
+      <div class="container">
+        <p>
+          Built with ❤️ by the
+          <a href="https://github.com/Airbolt-AI">Airbolt team</a>
+          <br />
+          <a href="https://github.com/Airbolt-AI/airbolt">GitHub</a> •
+          <a href="https://github.com/Airbolt-AI/airbolt/issues">Issues</a> •
+          <a href="https://github.com/Airbolt-AI/airbolt/discussions"
+            >Discussions</a
+          >
+        </p>
+      </div>
     </footer>
-</body>
+  </body>
 </html>

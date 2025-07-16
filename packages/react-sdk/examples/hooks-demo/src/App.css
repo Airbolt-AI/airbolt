@@ -65,17 +65,17 @@
   cursor: pointer;
 }
 
-.input-form button[type="submit"] {
+.input-form button[type='submit'] {
   background: #1976d2;
   color: white;
 }
 
-.input-form button[type="submit"]:disabled {
+.input-form button[type='submit']:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.input-form button[type="button"] {
+.input-form button[type='button'] {
   background: #f44336;
   color: white;
 }

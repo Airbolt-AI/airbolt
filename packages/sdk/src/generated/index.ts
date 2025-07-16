@@ -1,6 +1,6 @@
 /**
  * Generated client exports
- * 
+ *
  * This file will be populated by Fern when the SDK is generated.
  * For now, it serves as a placeholder to prevent import errors.
  */
