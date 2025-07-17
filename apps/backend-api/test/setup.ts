@@ -4,7 +4,7 @@ import { beforeAll } from 'vitest';
 // Note: Node.js 18+ includes fetch globally, but it may not be available in test environments
 if (typeof globalThis.fetch === 'undefined') {
   // Provide a basic fetch implementation for tests
-  // Most tests use vitest mocks anyway, so this is mainly for OpenAI service initialization
+  // Most tests use vitest mocks anyway, so this is mainly for AI provider service initialization
   globalThis.fetch = async (_input: any, _init?: any) => {
     return {
       ok: true,

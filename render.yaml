@@ -11,8 +11,12 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: AI_PROVIDER
+        value: openai # Default to OpenAI, can be changed to 'anthropic'
       - key: OPENAI_API_KEY
-        sync: false # Prompts user to enter value during deployment
+        sync: false # Prompts user to enter value during deployment if using OpenAI
+      - key: ANTHROPIC_API_KEY
+        sync: false # Prompts user to enter value during deployment if using Anthropic
       - key: JWT_SECRET
         generateValue: true # Render generates a secure random value
       - key: ALLOWED_ORIGIN

@@ -4,7 +4,7 @@ A production-ready backend for calling LLMs from your frontend securely. Built w
 
 ## Features
 
-- **Secure LLM Proxy**: Call OpenAI models from your frontend without exposing API keys
+- **Multi-Provider Support**: Call multiple AI providers (OpenAI, Anthropic, and more) from your frontend without exposing API keys
 - **JWT Authentication**: 15-minute access tokens for secure API access
 - **Rate Limiting**: Configurable per-minute request limits (default: 100 req/min)
 - **CORS Support**: Configure allowed origins for your frontend
@@ -29,15 +29,40 @@ pnpm test
 
 The API will be available at [http://localhost:3000](http://localhost:3000)
 
+## AI Provider Support
+
+Airbolt supports multiple AI providers out of the box:
+
+### OpenAI (Default)
+
+- Models: `gpt-4o-mini` (default), `gpt-4o`, `gpt-4`, `gpt-3.5-turbo`
+- Get API key: https://platform.openai.com/api-keys
+
+### Anthropic
+
+- Models: `claude-3-5-sonnet-20241022` (default), `claude-3-opus-20240229`, `claude-3-sonnet-20240229`
+- Get API key: https://console.anthropic.com/
+
+To switch providers, set the `AI_PROVIDER` environment variable:
+
+```bash
+# Use Anthropic instead of OpenAI
+AI_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
 ## Environment Configuration
 
 All environment variables are validated using Zod schemas for type safety and runtime validation.
 
 ### Required Variables
 
-| Variable         | Description                         | Format   | Example               |
-| ---------------- | ----------------------------------- | -------- | --------------------- |
-| `OPENAI_API_KEY` | OpenAI API key for AI functionality | `sk-...` | `sk-1234567890abcdef` |
+Choose your AI provider and provide the corresponding API key:
+
+| Variable            | Description                            | Format       | Example                   |
+| ------------------- | -------------------------------------- | ------------ | ------------------------- |
+| `OPENAI_API_KEY`    | OpenAI API key (if using OpenAI)       | `sk-...`     | `sk-1234567890abcdef`     |
+| `ANTHROPIC_API_KEY` | Anthropic API key (if using Anthropic) | `sk-ant-...` | `sk-ant-1234567890abcdef` |
 
 ### Optional Variables with Defaults
 
@@ -47,6 +72,8 @@ All environment variables are validated using Zod schemas for type safety and ru
 | `PORT`                   | Server port                                    | `3000`                  | 1-65535                                            |
 | `HOST`                   | Server host                                    | `localhost`             | Any valid hostname                                 |
 | `LOG_LEVEL`              | Logging verbosity                              | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
+| `AI_PROVIDER`            | AI provider to use                             | `openai`                | `openai`, `anthropic`                              |
+| `AI_MODEL`               | Specific model to use                          | Provider default        | Any valid model for the selected provider          |
 | `JWT_SECRET`             | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
 | `ALLOWED_ORIGIN`         | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
 | `SYSTEM_PROMPT`          | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
@@ -103,16 +130,19 @@ RATE_LIMIT_TIME_WINDOW=3600000
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/markprompt/airbolt)
 
 1. Click the button above
-2. Enter your OpenAI API key when prompted
+2. Enter your AI provider API key when prompted (OpenAI or Anthropic)
 3. Render will automatically generate a secure JWT secret
 4. Update `ALLOWED_ORIGIN` to match your frontend URL
 
 ### Manual Deployment
 
 1. **Required Environment Variables**:
-   - `OPENAI_API_KEY` - Your OpenAI API key
+   - AI Provider API key (one of):
+     - `OPENAI_API_KEY` - For OpenAI provider
+     - `ANTHROPIC_API_KEY` - For Anthropic provider
    - `JWT_SECRET` - Generate with: `openssl rand -hex 32`
    - `NODE_ENV=production`
+   - `AI_PROVIDER` - Set to `openai` or `anthropic` (defaults to `openai`)
 
 2. **Build and Start**:
    ```bash
@@ -197,7 +227,7 @@ Generate a JWT token for API access.
 
 #### POST `/api/chat`
 
-Send chat messages to OpenAI GPT models.
+Send chat messages to your configured AI provider.
 
 **Headers:**
 

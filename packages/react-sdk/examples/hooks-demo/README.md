@@ -31,7 +31,8 @@ This example demonstrates how to use the `useChat` hook from `@airbolt/react-sdk
    ```bash
    # From project root - create .env file if it doesn't exist
    echo "NODE_ENV=development" >> .env
-   echo "OPENAI_API_KEY=your-openai-api-key" >> .env
+   echo "AI_PROVIDER=openai" >> .env  # or 'anthropic'
+   echo "OPENAI_API_KEY=your-openai-api-key" >> .env  # or ANTHROPIC_API_KEY for Anthropic
    ```
 
    **⚠️ IMPORTANT**: `NODE_ENV=development` is required for CORS to work with multiple localhost ports. Without this, you'll get CORS errors.

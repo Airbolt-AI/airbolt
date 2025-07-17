@@ -1,8 +1,11 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { isDevelopment } from '@airbolt/config';
-import { MessageSchema, ChatResponseSchema } from '../../services/openai.js';
-import { OpenAIServiceError } from '../../services/openai.js';
+import {
+  MessageSchema,
+  ChatResponseSchema,
+  AIProviderError,
+} from '../../services/ai-provider.js';
 
 // Request schema for chat endpoint
 const ChatRequestSchema = z.object({
@@ -59,7 +62,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
         tags: ['Chat'],
         summary: 'Send chat messages to AI',
         description:
-          'Proxies chat messages to OpenAI and returns the assistant response',
+          'Proxies chat messages to configured AI provider and returns the assistant response',
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -141,7 +144,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             },
           },
           503: {
-            description: 'Service Unavailable - OpenAI API issues',
+            description: 'Service Unavailable - AI provider API issues',
             type: 'object',
             properties: {
               error: { type: 'string' },
@@ -172,21 +175,11 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           'Processing chat request'
         );
 
-        // Create OpenAI service instance with optional system prompt override
-        let openaiService = fastify.openai;
-
-        // If system prompt is provided in request, create a new service instance
-        if (system) {
-          const { OpenAIService } = await import('../../services/openai.js');
-          const apiKey = fastify.config?.OPENAI_API_KEY;
-          if (!apiKey) {
-            throw new Error('OPENAI_API_KEY not configured');
-          }
-          openaiService = new OpenAIService(apiKey, system);
-        }
-
-        // Call OpenAI service
-        const response = await openaiService.createChatCompletion(messages);
+        // Call AI provider service with optional system prompt override
+        const response = await fastify.aiProvider.createChatCompletion(
+          messages,
+          system
+        );
 
         // Log successful response
         const duration = Date.now() - startTime;
@@ -227,8 +220,8 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           });
         }
 
-        // Handle OpenAI service errors
-        if (error instanceof OpenAIServiceError) {
+        // Handle AI provider errors
+        if (error instanceof AIProviderError) {
           request.log.warn(
             {
               error: {
@@ -238,11 +231,11 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               },
               duration,
             },
-            'OpenAI service error'
+            'AI provider service error'
           );
 
           return reply.code(error.statusCode).send({
-            error: error.code || 'OpenAIError',
+            error: error.code || 'AIProviderError',
             message: error.message,
             statusCode: error.statusCode,
           });

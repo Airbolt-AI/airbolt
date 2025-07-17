@@ -20,6 +20,7 @@ import type { Environment } from '@airbolt/config';
  */
 const DEFAULT_TEST_ENV = {
   NODE_ENV: 'test' as const,
+  AI_PROVIDER: 'openai' as const,
   OPENAI_API_KEY: 'sk-test1234567890abcdef',
   JWT_SECRET: 'test-jwt-secret-for-testing-purposes-only-32chars',
   ALLOWED_ORIGIN: 'http://localhost:3000,http://localhost:3001',
@@ -142,7 +143,7 @@ export function createMinimalTestEnv(
   environment: Environment = 'test',
   overrides: Record<string, string> = {}
 ): Record<string, string> {
-  const minimalEnv = {
+  const minimalEnv: Record<string, string> = {
     NODE_ENV: environment,
     ...overrides,
   };
@@ -183,4 +184,12 @@ export const TEST_ENV_PRESETS = {
 
   /** Minimal environment for error testing */
   minimal: () => createMinimalTestEnv(),
+
+  /** Anthropic provider testing environment */
+  anthropic: () =>
+    createTestEnv({
+      AI_PROVIDER: 'anthropic',
+      ANTHROPIC_API_KEY: 'sk-ant-test1234567890abcdef',
+      // Don't set OPENAI_API_KEY to test Anthropic-only setup
+    }),
 } as const;

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { build } from '../../helper.js';
 import type { FastifyInstance } from 'fastify';
-import type { OpenAIService } from '../../../src/services/openai.js';
+import type { AIProviderService } from '../../../src/services/ai-provider.js';
 
 describe('Chat Route Integration Tests', () => {
   let app: FastifyInstance;
   let validToken: string;
-  let mockOpenAIService: Partial<OpenAIService>;
+  let mockAIProviderService: Partial<AIProviderService>;
 
   beforeEach(async () => {
     // Reset all mocks
@@ -18,8 +18,8 @@ describe('Chat Route Integration Tests', () => {
     vi.stubEnv('NODE_ENV', 'test');
     vi.stubEnv('ALLOWED_ORIGIN', 'http://localhost:3000,http://localhost:3001');
 
-    // Create mock OpenAI service
-    mockOpenAIService = {
+    // Create mock AI Provider service
+    mockAIProviderService = {
       createChatCompletion: vi.fn(),
     };
 
@@ -27,10 +27,10 @@ describe('Chat Route Integration Tests', () => {
 
     await app.ready();
 
-    // Mock the OpenAI service after app is ready
-    if (app.openai) {
-      vi.spyOn(app.openai, 'createChatCompletion').mockImplementation(
-        mockOpenAIService.createChatCompletion as any
+    // Mock the AI Provider service after app is ready
+    if (app.aiProvider) {
+      vi.spyOn(app.aiProvider, 'createChatCompletion').mockImplementation(
+        mockAIProviderService.createChatCompletion as any
       );
     }
 
@@ -51,7 +51,7 @@ describe('Chat Route Integration Tests', () => {
 
   describe('Full Auth + Chat Flow', () => {
     it('should complete full authenticated chat flow with mock OpenAI', async () => {
-      // Mock the OpenAI service response
+      // Mock the AI provider service response
       const mockResponse = {
         content: 'Hello! This is a test response from the AI assistant.',
         usage: { total_tokens: 42 },
@@ -59,7 +59,7 @@ describe('Chat Route Integration Tests', () => {
 
       // Mock the createChatCompletion method
       const createChatCompletionMock =
-        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+        mockAIProviderService.createChatCompletion as ReturnType<typeof vi.fn>;
       createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
@@ -86,21 +86,24 @@ describe('Chat Route Integration Tests', () => {
       const responseBody = JSON.parse(response.payload);
       expect(responseBody).toEqual(mockResponse);
 
-      // Verify the OpenAI service was called with correct messages
-      expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith([
-        { role: 'user', content: 'Hello, how are you today?' },
-        {
-          role: 'assistant',
-          content: 'I am doing well, thank you for asking!',
-        },
-        { role: 'user', content: 'Can you help me with a question?' },
-      ]);
+      // Verify the AI provider service was called with correct messages
+      expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+        [
+          { role: 'user', content: 'Hello, how are you today?' },
+          {
+            role: 'assistant',
+            content: 'I am doing well, thank you for asking!',
+          },
+          { role: 'user', content: 'Can you help me with a question?' },
+        ],
+        undefined
+      );
     });
 
     it.skip('should handle system prompt override in full flow', async () => {
-      // This test is skipped because system prompt override creates a new OpenAI service instance
+      // This test is skipped because system prompt override creates a new AI provider service instance
       // which requires complex mocking in integration tests. The functionality is thoroughly
-      // tested in unit tests where we can properly mock the OpenAI service constructor.
+      // tested in unit tests where we can properly mock the AI provider service constructor.
       // Integration testing focuses on the standard flow without system prompt overrides.
 
       const mockResponse = {
@@ -136,7 +139,7 @@ describe('Chat Route Integration Tests', () => {
       };
 
       const createChatCompletionMock =
-        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+        mockAIProviderService.createChatCompletion as ReturnType<typeof vi.fn>;
       createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
@@ -262,7 +265,7 @@ describe('Chat Route Integration Tests', () => {
       ];
 
       // Mock responses for each call
-      const mockSpy = mockOpenAIService.createChatCompletion as ReturnType<
+      const mockSpy = mockAIProviderService.createChatCompletion as ReturnType<
         typeof vi.fn
       >;
       mockSpy.mockResolvedValueOnce(mockResponses[0]!);
@@ -328,21 +331,29 @@ describe('Chat Route Integration Tests', () => {
       expect(JSON.parse(response3.payload)).toEqual(mockResponses[2]);
 
       // Verify all OpenAI calls received the correct conversation context
-      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+      expect(
+        mockAIProviderService.createChatCompletion
+      ).toHaveBeenNthCalledWith(
         1,
-        [{ role: 'user', content: 'Hello, I am John' }]
+        [{ role: 'user', content: 'Hello, I am John' }],
+        undefined
       );
 
-      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+      expect(
+        mockAIProviderService.createChatCompletion
+      ).toHaveBeenNthCalledWith(
         2,
         [
           { role: 'user', content: 'Hello, I am John' },
           { role: 'assistant', content: 'Nice to meet you!' },
           { role: 'user', content: 'What can you help me with?' },
-        ]
+        ],
+        undefined
       );
 
-      expect(mockOpenAIService.createChatCompletion).toHaveBeenNthCalledWith(
+      expect(
+        mockAIProviderService.createChatCompletion
+      ).toHaveBeenNthCalledWith(
         3,
         [
           { role: 'user', content: 'Hello, I am John' },
@@ -353,7 +364,8 @@ describe('Chat Route Integration Tests', () => {
             content: 'I can help with programming questions.',
           },
           { role: 'user', content: 'Can you write a Python function?' },
-        ]
+        ],
+        undefined
       );
     });
 
@@ -369,7 +381,7 @@ describe('Chat Route Integration Tests', () => {
       };
 
       const createChatCompletionMock =
-        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+        mockAIProviderService.createChatCompletion as ReturnType<typeof vi.fn>;
       createChatCompletionMock.mockResolvedValue(mockResponse);
 
       const response = await app.inject({
@@ -385,8 +397,9 @@ describe('Chat Route Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.payload)).toEqual(mockResponse);
-      expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith(
-        maxMessages
+      expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+        maxMessages,
+        undefined
       );
     });
 
@@ -397,7 +410,7 @@ describe('Chat Route Integration Tests', () => {
       };
 
       const createChatCompletionMock =
-        mockOpenAIService.createChatCompletion as ReturnType<typeof vi.fn>;
+        mockAIProviderService.createChatCompletion as ReturnType<typeof vi.fn>;
       createChatCompletionMock.mockResolvedValue(mockResponse);
 
       // Test with correct content-type

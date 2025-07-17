@@ -16,7 +16,7 @@ import envPlugin, { type Env } from './plugins/env.js';
 import corsPlugin from './plugins/cors.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import fastifyJwt from '@fastify/jwt';
-import openaiService from './services/openai.js';
+import aiProviderService from './services/ai-provider.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -142,6 +142,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
             PORT: 3000,
             LOG_LEVEL: 'info',
             OPENAI_API_KEY: 'sk-openapi-generation-placeholder',
+            AI_PROVIDER: 'openai',
             ALLOWED_ORIGIN: ['*'], // Allow all origins for OpenAPI generation
             SYSTEM_PROMPT: '',
             RATE_LIMIT_MAX: 100,
@@ -176,10 +177,10 @@ const app: FastifyPluginAsync<AppOptions> = async (
     },
   });
 
-  // Register OpenAI service after env (it depends on OPENAI_API_KEY from env)
+  // Register AI provider service after env (it depends on API keys from env)
   // Only register if env validation was not skipped (meaning we have real config)
   if (!opts.skipEnvValidation) {
-    await fastify.register(openaiService);
+    await fastify.register(aiProviderService);
   }
 
   // Swagger plugin registration moved to root level in buildApp function

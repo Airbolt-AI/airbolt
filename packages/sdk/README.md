@@ -36,7 +36,7 @@ const response = await chat(
 
 ### 🔒 Secure by Design
 
-- Your OpenAI API key stays on your backend
+- Your AI provider API keys stay on your backend
 - JWT tokens automatically handled
 - No API keys in frontend code
 
