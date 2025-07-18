@@ -13,6 +13,14 @@ export interface UseChatOptions {
    */
   system?: string;
   /**
+   * AI provider to use: 'openai' or 'anthropic'
+   */
+  provider?: 'openai' | 'anthropic';
+  /**
+   * Specific model to use (e.g., 'gpt-4', 'claude-3-5-sonnet-20241022')
+   */
+  model?: string;
+  /**
    * Initial messages to populate the chat history
    */
   initialMessages?: Message[];

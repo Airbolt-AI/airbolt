@@ -78,7 +78,7 @@ describe('createChatSession', () => {
 
   it('should pass baseURL to chat function', async () => {
     const baseURL = 'https://custom.api.com';
-    const session = createChatSession(baseURL);
+    const session = createChatSession({ baseURL });
 
     mockChat.mockResolvedValueOnce('Response');
 
@@ -87,6 +87,24 @@ describe('createChatSession', () => {
     expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content: 'Test' }], {
       baseURL,
     });
+  });
+
+  it('should pass provider and model to chat function', async () => {
+    const options = {
+      baseURL: 'https://custom.api.com',
+      provider: 'anthropic' as const,
+      model: 'claude-3-5-sonnet-20241022',
+    };
+    const session = createChatSession(options);
+
+    mockChat.mockResolvedValueOnce('Response from Claude');
+
+    await session.send('Test');
+
+    expect(mockChat).toHaveBeenCalledWith(
+      [{ role: 'user', content: 'Test' }],
+      options
+    );
   });
 
   it('should return read-only messages array', () => {

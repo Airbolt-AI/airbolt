@@ -42,7 +42,10 @@ describe('chat - property-based tests', () => {
           const result = await chat(messages as Message[]);
 
           expect(result).toBe(expectedResponse);
-          expect(mockChat).toHaveBeenCalledWith(messages);
+          expect(mockChat).toHaveBeenCalledWith(messages, {
+            provider: undefined,
+            model: undefined,
+          });
         }
       )
     );
@@ -83,7 +86,10 @@ describe('chat - property-based tests', () => {
           const expectedCall = system
             ? [{ role: 'system' as const, content: system }, ...messages]
             : messages;
-          expect(mockChat).toHaveBeenCalledWith(expectedCall);
+          expect(mockChat).toHaveBeenCalledWith(expectedCall, {
+            provider: undefined,
+            model: undefined,
+          });
         }
       )
     );
@@ -111,7 +117,10 @@ describe('chat - property-based tests', () => {
           await chat(messages);
 
           // Verify the exact message array was passed
-          expect(mockChat).toHaveBeenCalledWith(messages);
+          expect(mockChat).toHaveBeenCalledWith(messages, {
+            provider: undefined,
+            model: undefined,
+          });
         }
       )
     );
@@ -142,7 +151,10 @@ describe('chat - property-based tests', () => {
       const result = await chat(messages);
 
       expect(result).toBe('Safe response');
-      expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content }]);
+      expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content }], {
+        provider: undefined,
+        model: undefined,
+      });
     }
   });
 
@@ -165,10 +177,13 @@ describe('chat - property-based tests', () => {
 
       await chat(messages, { system });
 
-      expect(mockChat).toHaveBeenCalledWith([
-        { role: 'system', content: system },
-        ...messages,
-      ]);
+      expect(mockChat).toHaveBeenCalledWith(
+        [{ role: 'system', content: system }, ...messages],
+        {
+          provider: undefined,
+          model: undefined,
+        }
+      );
     }
   });
 });

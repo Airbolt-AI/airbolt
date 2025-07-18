@@ -43,8 +43,11 @@ export async function chat(
     ? [{ role: 'system' as const, content: options.system }, ...messages]
     : messages;
 
-  // Make the chat request
-  const response = await client.chat(allMessages);
+  // Make the chat request with optional provider and model
+  const response = await client.chat(allMessages, {
+    provider: options?.provider,
+    model: options?.model,
+  });
 
   // Return only the assistant's content for simplicity
   return response.content;

@@ -33,10 +33,10 @@ export const ProviderConfigSchema = z.object({
 export type ProviderConfig = z.infer<typeof ProviderConfigSchema>;
 
 // Model configurations with defaults
-const DEFAULT_MODELS: Record<string, string> = {
+const DEFAULT_MODELS = {
   openai: 'gpt-4o-mini',
   anthropic: 'claude-3-5-sonnet-20241022',
-};
+} as const;
 
 // Provider feature flags
 export const PROVIDER_FEATURES = {
@@ -70,6 +70,10 @@ export class AIProviderService {
   private maxRetries: number = 3;
   private baseDelay: number = 1000;
   private provider: string;
+  private apiKeys: {
+    openai?: string;
+    anthropic?: string;
+  } = {};
 
   static createFromEnv(config: {
     AI_PROVIDER?: string;
@@ -98,13 +102,27 @@ export class AIProviderService {
       throw new Error(`${provider.toUpperCase()}_API_KEY is not configured`);
     }
 
+    // Store all available API keys for dynamic provider switching
+    const apiKeys: {
+      openai?: string;
+      anthropic?: string;
+    } = {};
+
+    if (config.OPENAI_API_KEY) {
+      apiKeys.openai = config.OPENAI_API_KEY;
+    }
+    if (config.ANTHROPIC_API_KEY) {
+      apiKeys.anthropic = config.ANTHROPIC_API_KEY;
+    }
+
     return new AIProviderService(
       {
         provider,
         apiKey,
         model: config.AI_MODEL,
       },
-      config.SYSTEM_PROMPT
+      config.SYSTEM_PROMPT,
+      { apiKeys }
     );
   }
 
@@ -114,11 +132,28 @@ export class AIProviderService {
     options?: {
       maxRetries?: number;
       baseDelay?: number;
+      apiKeys?: {
+        openai?: string;
+        anthropic?: string;
+      };
     }
   ) {
     this.provider = config.provider;
-    const modelName =
-      config.model || DEFAULT_MODELS[config.provider] || 'gpt-4o-mini';
+    let modelName: string;
+    if (config.model) {
+      modelName = config.model;
+    } else {
+      switch (config.provider) {
+        case 'openai':
+          modelName = DEFAULT_MODELS.openai;
+          break;
+        case 'anthropic':
+          modelName = DEFAULT_MODELS.anthropic;
+          break;
+        default:
+          modelName = 'gpt-4o-mini';
+      }
+    }
 
     // Initialize the appropriate provider
     switch (config.provider) {
@@ -150,16 +185,95 @@ export class AIProviderService {
     if (options?.baseDelay !== undefined) {
       this.baseDelay = options.baseDelay;
     }
+    if (options?.apiKeys !== undefined) {
+      this.apiKeys = options.apiKeys;
+    }
+  }
+
+  private createModel(
+    provider: string,
+    model: string,
+    apiKey: string
+  ): LanguageModel {
+    switch (provider) {
+      case 'openai':
+        const openaiProvider = createOpenAI({ apiKey });
+        return openaiProvider.chat(model);
+      case 'anthropic':
+        const anthropicProvider = createAnthropic({ apiKey });
+        return anthropicProvider.messages(model);
+      default:
+        // This ensures TypeScript exhaustiveness checking
+        const _exhaustiveCheck: never = provider as never;
+        throw new Error(`Unsupported provider: ${String(_exhaustiveCheck)}`);
+    }
   }
 
   async createChatCompletion(
     messages: Message[],
-    systemPromptOverride?: string
+    systemPromptOverride?: string,
+    providerOverride?: string,
+    modelOverride?: string
   ): Promise<ChatResponse> {
     const messagesWithSystem = this.injectSystemPrompt(
       messages,
       systemPromptOverride
     );
+
+    // Determine which model to use
+    let modelToUse = this.model;
+    let providerForError = this.provider;
+
+    if (providerOverride || modelOverride) {
+      // Use the override provider or fall back to current provider
+      const provider = providerOverride || this.provider;
+
+      // Validate provider first
+      if (provider !== 'openai' && provider !== 'anthropic') {
+        throw new AIProviderError(
+          `Unsupported provider: ${provider}`,
+          400,
+          'INVALID_PROVIDER'
+        );
+      }
+
+      let defaultModel: string;
+      switch (provider) {
+        case 'openai':
+          defaultModel = DEFAULT_MODELS.openai;
+          break;
+        case 'anthropic':
+          defaultModel = DEFAULT_MODELS.anthropic;
+          break;
+        default:
+          defaultModel = 'gpt-4o-mini';
+      }
+      const modelName = modelOverride || defaultModel;
+
+      // Get the appropriate API key from stored keys
+      let apiKey: string | undefined;
+      switch (provider) {
+        case 'openai':
+          apiKey = this.apiKeys.openai;
+          break;
+        case 'anthropic':
+          apiKey = this.apiKeys.anthropic;
+          break;
+        default:
+          apiKey = undefined;
+      }
+
+      if (!apiKey) {
+        throw new AIProviderError(
+          `API key not configured for provider: ${provider}`,
+          400,
+          'MISSING_API_KEY'
+        );
+      }
+
+      modelToUse = this.createModel(provider, modelName, apiKey);
+      providerForError = provider;
+    }
 
     let lastError: unknown;
 
@@ -173,7 +287,7 @@ export class AIProviderService {
 
         // Use Vercel AI SDK's generateText function
         const result = await generateText({
-          model: this.model,
+          model: modelToUse,
           messages: formattedMessages,
           temperature: 0.7,
           maxTokens: 1000,
@@ -203,7 +317,7 @@ export class AIProviderService {
     }
 
     // Handle the error
-    this.handleProviderError(lastError);
+    this.handleProviderError(lastError, providerForError);
   }
 
   private injectSystemPrompt(
@@ -236,7 +350,11 @@ export class AIProviderService {
     return false;
   }
 
-  private handleProviderError(error: unknown): never {
+  private handleProviderError(
+    error: unknown,
+    providerForError: string = this.provider
+  ): never {
+    const provider = providerForError;
     // Handle Vercel AI SDK errors
     if (error && typeof error === 'object' && 'status' in error) {
       const aiError = error as {
@@ -249,7 +367,7 @@ export class AIProviderService {
       switch (aiError.status) {
         case 401:
           throw new AIProviderError(
-            `Invalid ${this.provider.toUpperCase()} API key`,
+            `Invalid ${providerForError.toUpperCase()} API key`,
             401,
             'INVALID_API_KEY'
           );
@@ -259,7 +377,7 @@ export class AIProviderService {
             errorMessage.includes('billing')
           ) {
             throw new AIProviderError(
-              `${this.provider.toUpperCase()} quota exceeded. Please check your account billing.`,
+              `${provider.toUpperCase()} quota exceeded. Please check your account billing.`,
               402,
               'INSUFFICIENT_QUOTA'
             );
@@ -271,7 +389,7 @@ export class AIProviderService {
           );
         case 400:
           throw new AIProviderError(
-            `Invalid request to ${this.provider.toUpperCase()} API`,
+            `Invalid request to ${provider.toUpperCase()} API`,
             400,
             'INVALID_REQUEST'
           );
@@ -279,13 +397,13 @@ export class AIProviderService {
         case 502:
         case 503:
           throw new AIProviderError(
-            `${this.provider.toUpperCase()} service temporarily unavailable`,
+            `${provider.toUpperCase()} service temporarily unavailable`,
             503,
             'SERVICE_UNAVAILABLE'
           );
         default:
           throw new AIProviderError(
-            `${this.provider.toUpperCase()} API error: ${errorMessage}`,
+            `${provider.toUpperCase()} API error: ${errorMessage}`,
             aiError.status || 500,
             'PROVIDER_ERROR'
           );
@@ -299,14 +417,14 @@ export class AIProviderService {
         error.message.includes('ETIMEDOUT')
       ) {
         throw new AIProviderError(
-          `Unable to connect to ${this.provider.toUpperCase()} API`,
+          `Unable to connect to ${provider.toUpperCase()} API`,
           503,
           'CONNECTION_ERROR'
         );
       }
 
       throw new AIProviderError(
-        `Unexpected error communicating with ${this.provider.toUpperCase()}`,
+        `Unexpected error communicating with ${provider.toUpperCase()}`,
         500,
         'UNEXPECTED_ERROR'
       );

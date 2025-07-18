@@ -148,6 +148,8 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(200);
         expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
           [{ role: 'user', content: 'Hello' }],
+          undefined,
+          undefined,
           undefined
         );
       });
@@ -261,6 +263,8 @@ describe('Chat Route Unit Tests', () => {
             { role: 'assistant', content: 'Hi there!' },
             { role: 'user', content: 'How are you?' },
           ],
+          undefined,
+          undefined,
           undefined
         );
       });
@@ -286,7 +290,66 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(200);
         expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
           [{ role: 'user', content: 'Hello' }],
-          'You are a helpful assistant.'
+          'You are a helpful assistant.',
+          undefined,
+          undefined
+        );
+      });
+
+      it('should accept optional provider and model overrides', async () => {
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
+          content: 'Response from Anthropic',
+          usage: { total_tokens: 15 },
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: 'Hello' }],
+            provider: 'anthropic',
+            model: 'claude-3-5-sonnet-20241022',
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          'anthropic',
+          'claude-3-5-sonnet-20241022'
+        );
+      });
+
+      it('should accept all optional parameters together', async () => {
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
+          content: 'Response with all options',
+          usage: { total_tokens: 20 },
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: 'Hello' }],
+            system: 'You are a creative assistant.',
+            provider: 'openai',
+            model: 'gpt-4',
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          'You are a creative assistant.',
+          'openai',
+          'gpt-4'
         );
       });
     });

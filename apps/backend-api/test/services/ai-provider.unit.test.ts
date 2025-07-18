@@ -206,6 +206,193 @@ describe('AIProviderService', () => {
         code: 'INSUFFICIENT_QUOTA',
       });
     });
+
+    it('should allow provider override at runtime', async () => {
+      const mockResponse = {
+        text: 'Response from Anthropic',
+        usage: { totalTokens: 30 },
+      };
+
+      vi.mocked(generateText).mockResolvedValueOnce(mockResponse as any);
+
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+            anthropic: 'sk-ant-test-key',
+          },
+        }
+      );
+
+      const result = await service.createChatCompletion(
+        [{ role: 'user', content: 'Hello' }],
+        undefined,
+        'anthropic'
+      );
+
+      expect(result.content).toBe('Response from Anthropic');
+      expect(generateText).toHaveBeenCalledWith({
+        model: 'mock-anthropic-model',
+        messages: [{ role: 'user', content: 'Hello' }],
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+    });
+
+    it('should allow model override at runtime', async () => {
+      const mockResponse = {
+        text: 'Response from GPT-4',
+        usage: { totalTokens: 35 },
+      };
+
+      vi.mocked(generateText).mockResolvedValueOnce(mockResponse as any);
+
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+          },
+        }
+      );
+
+      const result = await service.createChatCompletion(
+        [{ role: 'user', content: 'Hello' }],
+        undefined,
+        undefined,
+        'gpt-4'
+      );
+
+      expect(result.content).toBe('Response from GPT-4');
+    });
+
+    it('should throw error when API key is missing for override provider', async () => {
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+            // anthropic key missing
+          },
+        }
+      );
+
+      await expect(
+        service.createChatCompletion(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          'anthropic'
+        )
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: 'MISSING_API_KEY',
+        message: 'API key not configured for provider: anthropic',
+      });
+    });
+
+    it('should throw error for invalid provider override', async () => {
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+          },
+        }
+      );
+
+      await expect(
+        service.createChatCompletion(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          'invalid-provider'
+        )
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: 'INVALID_PROVIDER',
+        message: 'Unsupported provider: invalid-provider',
+      });
+    });
+
+    it('should handle both provider and model overrides together', async () => {
+      const mockResponse = {
+        text: 'Response from Claude 3 Opus',
+        usage: { totalTokens: 40 },
+      };
+
+      vi.mocked(generateText).mockResolvedValueOnce(mockResponse as any);
+
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+          model: 'gpt-4o-mini',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+            anthropic: 'sk-ant-test-key',
+          },
+        }
+      );
+
+      const result = await service.createChatCompletion(
+        [{ role: 'user', content: 'Hello' }],
+        undefined,
+        'anthropic',
+        'claude-3-opus-20240229'
+      );
+
+      expect(result.content).toBe('Response from Claude 3 Opus');
+    });
+
+    it('should use correct provider in error messages when using override', async () => {
+      const error = { status: 401, message: 'Unauthorized' };
+      vi.mocked(generateText).mockRejectedValue(error);
+
+      const service = new AIProviderService(
+        {
+          provider: 'openai',
+          apiKey: 'sk-test-key',
+        },
+        undefined,
+        {
+          apiKeys: {
+            openai: 'sk-test-key',
+            anthropic: 'sk-ant-test-key',
+          },
+        }
+      );
+
+      await expect(
+        service.createChatCompletion(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          'anthropic'
+        )
+      ).rejects.toMatchObject({
+        message: 'Invalid ANTHROPIC API key',
+        statusCode: 401,
+        code: 'INVALID_API_KEY',
+      });
+    });
   });
 
   describe('supportsFeature', () => {

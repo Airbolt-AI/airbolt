@@ -96,6 +96,8 @@ describe('Chat Route Integration Tests', () => {
           },
           { role: 'user', content: 'Can you help me with a question?' },
         ],
+        undefined,
+        undefined,
         undefined
       );
     });
@@ -336,6 +338,8 @@ describe('Chat Route Integration Tests', () => {
       ).toHaveBeenNthCalledWith(
         1,
         [{ role: 'user', content: 'Hello, I am John' }],
+        undefined,
+        undefined,
         undefined
       );
 
@@ -348,6 +352,8 @@ describe('Chat Route Integration Tests', () => {
           { role: 'assistant', content: 'Nice to meet you!' },
           { role: 'user', content: 'What can you help me with?' },
         ],
+        undefined,
+        undefined,
         undefined
       );
 
@@ -365,6 +371,8 @@ describe('Chat Route Integration Tests', () => {
           },
           { role: 'user', content: 'Can you write a Python function?' },
         ],
+        undefined,
+        undefined,
         undefined
       );
     });
@@ -399,6 +407,8 @@ describe('Chat Route Integration Tests', () => {
       expect(JSON.parse(response.payload)).toEqual(mockResponse);
       expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
         maxMessages,
+        undefined,
+        undefined,
         undefined
       );
     });

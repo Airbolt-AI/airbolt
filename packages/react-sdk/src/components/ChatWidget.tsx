@@ -36,6 +36,14 @@ export interface ChatWidgetProps {
    */
   system?: string;
   /**
+   * AI provider to use: 'openai' or 'anthropic'
+   */
+  provider?: 'openai' | 'anthropic';
+  /**
+   * Specific model to use (e.g., 'gpt-4', 'claude-3-5-sonnet-20241022')
+   */
+  model?: string;
+  /**
    * Placeholder text for the input field
    */
   placeholder?: string;
@@ -97,6 +105,8 @@ export interface ChatWidgetProps {
 export function ChatWidget({
   baseURL,
   system,
+  provider,
+  model,
   placeholder = 'Type a message...',
   title = 'AI Assistant',
   theme = 'auto',
@@ -111,6 +121,12 @@ export function ChatWidget({
   }
   if (system !== undefined) {
     chatOptions.system = system;
+  }
+  if (provider !== undefined) {
+    chatOptions.provider = provider;
+  }
+  if (model !== undefined) {
+    chatOptions.model = model;
   }
 
   const { messages, input, setInput, send, isLoading, error } =

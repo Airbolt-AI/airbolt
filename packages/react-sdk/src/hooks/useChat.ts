@@ -108,6 +108,12 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       if (options?.system !== undefined) {
         chatOptions.system = options.system;
       }
+      if (options?.provider !== undefined) {
+        chatOptions.provider = options.provider;
+      }
+      if (options?.model !== undefined) {
+        chatOptions.model = options.model;
+      }
       const response = await chat(allMessages, chatOptions);
 
       // Only update state if component is still mounted

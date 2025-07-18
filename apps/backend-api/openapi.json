@@ -109,6 +109,15 @@
                   "system": {
                     "type": "string",
                     "description": "Optional system prompt to override default"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": ["openai", "anthropic"],
+                    "description": "AI provider to use (defaults to environment setting)"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Specific model to use (defaults to provider default)"
                   }
                 }
               }

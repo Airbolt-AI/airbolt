@@ -1,5 +1,5 @@
 import { chat } from './chat.js';
-import type { Message, ChatSession } from './types.js';
+import type { Message, ChatSession, ChatOptions } from './types.js';
 
 /**
  * Create a new chat session for managing conversation state
@@ -23,10 +23,20 @@ import type { Message, ChatSession } from './types.js';
  * // ]
  * ```
  *
- * @param baseURL Optional base URL for the Airbolt API
+ * @example
+ * ```typescript
+ * // With provider and model
+ * const session = createChatSession({
+ *   baseURL: 'https://api.airbolt.dev',
+ *   provider: 'anthropic',
+ *   model: 'claude-3-5-sonnet-20241022'
+ * });
+ * ```
+ *
+ * @param options Optional configuration for the chat session
  * @returns A new chat session instance
  */
-export function createChatSession(baseURL?: string): ChatSession {
+export function createChatSession(options?: ChatOptions): ChatSession {
   // Initialize conversation history
   const messages: Message[] = [];
 
@@ -37,11 +47,7 @@ export function createChatSession(baseURL?: string): ChatSession {
 
       // Get response with full conversation history
       // Pass a copy to prevent mutation issues
-      const chatOptions: Parameters<typeof chat>[1] = baseURL
-        ? { baseURL }
-        : undefined;
-
-      const reply = await chat([...messages], chatOptions);
+      const reply = await chat([...messages], options);
 
       // Add assistant response to history
       messages.push({ role: 'assistant', content: reply });

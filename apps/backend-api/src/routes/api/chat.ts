@@ -14,6 +14,8 @@ const ChatRequestSchema = z.object({
     .min(1, 'At least one message is required')
     .max(50, 'Too many messages in conversation'),
   system: z.string().optional(),
+  provider: z.enum(['openai', 'anthropic']).optional(),
+  model: z.string().optional(),
 });
 
 // JWT payload interface
@@ -93,6 +95,17 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               type: 'string',
               description: 'Optional system prompt to override default',
             },
+            provider: {
+              type: 'string',
+              enum: ['openai', 'anthropic'],
+              description:
+                'AI provider to use (defaults to environment setting)',
+            },
+            model: {
+              type: 'string',
+              description:
+                'Specific model to use (defaults to provider default)',
+            },
           },
         },
         response: {
@@ -160,13 +173,17 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
       try {
         // Validate request body
-        const { messages, system } = ChatRequestSchema.parse(request.body);
+        const { messages, system, provider, model } = ChatRequestSchema.parse(
+          request.body
+        );
 
         // Log request (without sensitive content)
         request.log.info(
           {
             messageCount: messages.length,
             hasSystemPrompt: !!system,
+            provider: provider,
+            model: model,
             jwt: {
               iat: request.jwt?.iat,
               exp: request.jwt?.exp,
@@ -175,10 +192,12 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           'Processing chat request'
         );
 
-        // Call AI provider service with optional system prompt override
+        // Call AI provider service with optional system prompt and provider/model overrides
         const response = await fastify.aiProvider.createChatCompletion(
           messages,
-          system
+          system,
+          provider,
+          model
         );
 
         // Log successful response

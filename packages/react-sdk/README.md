@@ -75,6 +75,8 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 | -------------- | ---------------------------------- | --------------------- | -------------------------------------------------- |
 | `baseURL`      | `string`                           | -                     | **Required**. Base URL for your Airbolt backend    |
 | `system`       | `string`                           | -                     | Optional. System prompt to guide the AI's behavior |
+| `provider`     | `'openai' \| 'anthropic'`          | -                     | Optional. AI provider to use                       |
+| `model`        | `string`                           | -                     | Optional. Specific model to use                    |
 | `placeholder`  | `string`                           | `"Type a message..."` | Placeholder text for the input field               |
 | `title`        | `string`                           | `"AI Assistant"`      | Title displayed in the widget header               |
 | `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)        |
@@ -96,6 +98,14 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
   theme="dark"
   position="fixed-bottom-right"
   system="You are a helpful support agent"
+/>
+
+// With specific AI provider and model
+<ChatWidget
+  baseURL="https://your-deployment.onrender.com"
+  provider="anthropic"
+  model="claude-3-5-sonnet-20241022"
+  system="You are a technical documentation expert"
 />
 
 // With CSS custom properties (recommended)
@@ -128,11 +138,13 @@ function useChat(options?: UseChatOptions): UseChatReturn;
 
 #### Options
 
-| Option            | Type        | Description                                              |
-| ----------------- | ----------- | -------------------------------------------------------- |
-| `baseURL`         | `string`    | **Required**. Base URL for your Airbolt backend.         |
-| `system`          | `string`    | Optional. System prompt to include with the messages.    |
-| `initialMessages` | `Message[]` | Optional. Initial messages to populate the chat history. |
+| Option            | Type                      | Description                                              |
+| ----------------- | ------------------------- | -------------------------------------------------------- |
+| `baseURL`         | `string`                  | **Required**. Base URL for your Airbolt backend.         |
+| `system`          | `string`                  | Optional. System prompt to include with the messages.    |
+| `provider`        | `'openai' \| 'anthropic'` | Optional. AI provider to use.                            |
+| `model`           | `string`                  | Optional. Specific model to use.                         |
+| `initialMessages` | `Message[]`               | Optional. Initial messages to populate the chat history. |
 
 #### Return Value
 
@@ -157,6 +169,8 @@ interface Message {
 interface UseChatOptions {
   baseURL: string;
   system?: string;
+  provider?: 'openai' | 'anthropic';
+  model?: string;
   initialMessages?: Message[];
 }
 ```
