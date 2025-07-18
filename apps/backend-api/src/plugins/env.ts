@@ -62,8 +62,8 @@ export const EnvSchema = z
       })
       .min(1, 'OPENAI_API_KEY cannot be empty')
       .regex(
-        /^sk-[A-Za-z0-9_-]+$/,
-        'OPENAI_API_KEY must be a valid OpenAI API key format (sk-...)'
+        /^sk-(?:proj-)?[A-Za-z0-9_-]+$/,
+        'OPENAI_API_KEY must be a valid OpenAI API key format (sk-... or sk-proj-...)'
       )
       .optional(),
 
