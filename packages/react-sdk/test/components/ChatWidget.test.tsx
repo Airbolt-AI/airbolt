@@ -50,7 +50,7 @@ describe('ChatWidget XSS Protection', () => {
   });
 
   describe('XSS Prevention', () => {
-    it('should escape HTML script tags in messages', () => {
+    it('should render HTML script tags as plain text (React XSS protection)', () => {
       const maliciousMessages: Message[] = [
         {
           role: 'user',
@@ -69,14 +69,12 @@ describe('ChatWidget XSS Protection', () => {
       const messageElement = container.querySelector(
         '[aria-label="user message"]'
       );
-      expect(messageElement?.textContent).toBe(
-        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
-      );
+      expect(messageElement?.textContent).toBe('<script>alert("XSS")</script>');
       // Ensure no actual script tag exists
       expect(container.querySelector('script')).toBeNull();
     });
 
-    it('should escape HTML img tags with onerror attributes', () => {
+    it('should render HTML img tags as plain text (React XSS protection)', () => {
       const maliciousMessages: Message[] = [
         {
           role: 'user',
@@ -96,13 +94,13 @@ describe('ChatWidget XSS Protection', () => {
         '[aria-label="user message"]'
       );
       expect(messageElement?.textContent).toBe(
-        '&lt;img src=&quot;x&quot; onerror=&quot;alert(&#39;XSS&#39;)&quot;&gt;'
+        '<img src="x" onerror="alert(\'XSS\')">'
       );
       // Ensure no actual img tag with onerror exists
       expect(container.querySelector('img[onerror]')).toBeNull();
     });
 
-    it('should escape all dangerous HTML characters', () => {
+    it('should render HTML characters as plain text without encoding', () => {
       const maliciousMessages: Message[] = [
         {
           role: 'user',
@@ -122,7 +120,7 @@ describe('ChatWidget XSS Protection', () => {
         '[aria-label="user message"]'
       );
       expect(messageElement?.textContent).toBe(
-        'Test &amp; check &lt;tag&gt; &quot;quotes&quot; &#39;apostrophes&#39;'
+        'Test & check <tag> "quotes" \'apostrophes\''
       );
     });
 
@@ -166,7 +164,7 @@ describe('ChatWidget XSS Protection', () => {
         '[aria-label="assistant message"]'
       );
       expect(messageElement?.textContent).toBe(
-        '&lt;svg onload=&quot;alert(1)&quot;&gt;&lt;iframe src=&quot;javascript:alert(2)&quot;&gt;&lt;/iframe&gt;&lt;/svg&gt;'
+        '<svg onload="alert(1)"><iframe src="javascript:alert(2)"></iframe></svg>'
       );
       // Ensure no dangerous elements exist
       expect(container.querySelector('svg')).toBeNull();
@@ -183,6 +181,82 @@ describe('ChatWidget XSS Protection', () => {
 
       // Should render without throwing
       expect(() => render(<ChatWidget />)).not.toThrow();
+    });
+  });
+
+  describe('Special Character Rendering', () => {
+    it('should render apostrophes correctly', () => {
+      const messages: Message[] = [
+        {
+          role: 'user',
+          content: "It's working! I'm happy!",
+        },
+      ];
+
+      mockUseChat.mockReturnValue({
+        ...mockDefaults,
+        messages,
+      });
+
+      const { container } = render(<ChatWidget />);
+      const messageElement = container.querySelector(
+        '[aria-label="user message"]'
+      );
+      expect(messageElement?.textContent).toBe("It's working! I'm happy!");
+    });
+
+    it('should render quotes and other special characters correctly', () => {
+      const messages: Message[] = [
+        {
+          role: 'assistant',
+          content: 'He said "Hello" & waved < smiled > then left.',
+        },
+      ];
+
+      mockUseChat.mockReturnValue({
+        ...mockDefaults,
+        messages,
+      });
+
+      const { container } = render(<ChatWidget />);
+      const messageElement = container.querySelector(
+        '[aria-label="assistant message"]'
+      );
+      expect(messageElement?.textContent).toBe(
+        'He said "Hello" & waved < smiled > then left.'
+      );
+    });
+
+    it('should render mixed special characters from both user and assistant', () => {
+      const messages: Message[] = [
+        {
+          role: 'user',
+          content: "What's 2 + 2?",
+        },
+        {
+          role: 'assistant',
+          content: '2 + 2 = 4. It\'s simple math! "Easy as pie" they say.',
+        },
+      ];
+
+      mockUseChat.mockReturnValue({
+        ...mockDefaults,
+        messages,
+      });
+
+      const { container } = render(<ChatWidget />);
+
+      const userMessage = container.querySelector(
+        '[aria-label="user message"]'
+      );
+      expect(userMessage?.textContent).toBe("What's 2 + 2?");
+
+      const assistantMessage = container.querySelector(
+        '[aria-label="assistant message"]'
+      );
+      expect(assistantMessage?.textContent).toBe(
+        '2 + 2 = 4. It\'s simple math! "Easy as pie" they say.'
+      );
     });
   });
 });

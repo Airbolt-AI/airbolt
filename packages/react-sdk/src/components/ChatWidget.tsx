@@ -9,21 +9,6 @@ import {
   defaultThemes,
 } from './ChatWidget.styles.js';
 
-/**
- * Escapes HTML entities to prevent XSS attacks
- * Converts potentially dangerous characters to safe HTML entities
- */
-function escapeHtml(text: string): string {
-  const htmlEntities: Record<string, string> = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '&': '&amp;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-  return text.replace(/[<>&"']/g, char => htmlEntities[char] ?? char);
-}
-
 export type { MinimalTheme } from './ChatWidget.styles.js';
 
 export interface ChatWidgetProps {
@@ -217,7 +202,7 @@ export function ChatWidget({
             role="article"
             aria-label={`${message.role} message`}
           >
-            {escapeHtml(message.content)}
+            {message.content}
           </div>
         ))}
 
