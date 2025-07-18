@@ -18,6 +18,15 @@ export interface ChatOptions {
    * System prompt to include with the messages
    */
   system?: string;
+  /**
+   * AI provider to use: 'openai' or 'anthropic'. Defaults to backend environment setting.
+   */
+  provider?: 'openai' | 'anthropic';
+  /**
+   * Specific model to use (e.g., 'gpt-4', 'claude-3-5-sonnet-20241022').
+   * Defaults to the provider's default model.
+   */
+  model?: string;
 }
 
 /**

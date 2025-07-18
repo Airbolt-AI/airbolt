@@ -41,16 +41,42 @@ export const EnvSchema = z
       })
       .default('info'),
 
+    // AI Provider Configuration
+    AI_PROVIDER: z
+      .enum(['openai', 'anthropic'], {
+        errorMap: () => ({
+          message: 'AI_PROVIDER must be one of: openai, anthropic',
+        }),
+      })
+      .default('openai'),
+
+    AI_MODEL: z
+      .string({
+        invalid_type_error: 'AI_MODEL must be a string',
+      })
+      .optional(),
+
     OPENAI_API_KEY: z
       .string({
-        required_error: 'OPENAI_API_KEY is required for AI functionality',
         invalid_type_error: 'OPENAI_API_KEY must be a string',
       })
       .min(1, 'OPENAI_API_KEY cannot be empty')
       .regex(
-        /^sk-[A-Za-z0-9_-]+$/,
-        'OPENAI_API_KEY must be a valid OpenAI API key format (sk-...)'
-      ),
+        /^sk-(?:proj-)?[A-Za-z0-9_-]+$/,
+        'OPENAI_API_KEY must be a valid OpenAI API key format (sk-... or sk-proj-...)'
+      )
+      .optional(),
+
+    ANTHROPIC_API_KEY: z
+      .string({
+        invalid_type_error: 'ANTHROPIC_API_KEY must be a string',
+      })
+      .min(1, 'ANTHROPIC_API_KEY cannot be empty')
+      .regex(
+        /^sk-ant-[A-Za-z0-9_-]+$/,
+        'ANTHROPIC_API_KEY must be a valid Anthropic API key format (sk-ant-...)'
+      )
+      .optional(),
 
     JWT_SECRET: z
       .string({
@@ -164,6 +190,22 @@ export const EnvSchema = z
       message:
         'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32',
       path: ['JWT_SECRET'],
+    }
+  )
+  .refine(
+    data => {
+      // Ensure the appropriate API key is provided for the selected provider
+      if (data.AI_PROVIDER === 'openai' && !data.OPENAI_API_KEY) {
+        return false;
+      }
+      if (data.AI_PROVIDER === 'anthropic' && !data.ANTHROPIC_API_KEY) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'API key for the selected AI provider is required',
+      path: ['AI_PROVIDER'],
     }
   );
 

@@ -4,12 +4,12 @@
 
 ## Why You Need This
 
-**The Problem**: If you put your OpenAI API key in frontend code, anyone can:
+**The Problem**: If you put your AI provider API keys in frontend code, anyone can:
 
 - View it in browser DevTools (it's visible in your JavaScript)
 - Use it to make unlimited API calls on your dime
 - Potentially rack up thousands in charges before you notice
-- Access your entire OpenAI account and usage history
+- Access your entire AI provider account and usage history
 
 **The Solution**: Airbolt is a secure backend proxy that:
 
@@ -31,13 +31,15 @@ Deploy our production-ready LLM proxy to Render. You'll get your own private API
 
 - Secure LLM proxy with JWT authentication
 - Rate limiting and abuse prevention
-- OpenAI integration with your API key
+- Multi-provider AI integration (OpenAI, Anthropic, and more)
 - Production logging and error handling
 
 **What you need:**
 
 - Service name (this becomes your URL, e.g., `my-ai-backend` → `https://my-ai-backend.onrender.com`)
-- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+- AI provider API key:
+  - OpenAI ([get one here](https://platform.openai.com/api-keys))
+  - Anthropic ([get one here](https://console.anthropic.com/))
 
 After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
 
@@ -68,7 +70,7 @@ That's it! Your app now has secure AI chat that can't be abused by random users.
 
 ## What you get today
 
-**Secure LLM proxy** - Your OpenAI API key stays on the server. Frontend gets short-lived JWT tokens (15 min expiry) that can only access the chat endpoint.
+**Secure LLM proxy** - Your AI provider API keys stay on the server. Frontend gets short-lived JWT tokens (15 min expiry) that can only access the chat endpoint.
 
 **How the security works**:
 
@@ -98,7 +100,7 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 **Function calling** - Let AI models call your application functions and APIs.
 
-**Multi-provider support** - Anthropic Claude, Google Gemini, local models, and more.
+**Enhanced multi-provider support** - Already supports OpenAI and Anthropic (see [migration guide](MIGRATION.md) for details). Coming soon: Google Gemini, local models, and more.
 
 **Conversation management** - Persistent chat sessions, message history, and context management.
 
@@ -211,7 +213,8 @@ npm install
 npm run build
 
 # Set environment variables
-export OPENAI_API_KEY=sk-...
+export AI_PROVIDER=openai # or anthropic
+export OPENAI_API_KEY=sk-... # or ANTHROPIC_API_KEY for Anthropic
 export NODE_ENV=production
 
 npm start
@@ -221,7 +224,7 @@ npm start
 
 **Phase 1: Foundation** (Current)
 
-- ✅ Core chat API with OpenAI integration
+- ✅ Core chat API with multi-provider support (OpenAI, Anthropic)
 - ✅ TypeScript SDKs for Node.js and React
 - ✅ One-click deployment to Render
 - ✅ Production-ready error handling and validation
@@ -232,7 +235,7 @@ npm start
 - 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
 - 🚧 Response streaming for real-time chat
 - 🚧 Function calling and tool use
-- 🚧 Multi-provider support (Anthropic, Google, etc.)
+- 🚧 Enhanced multi-provider support (Google, local models, etc.)
 
 **Phase 3: Production Scale**
 
@@ -294,12 +297,12 @@ MIT © [Airbolt AI](https://github.com/Airbolt-AI)
 
 <!-- Alternative tagline options for consideration:
 1. "A production-ready backend for calling LLMs from your frontend securely."
-2. "The secure proxy between your frontend and OpenAI."
+2. "The secure proxy between your frontend and AI providers."
 3. "Deploy once, call LLMs safely from any frontend."
-4. "Your OpenAI API key stays secret. Your frontend stays simple."
+4. "Your AI API keys stay secret. Your frontend stays simple."
 5. "The missing backend for frontend AI apps."
 6. "Stop exposing API keys. Start shipping AI features."
-7. "A JWT-secured proxy for OpenAI APIs."
+7. "A JWT-secured proxy for AI provider APIs."
 8. "The auth layer for LLM APIs you don't want to build."
 9. "Frontend AI without the API key nightmares."
 10. "Open-source backend for secure LLM access."

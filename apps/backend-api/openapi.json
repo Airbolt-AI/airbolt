@@ -77,7 +77,7 @@
       "post": {
         "summary": "Send chat messages to AI",
         "tags": ["Chat"],
-        "description": "Proxies chat messages to OpenAI and returns the assistant response",
+        "description": "Proxies chat messages to configured AI provider and returns the assistant response",
         "requestBody": {
           "content": {
             "application/json": {
@@ -109,6 +109,15 @@
                   "system": {
                     "type": "string",
                     "description": "Optional system prompt to override default"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": ["openai", "anthropic"],
+                    "description": "AI provider to use (defaults to environment setting)"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Specific model to use (defaults to provider default)"
                   }
                 }
               }
@@ -216,11 +225,11 @@
             }
           },
           "503": {
-            "description": "Service Unavailable - OpenAI API issues",
+            "description": "Service Unavailable - AI provider API issues",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Service Unavailable - OpenAI API issues",
+                  "description": "Service Unavailable - AI provider API issues",
                   "type": "object",
                   "properties": {
                     "error": {

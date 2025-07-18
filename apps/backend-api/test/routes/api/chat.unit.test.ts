@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import chatRoutes from '../../../src/routes/api/chat.js';
-import { OpenAIServiceError } from '../../../src/services/openai.js';
+import { AIProviderError } from '../../../src/services/ai-provider.js';
 
-// Mock the OpenAI service
-const mockOpenAIService = {
+// Mock the AI Provider service
+const mockAIProviderService = {
   createChatCompletion: vi.fn(),
 };
 
-// Mock the OpenAI service module
-vi.mock('../../../src/services/openai.js', async () => {
-  const actual = await vi.importActual('../../../src/services/openai.js');
+// Mock the AI Provider service module
+vi.mock('../../../src/services/ai-provider.js', async () => {
+  const actual = await vi.importActual('../../../src/services/ai-provider.js');
   return {
     ...actual,
-    OpenAIService: vi.fn().mockImplementation(() => mockOpenAIService),
+    AIProviderService: vi.fn().mockImplementation(() => mockAIProviderService),
   };
 });
 
@@ -47,6 +47,7 @@ describe('Chat Route Unit Tests', () => {
       NODE_ENV: 'test' as const,
       PORT: 3000,
       LOG_LEVEL: 'info' as const,
+      AI_PROVIDER: 'openai' as const,
       OPENAI_API_KEY: 'sk-test123',
       JWT_SECRET: 'test-secret-key-for-unit-tests-32chars',
       ALLOWED_ORIGIN: ['http://localhost:3000'],
@@ -56,8 +57,8 @@ describe('Chat Route Unit Tests', () => {
       TRUST_PROXY: false,
     });
 
-    // Mock OpenAI service
-    app.decorate('openai', mockOpenAIService as any);
+    // Mock AI Provider service
+    app.decorate('aiProvider', mockAIProviderService as any);
 
     // Register chat routes
     await app.register(chatRoutes, { prefix: '/api' });
@@ -128,7 +129,7 @@ describe('Chat Route Unit Tests', () => {
       });
 
       it('should accept requests with valid JWT token', async () => {
-        mockOpenAIService.createChatCompletion.mockResolvedValue({
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
           content: 'Hello! How can I help you today?',
           usage: { total_tokens: 25 },
         });
@@ -145,9 +146,12 @@ describe('Chat Route Unit Tests', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith([
-          { role: 'user', content: 'Hello' },
-        ]);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          undefined,
+          undefined
+        );
       });
     });
 
@@ -232,7 +236,7 @@ describe('Chat Route Unit Tests', () => {
       });
 
       it('should accept valid messages', async () => {
-        mockOpenAIService.createChatCompletion.mockResolvedValue({
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
           content: 'Response',
           usage: { total_tokens: 10 },
         });
@@ -253,15 +257,20 @@ describe('Chat Route Unit Tests', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        expect(mockOpenAIService.createChatCompletion).toHaveBeenCalledWith([
-          { role: 'user', content: 'Hello' },
-          { role: 'assistant', content: 'Hi there!' },
-          { role: 'user', content: 'How are you?' },
-        ]);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [
+            { role: 'user', content: 'Hello' },
+            { role: 'assistant', content: 'Hi there!' },
+            { role: 'user', content: 'How are you?' },
+          ],
+          undefined,
+          undefined,
+          undefined
+        );
       });
 
       it('should accept optional system prompt', async () => {
-        mockOpenAIService.createChatCompletion.mockResolvedValue({
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
           content: 'Response',
           usage: { total_tokens: 10 },
         });
@@ -279,7 +288,69 @@ describe('Chat Route Unit Tests', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        // Should create new OpenAI service instance with system prompt
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          'You are a helpful assistant.',
+          undefined,
+          undefined
+        );
+      });
+
+      it('should accept optional provider and model overrides', async () => {
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
+          content: 'Response from Anthropic',
+          usage: { total_tokens: 15 },
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: 'Hello' }],
+            provider: 'anthropic',
+            model: 'claude-3-5-sonnet-20241022',
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          undefined,
+          'anthropic',
+          'claude-3-5-sonnet-20241022'
+        );
+      });
+
+      it('should accept all optional parameters together', async () => {
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
+          content: 'Response with all options',
+          usage: { total_tokens: 20 },
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: 'Hello' }],
+            system: 'You are a creative assistant.',
+            provider: 'openai',
+            model: 'gpt-4',
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello' }],
+          'You are a creative assistant.',
+          'openai',
+          'gpt-4'
+        );
       });
     });
 
@@ -290,7 +361,9 @@ describe('Chat Route Unit Tests', () => {
           usage: { total_tokens: 25 },
         };
 
-        mockOpenAIService.createChatCompletion.mockResolvedValue(mockResponse);
+        mockAIProviderService.createChatCompletion.mockResolvedValue(
+          mockResponse
+        );
 
         const response = await app.inject({
           method: 'POST',
@@ -308,13 +381,13 @@ describe('Chat Route Unit Tests', () => {
       });
 
       it('should handle OpenAI rate limit errors', async () => {
-        const rateLimitError = new OpenAIServiceError(
+        const rateLimitError = new AIProviderError(
           'Rate limit exceeded',
           429,
           'RATE_LIMIT_EXCEEDED'
         );
 
-        mockOpenAIService.createChatCompletion.mockRejectedValue(
+        mockAIProviderService.createChatCompletion.mockRejectedValue(
           rateLimitError
         );
 
@@ -337,14 +410,14 @@ describe('Chat Route Unit Tests', () => {
         });
       });
 
-      it('should handle OpenAI API key errors', async () => {
-        const authError = new OpenAIServiceError(
+      it('should handle AI provider API key errors', async () => {
+        const authError = new AIProviderError(
           'Invalid API key',
           401,
           'INVALID_API_KEY'
         );
 
-        mockOpenAIService.createChatCompletion.mockRejectedValue(authError);
+        mockAIProviderService.createChatCompletion.mockRejectedValue(authError);
 
         const response = await app.inject({
           method: 'POST',
@@ -365,14 +438,16 @@ describe('Chat Route Unit Tests', () => {
         });
       });
 
-      it('should handle OpenAI service unavailable errors', async () => {
-        const serviceError = new OpenAIServiceError(
+      it('should handle AI provider service unavailable errors', async () => {
+        const serviceError = new AIProviderError(
           'Service temporarily unavailable',
           503,
           'SERVICE_UNAVAILABLE'
         );
 
-        mockOpenAIService.createChatCompletion.mockRejectedValue(serviceError);
+        mockAIProviderService.createChatCompletion.mockRejectedValue(
+          serviceError
+        );
 
         const response = await app.inject({
           method: 'POST',
@@ -396,7 +471,7 @@ describe('Chat Route Unit Tests', () => {
       it('should handle unexpected errors', async () => {
         const unexpectedError = new Error('Something went wrong');
 
-        mockOpenAIService.createChatCompletion.mockRejectedValue(
+        mockAIProviderService.createChatCompletion.mockRejectedValue(
           unexpectedError
         );
 
@@ -426,7 +501,9 @@ describe('Chat Route Unit Tests', () => {
           content: 'Hello! How can I help you today?',
         };
 
-        mockOpenAIService.createChatCompletion.mockResolvedValue(mockResponse);
+        mockAIProviderService.createChatCompletion.mockResolvedValue(
+          mockResponse
+        );
 
         const response = await app.inject({
           method: 'POST',
@@ -453,7 +530,9 @@ describe('Chat Route Unit Tests', () => {
           usage: { total_tokens: 25 },
         };
 
-        mockOpenAIService.createChatCompletion.mockResolvedValue(mockResponse);
+        mockAIProviderService.createChatCompletion.mockResolvedValue(
+          mockResponse
+        );
 
         const response = await app.inject({
           method: 'POST',

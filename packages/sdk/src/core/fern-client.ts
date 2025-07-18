@@ -79,12 +79,20 @@ export class AirboltClient {
   /**
    * Send a chat request with automatic auth handling and cold start retry
    */
-  async chat(messages: Message[]): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options?: {
+      provider?: 'openai' | 'anthropic';
+      model?: string;
+    }
+  ): Promise<ChatResponse> {
     const request: AirboltAPI.PostApiChatRequest = {
       messages: messages.map(m => ({
         role: m.role,
         content: m.content,
       })),
+      provider: options?.provider,
+      model: options?.model,
     };
 
     try {

@@ -54,7 +54,7 @@ jobs:
           pnpm vitest run -c ${{ matrix.config.file }} \
             --reporter=json \
             --outputFile=results-${{ matrix.config.name }}.json \
-            apps/backend-api/test/services/openai.unit.test.ts
+            apps/backend-api/test/services/ai-provider.unit.test.ts
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

@@ -41,7 +41,10 @@ describe('chat', () => {
     expect(mockClientConstructor).toHaveBeenCalledWith({
       baseURL: 'http://localhost:3000',
     });
-    expect(mockChat).toHaveBeenCalledWith(messages);
+    expect(mockChat).toHaveBeenCalledWith(messages, {
+      provider: undefined,
+      model: undefined,
+    });
   });
 
   it('should pass baseURL option to client', async () => {
@@ -69,10 +72,13 @@ describe('chat', () => {
 
     await chat(messages, { system });
 
-    expect(mockChat).toHaveBeenCalledWith([
-      { role: 'system', content: system },
-      ...messages,
-    ]);
+    expect(mockChat).toHaveBeenCalledWith(
+      [{ role: 'system', content: system }, ...messages],
+      {
+        provider: undefined,
+        model: undefined,
+      }
+    );
   });
 
   it('should handle multiple messages in conversation', async () => {
@@ -90,7 +96,10 @@ describe('chat', () => {
     const result = await chat(messages);
 
     expect(result).toBe('3+3 equals 6');
-    expect(mockChat).toHaveBeenCalledWith(messages);
+    expect(mockChat).toHaveBeenCalledWith(messages, {
+      provider: undefined,
+      model: undefined,
+    });
   });
 
   it('should propagate errors from AirboltClient', async () => {
@@ -113,7 +122,10 @@ describe('chat', () => {
     const result = await chat(messages);
 
     expect(result).toBe('No messages provided');
-    expect(mockChat).toHaveBeenCalledWith([]);
+    expect(mockChat).toHaveBeenCalledWith([], {
+      provider: undefined,
+      model: undefined,
+    });
   });
 
   it('should handle both baseURL and system options together', async () => {
@@ -133,9 +145,60 @@ describe('chat', () => {
     expect(mockClientConstructor).toHaveBeenCalledWith({
       baseURL: options.baseURL,
     });
-    expect(mockChat).toHaveBeenCalledWith([
-      { role: 'system', content: options.system },
-      ...messages,
-    ]);
+    expect(mockChat).toHaveBeenCalledWith(
+      [{ role: 'system', content: options.system }, ...messages],
+      {
+        provider: undefined,
+        model: undefined,
+      }
+    );
+  });
+
+  it('should pass provider and model options to client', async () => {
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+    const options = {
+      provider: 'anthropic' as const,
+      model: 'claude-3-5-sonnet-20241022',
+    };
+
+    mockChat.mockResolvedValue({
+      content: 'Hello from Claude!',
+      usage: { total_tokens: 15 },
+    });
+
+    await chat(messages, options);
+
+    expect(mockChat).toHaveBeenCalledWith(messages, {
+      provider: options.provider,
+      model: options.model,
+    });
+  });
+
+  it('should pass all options together', async () => {
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+    const options = {
+      baseURL: 'https://api.custom.com',
+      system: 'You are a helpful assistant',
+      provider: 'openai' as const,
+      model: 'gpt-4',
+    };
+
+    mockChat.mockResolvedValue({
+      content: 'Hello! I am GPT-4.',
+      usage: { total_tokens: 25 },
+    });
+
+    await chat(messages, options);
+
+    expect(mockClientConstructor).toHaveBeenCalledWith({
+      baseURL: options.baseURL,
+    });
+    expect(mockChat).toHaveBeenCalledWith(
+      [{ role: 'system', content: options.system }, ...messages],
+      {
+        provider: options.provider,
+        model: options.model,
+      }
+    );
   });
 });

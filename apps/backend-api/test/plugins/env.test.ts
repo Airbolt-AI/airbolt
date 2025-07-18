@@ -160,13 +160,17 @@ describe('Environment Schema Validation', () => {
     });
   });
 
-  describe('OPENAI_API_KEY validation', () => {
-    it('should require OPENAI_API_KEY', () => {
-      expect(() => EnvSchema.parse({})).toThrow('OPENAI_API_KEY is required');
+  describe('AI Provider API Key validation', () => {
+    it('should require API key for selected provider', () => {
+      expect(() => EnvSchema.parse({})).toThrow(
+        'API key for the selected AI provider is required'
+      );
     });
 
     it('should reject empty OPENAI_API_KEY', () => {
-      expect(() => EnvSchema.parse({ OPENAI_API_KEY: '' })).toThrow();
+      expect(() => EnvSchema.parse({ OPENAI_API_KEY: '' })).toThrow(
+        'OPENAI_API_KEY cannot be empty'
+      );
     });
 
     it('should reject invalid OPENAI_API_KEY format', () => {
@@ -193,6 +197,22 @@ describe('Environment Schema Validation', () => {
         });
         expect(result.OPENAI_API_KEY).toBe(key);
       }
+    });
+
+    it('should require ANTHROPIC_API_KEY when provider is anthropic', () => {
+      expect(() => EnvSchema.parse({ AI_PROVIDER: 'anthropic' })).toThrow(
+        'API key for the selected AI provider is required'
+      );
+    });
+
+    it('should accept valid ANTHROPIC_API_KEY when provider is anthropic', () => {
+      const result = EnvSchema.parse({
+        AI_PROVIDER: 'anthropic',
+        ANTHROPIC_API_KEY: 'sk-ant-test123',
+        JWT_SECRET: randomBytes(32).toString('hex'),
+      });
+      expect(result.ANTHROPIC_API_KEY).toBe('sk-ant-test123');
+      expect(result.AI_PROVIDER).toBe('anthropic');
     });
   });
 
@@ -516,15 +536,34 @@ describe('Environment Schema Validation', () => {
         expect(error).toBeInstanceOf(ZodError);
         if (error instanceof ZodError) {
           expect(error.errors.length).toBeGreaterThan(0);
-          // Should have errors for missing OPENAI_API_KEY, invalid NODE_ENV, and invalid PORT
-          expect(
-            error.errors.some((e: any) => e.path.includes('OPENAI_API_KEY'))
-          ).toBe(true);
+          // Should have errors for invalid NODE_ENV and invalid PORT
+          // Note: API key validation is a refine check that doesn't run when basic validation fails
           expect(
             error.errors.some((e: any) => e.path.includes('NODE_ENV'))
           ).toBe(true);
           expect(error.errors.some((e: any) => e.path.includes('PORT'))).toBe(
             true
+          );
+        }
+      }
+    });
+
+    it('should validate API key requirement when other fields are valid', () => {
+      try {
+        EnvSchema.parse({
+          NODE_ENV: 'test',
+          PORT: 3000,
+          JWT_SECRET: randomBytes(32).toString('hex'),
+          // Missing OPENAI_API_KEY for default provider
+        });
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ZodError);
+        if (error instanceof ZodError) {
+          expect(error.errors.length).toBe(1);
+          expect(error.errors[0]?.path).toContain('AI_PROVIDER');
+          expect(error.errors[0]?.message).toBe(
+            'API key for the selected AI provider is required'
           );
         }
       }

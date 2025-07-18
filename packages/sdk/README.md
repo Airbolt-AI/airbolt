@@ -36,7 +36,7 @@ const response = await chat(
 
 ### 🔒 Secure by Design
 
-- Your OpenAI API key stays on your backend
+- Your AI provider API keys stay on your backend
 - JWT tokens automatically handled
 - No API keys in frontend code
 
@@ -70,6 +70,8 @@ function chat(messages: Message[], options?: ChatOptions): Promise<string>;
 - `options` - Optional configuration
   - `baseURL` - Your Airbolt backend URL (default: `http://localhost:3000`)
   - `system` - System prompt to set AI behavior
+  - `provider` - AI provider to use: `'openai'` or `'anthropic'` (default: uses backend environment setting)
+  - `model` - Specific model to use (e.g., `'gpt-4'`, `'claude-3-5-sonnet-20241022'`). Defaults to provider's default model
 
 **Returns:** The AI assistant's response as a string
 
@@ -201,6 +203,28 @@ const response = await chat(
 const response = await chat([{ role: 'user', content: 'Hello!' }], {
   baseURL: 'https://your-app.onrender.com',
 });
+```
+
+### Selecting AI Provider and Model
+
+```javascript
+// Use Anthropic Claude
+const response = await chat(
+  [{ role: 'user', content: 'Explain quantum computing' }],
+  {
+    provider: 'anthropic',
+    model: 'claude-3-5-sonnet-20241022',
+  }
+);
+
+// Use OpenAI GPT-4
+const response = await chat(
+  [{ role: 'user', content: 'Write a TypeScript function' }],
+  {
+    provider: 'openai',
+    model: 'gpt-4',
+  }
+);
 ```
 
 ## Running Examples
