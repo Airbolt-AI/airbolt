@@ -377,6 +377,26 @@ mcp__linear__create_issue({
 // ❌ WRONG: Missing projectId creates orphaned issues
 ```
 
+**When creating tickets, include cascading update requirements in the description:**
+
+For features with API changes, include subtasks like:
+
+- [ ] Update OpenAPI specification
+- [ ] Regenerate SDK types
+- [ ] Update SDK wrapper functions
+- [ ] Update React hooks if needed
+- [ ] Update example applications
+- [ ] Update package documentation
+
+For features with new environment variables:
+
+- [ ] Update .env.example
+- [ ] Update env.ts schema
+- [ ] Update deployment documentation
+- [ ] Update backend README
+
+This helps ensure all necessary updates are tracked and completed.
+
 ### GitHub CLI Integration
 
 ```bash
@@ -384,6 +404,134 @@ mcp__linear__create_issue({
 gh pr create --title "feat(auth): implement user authentication (LIN-123)" \
              --body "## Summary\n- Add user authentication\n\n## Testing\n- Unit tests added\n\nCloses LIN-123"
 ```
+
+## 🚨 CRITICAL: Cascading Updates Checklist
+
+**When making code changes, multiple files often need updates to maintain consistency.** This section provides comprehensive checklists for different types of changes to ensure nothing is missed.
+
+### API Endpoint Changes
+
+When modifying any API endpoint (adding, changing, or removing):
+
+- [ ] Update route handler in `apps/backend-api/src/routes/`
+- [ ] Update OpenAPI spec: Run `pnpm openapi:generate` in backend-api directory
+- [ ] Regenerate SDK: Run `pnpm generate` in packages/sdk (automatic via pre-push)
+- [ ] Update SDK wrapper functions in `packages/sdk/src/api/` if needed
+- [ ] Update React hooks in `packages/react-sdk/src/hooks/` if API usage changed
+- [ ] Update all example code that uses the endpoint
+- [ ] Update tests: unit, integration, and property tests for all affected code
+- [ ] Update README documentation in affected packages
+- [ ] Update API documentation comments
+
+### Environment Variable Changes
+
+When adding or modifying environment variables:
+
+- [ ] Update `.env.example` with new variable and descriptive comment
+- [ ] Update `apps/backend-api/src/plugins/env.ts` Zod schema with validation
+- [ ] Update backend-api README configuration section
+- [ ] Update deployment docs (`render.yaml` if deployment-specific)
+- [ ] Update test setup files that use the environment variable
+- [ ] Update MIGRATION.md if it's a breaking change
+- [ ] Add default values in env.ts schema when appropriate
+- [ ] Update any example configurations
+
+### AI Provider Additions
+
+When adding a new AI provider:
+
+- [ ] Add provider implementation in `apps/backend-api/src/services/ai-provider.ts`
+- [ ] Update `AI_PROVIDER` enum in `apps/backend-api/src/plugins/env.ts`
+- [ ] Add API key validation pattern in env.ts
+- [ ] Update `.env.example` with provider configuration example
+- [ ] Add comprehensive provider tests:
+  - Unit tests for provider logic
+  - Integration tests for API calls
+  - Property tests for edge cases
+- [ ] Update OpenAPI spec provider enum
+- [ ] Regenerate SDK to include new provider types
+- [ ] Update SDK and React SDK type definitions
+- [ ] Update all documentation mentioning available providers
+- [ ] Update MIGRATION.md with provider setup instructions
+
+### Type/Interface Changes
+
+When modifying types or interfaces:
+
+- [ ] Update TypeScript interfaces in source files
+- [ ] Update corresponding Zod schemas for runtime validation
+- [ ] Update branded types in `packages/types` if applicable
+- [ ] Regenerate SDK if API contract types changed
+- [ ] Update type exports in package index files
+- [ ] Update all example code using the types
+- [ ] Update all tests using the types
+- [ ] Update documentation showing type usage
+- [ ] Verify no type mismatches across package boundaries
+
+### Feature Additions
+
+When adding new features:
+
+- [ ] Create feature flag in env.ts if feature should be toggleable
+- [ ] Add feature documentation to relevant README files
+- [ ] Create example usage in example applications
+- [ ] Add integration tests demonstrating the feature
+- [ ] Update package.json if new dependencies added
+- [ ] Update CHANGELOG.md or create changeset
+- [ ] Add feature to main README if user-facing
+- [ ] Update any getting started guides
+
+### Breaking Changes
+
+When making breaking changes:
+
+- [ ] Update MIGRATION.md with detailed migration guide
+- [ ] Include before/after code examples
+- [ ] Document all affected APIs
+- [ ] Create deprecation notices if doing phased rollout
+- [ ] Update all examples to use new patterns
+- [ ] Consider backwards compatibility layer
+- [ ] Plan communication strategy for users
+
+### Update Priority Matrix
+
+**MUST Update (CI will fail if not done):**
+
+- API contract changes → OpenAPI spec + SDK regeneration
+- New required env vars → env.ts schema + .env.example
+- Breaking changes → MIGRATION.md with clear guide
+- Type changes → All dependent code must be updated
+- Test changes → All test configs must stay in sync
+
+**SHOULD Update (Best practices, may not block CI):**
+
+- New features → Examples and README documentation
+- New providers/models → All provider documentation
+- Performance improvements → Mention in relevant docs
+- Bug fixes → Add regression tests
+- Configuration changes → Update deployment docs
+
+### Pre-Commit Checklist
+
+Before committing any code changes, verify:
+
+- [ ] All tests updated and passing (`pnpm test`)
+- [ ] OpenAPI regenerated if routes changed: `pnpm openapi:generate`
+- [ ] SDK regenerated if API changed: `pnpm generate` in packages/sdk
+- [ ] Examples updated if public API changed
+- [ ] Documentation updated in all affected locations
+- [ ] Environment variables documented if added
+- [ ] No orphaned code or documentation
+- [ ] Lint and type-check pass: `pnpm ai:quick`
+
+### Common Cascading Patterns
+
+1. **Route Change** → OpenAPI → SDK → Types → Examples → Tests → Docs
+2. **Env Variable** → .env.example → env.ts → Tests → Deployment → Docs
+3. **New Provider** → ai-provider.ts → env.ts → Types → SDK → Examples → Docs
+4. **Type Change** → All imports → Zod schemas → Tests → Examples → Docs
+
+**Remember**: When in doubt, search for all usages of what you're changing and update them all.
 
 ## 🚨 CRITICAL: Environment Handling Standards
 
