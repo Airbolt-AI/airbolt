@@ -168,6 +168,55 @@ if (!user) {
 throw new Error('Something went wrong'); // Too generic!
 ```
 
+### API Contract Stability
+
+**🚨 CRITICAL: Never break existing API contracts without explicit human approval.** Airbolt is deployed by users with production applications depending on the API.
+
+#### Backward Compatibility is Mandatory
+
+- **Never** remove or rename existing endpoints
+- **Never** change required fields to optional or vice versa
+- **Never** change response structure in breaking ways
+- **Never** change authentication mechanisms without migration path
+
+#### Safe Changes vs Breaking Changes
+
+**Safe Changes** (can be made freely):
+
+- Adding optional request fields
+- Adding new response fields (clients should ignore unknown fields)
+- Adding new endpoints
+- Adding new optional query parameters
+- Expanding enums with new values (if clients handle unknown values)
+
+**Breaking Changes** (require human consultation and versioning strategy):
+
+- Removing or renaming fields
+- Changing field types
+- Changing error response formats
+- Removing endpoints
+- Changing authentication requirements
+- Modifying validation rules for existing fields
+
+#### API Versioning Strategy
+
+If breaking changes are absolutely necessary:
+
+- **MUST** consult with human before implementing
+- Consider implementing versioned endpoints (e.g., `/api/v1/chat`, `/api/v2/chat`)
+- Use deprecation warnings for features that will be removed
+- Maintain old versions for a reasonable deprecation period (minimum 6 months)
+- Document version compatibility in SDK releases
+- Include upgrade guides in release notes
+
+#### Documentation Requirements for API Changes
+
+- Mark all deprecated features clearly with `@deprecated` comments
+- Provide migration timelines in deprecation notices
+- Document which SDK versions work with which API versions
+- Include before/after examples for any changes
+- Update all affected example code
+
 ## Code Templates
 
 ### Route Template
@@ -422,54 +471,6 @@ When modifying any API endpoint (adding, changing, or removing):
 - [ ] Update tests: unit, integration, and property tests for all affected code
 - [ ] Update README documentation in affected packages
 - [ ] Update API documentation comments
-
-### API Contract Stability
-
-**🚨 CRITICAL: Never break existing API contracts.** Airbolt is deployed by users with production applications depending on the API.
-
-#### Backward Compatibility is Mandatory
-
-- **Never** remove or rename existing endpoints
-- **Never** change required fields to optional or vice versa
-- **Never** change response structure in breaking ways
-- **Never** change authentication mechanisms without migration path
-
-#### Safe Changes vs Breaking Changes
-
-**Safe Changes** (can be made freely):
-
-- Adding optional request fields
-- Adding new response fields (clients should ignore unknown fields)
-- Adding new endpoints
-- Adding new optional query parameters
-- Expanding enums with new values (if clients handle unknown values)
-
-**Breaking Changes** (require versioning strategy):
-
-- Removing or renaming fields
-- Changing field types
-- Changing error response formats
-- Removing endpoints
-- Changing authentication requirements
-- Modifying validation rules for existing fields
-
-#### API Versioning Strategy
-
-If breaking changes are absolutely necessary:
-
-- Consider implementing versioned endpoints (e.g., `/api/v1/chat`, `/api/v2/chat`)
-- Use deprecation warnings for features that will be removed
-- Maintain old versions for a reasonable deprecation period (minimum 6 months)
-- Document version compatibility in SDK releases
-- Include upgrade guides in release notes
-
-#### Documentation Requirements for API Changes
-
-- Mark all deprecated features clearly with `@deprecated` comments
-- Provide migration timelines in deprecation notices
-- Document which SDK versions work with which API versions
-- Include before/after examples for any changes
-- Update all affected example code
 
 ### Environment Variable Changes
 
