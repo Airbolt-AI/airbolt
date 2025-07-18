@@ -32,7 +32,7 @@ const config = {
 
   // MUTATION TARGETS - Focus on critical decision points
   mutate: [
-    'apps/backend-api/src/services/openai.ts', // Retry logic, error handling
+    'apps/backend-api/src/services/ai-provider.ts', // Retry logic, error handling, provider switching
     'packages/sdk/src/core/token-manager.ts', // Token expiration, refresh logic
     'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations
   ],
