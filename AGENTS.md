@@ -423,6 +423,54 @@ When modifying any API endpoint (adding, changing, or removing):
 - [ ] Update README documentation in affected packages
 - [ ] Update API documentation comments
 
+### API Contract Stability
+
+**🚨 CRITICAL: Never break existing API contracts.** Airbolt is deployed by users with production applications depending on the API.
+
+#### Backward Compatibility is Mandatory
+
+- **Never** remove or rename existing endpoints
+- **Never** change required fields to optional or vice versa
+- **Never** change response structure in breaking ways
+- **Never** change authentication mechanisms without migration path
+
+#### Safe Changes vs Breaking Changes
+
+**Safe Changes** (can be made freely):
+
+- Adding optional request fields
+- Adding new response fields (clients should ignore unknown fields)
+- Adding new endpoints
+- Adding new optional query parameters
+- Expanding enums with new values (if clients handle unknown values)
+
+**Breaking Changes** (require versioning strategy):
+
+- Removing or renaming fields
+- Changing field types
+- Changing error response formats
+- Removing endpoints
+- Changing authentication requirements
+- Modifying validation rules for existing fields
+
+#### API Versioning Strategy
+
+If breaking changes are absolutely necessary:
+
+- Consider implementing versioned endpoints (e.g., `/api/v1/chat`, `/api/v2/chat`)
+- Use deprecation warnings for features that will be removed
+- Maintain old versions for a reasonable deprecation period (minimum 6 months)
+- Document version compatibility in SDK releases
+- Include upgrade guides in release notes
+
+#### Documentation Requirements for API Changes
+
+- Mark all deprecated features clearly with `@deprecated` comments
+- Provide migration timelines in deprecation notices
+- Document which SDK versions work with which API versions
+- Include before/after examples for any changes
+- Update all affected example code
+
 ### Environment Variable Changes
 
 When adding or modifying environment variables:
@@ -432,7 +480,7 @@ When adding or modifying environment variables:
 - [ ] Update backend-api README configuration section
 - [ ] Update deployment docs (`render.yaml` if deployment-specific)
 - [ ] Update test setup files that use the environment variable
-- [ ] Update MIGRATION.md if it's a breaking change
+- [ ] If breaking change, follow API versioning strategy instead
 - [ ] Add default values in env.ts schema when appropriate
 - [ ] Update any example configurations
 
@@ -452,7 +500,7 @@ When adding a new AI provider:
 - [ ] Regenerate SDK to include new provider types
 - [ ] Update SDK and React SDK type definitions
 - [ ] Update all documentation mentioning available providers
-- [ ] Update MIGRATION.md with provider setup instructions
+- [ ] Update README with provider setup instructions
 
 ### Type/Interface Changes
 
@@ -483,15 +531,17 @@ When adding new features:
 
 ### Breaking Changes
 
-When making breaking changes:
+When making breaking changes (try to avoid these!):
 
-- [ ] Update MIGRATION.md with detailed migration guide
+- [ ] Follow API versioning strategy defined above
+- [ ] Create detailed migration guide in documentation
 - [ ] Include before/after code examples
 - [ ] Document all affected APIs
 - [ ] Create deprecation notices if doing phased rollout
 - [ ] Update all examples to use new patterns
 - [ ] Consider backwards compatibility layer
 - [ ] Plan communication strategy for users
+- [ ] Maintain old version for deprecation period
 
 ### Update Priority Matrix
 
@@ -499,7 +549,7 @@ When making breaking changes:
 
 - API contract changes → OpenAPI spec + SDK regeneration
 - New required env vars → env.ts schema + .env.example
-- Breaking changes → MIGRATION.md with clear guide
+- Breaking changes → Follow API versioning strategy
 - Type changes → All dependent code must be updated
 - Test changes → All test configs must stay in sync
 
