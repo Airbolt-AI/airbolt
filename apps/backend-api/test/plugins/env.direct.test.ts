@@ -79,6 +79,7 @@ describe('Environment Plugin Direct Tests', () => {
         'http://localhost:5174',
         'http://localhost:4200',
         'http://localhost:8080',
+        'http://localhost:61000',
       ]);
     } finally {
       process.env = originalEnv;
@@ -256,6 +257,7 @@ describe('Environment Plugin Direct Tests', () => {
         'http://localhost:5174',
         'http://localhost:4200',
         'http://localhost:8080',
+        'http://localhost:61000',
       ]);
     } finally {
       process.env = originalEnv;
@@ -387,6 +389,7 @@ describe('Environment Plugin Direct Tests', () => {
             'http://localhost:5174',
             'http://localhost:4200',
             'http://localhost:8080',
+            'http://localhost:61000',
           ]),
         ];
         expect(app.config?.ALLOWED_ORIGIN).toEqual(expectedWithDev);
