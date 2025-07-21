@@ -1,104 +1,36 @@
-# AI Coding Guidelines for airbolt
+# AI Coding Guidelines for Airbolt
 
-## 🚨 CRITICAL: Zero CI Failures Guaranteed
+This document defines the core principles and philosophy for AI agents working on the Airbolt project. For specific implementation details, see:
 
-**Four-Layer Defense System** prevents any CI failures:
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Day-to-day development workflows and commands
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical patterns and architectural decisions
+- **[.claude/README.md](./.claude/README.md)** - Claude Code specific configuration
 
-1. **Immediate Feedback** (Claude Code hooks):
-   - Automatic: Validates on every file edit (<2s)
-   - Shows errors/warnings inline during AI sessions
-   - Auto-formats code and provides contextual alerts
-2. **During Development**:
-   - Manual: `pnpm ai:quick` (run frequently, <5s)
-   - Automatic: `pnpm ai:watch` (continuous validation on file save)
-3. **Before Commit**: Pre-commit hooks (automatic, ~30s)
-4. **Before Push**: Pre-push validation (mandatory, matches CI exactly)
+## 🚨 Core Principle: Zero CI Failures
 
-**You CANNOT push code that will fail CI** - multiple layers ensure quality.
+Our development process is designed with multiple validation layers to ensure code quality before it reaches CI. The goal is simple: **You cannot push code that will fail CI**.
 
-**Development validation pipeline:**
+### Four-Layer Defense System
 
-```bash
-# Manual validation
-pnpm ai:quick          # Fast feedback during coding (~5s): lint + type-check (Nx cached)
-pnpm ai:check          # Standard validation (~30s): + graph validation
-pnpm ai:compliance     # Full validation (~3min): + tests + build + mutation testing + security
-pnpm ai:mutation       # Run mutation testing directly (focused on business logic)
+1. **Immediate Feedback** - Real-time validation as you code
+2. **During Development** - Fast validation commands with caching
+3. **Before Commit** - Automatic pre-commit hooks
+4. **Before Push** - Comprehensive pre-push validation
 
-# Test configuration validation (CRITICAL)
-pnpm test:config:verify    # Full validation: property comparison + test execution
-pnpm test:config:quick     # Fast validation for pre-push hooks
+This layered approach catches issues early, saving time and maintaining code quality.
 
-# Continuous validation (runs on file save)
-pnpm ai:watch          # Watch all files, run ai:quick on changes
-pnpm dev:watch         # Watch all files, run affected lint+type-check
+## Quick Start
 
-# Nx affected commands - only run on changed packages
-pnpm affected:lint     # Lint only changed packages
-pnpm affected:test     # Test only changed packages
-pnpm affected:build    # Build only changed packages
-pnpm affected:all      # Run all tasks on changed packages
+For detailed setup and commands, see [DEVELOPMENT.md](./DEVELOPMENT.md). The essential workflow:
 
-# Release management commands (automated)
-pnpm release:prepare   # Version + lockfile sync + stage (foolproof)
-pnpm release:beta      # Full beta release preparation
-pnpm changeset:manual  # Manual version + lockfile sync (debugging)
-```
-
-**Fix issues immediately:**
-
-```bash
-pnpm lint:fix          # Auto-fix formatting and linting
-```
-
-**Key Rule**: The pre-push hook automatically runs `pnpm ci:check` - you literally cannot push failing code.
-
-## Quick Start Essentials
-
-**Tech Stack**: Fastify + TypeScript + Zod + Nx monorepo with comprehensive quality guardrails
-
-**Project Structure**:
-
-- `apps/backend-api/` - Main Fastify API server
-- `packages/` - Shared libraries and utilities
-
-**Essential Development Flow**:
-
-```bash
-# One-time setup (for pre-push validation)
-pnpm setup:hooks       # Installs both pre-commit and pre-push hooks
-
-# Start feature
-git checkout main && git pull origin main
-git checkout -b feature/your-feature-name
-
-# Develop with instant feedback
-pnpm ai:quick          # Run constantly during coding (Nx cached for speed)
-
-# Commit (pre-commit hooks run automatically)
-git add . && git commit -m "feat(scope): description"
-
-# Push (pre-push validation runs automatically)
-git push               # Will run full CI validation before push
-```
-
-**If Validation Fails During Push:**
-
-```bash
-# The push will be blocked with clear error messages
-# Fix the issues locally:
-pnpm lint:fix          # Auto-fix formatting
-pnpm type-check        # See TypeScript errors
-pnpm test              # Run failing tests
-
-# Then commit fixes and push again
-git add . && git commit -m "fix: resolve validation errors"
-git push               # Pre-push will run again
-```
+1. Install dependencies and hooks
+2. Use fast validation during development
+3. Let git hooks handle validation automatically
+4. Fix any issues before they reach CI
 
 ## 🧠 Decision-Making Philosophy
 
-**Before implementing any solution, pause to ultrathink:**
+**Before implementing any solution, pause to think:**
 
 - What are all the possible approaches to solve this?
 - Which approach is clearest and simplest?
@@ -107,653 +39,213 @@ git push               # Pre-push will run again
 
 **Choose the option that best balances these factors.** The best code is often the code you don't write.
 
-## 🚨 MANDATORY Architecture Rules
+## Core Principles
 
-### TypeScript: @tsconfig/strictest Preset
+### 1. Type Safety First
 
-- **No `any` types** - Use specific types or `unknown` with type guards
-- **Explicit return types** - For all public functions and methods
-- **Strict null checks** - Handle `null` and `undefined` explicitly
+- Use TypeScript's strictest settings
+- No `any` types - use specific types or `unknown` with guards
+- Explicit return types for public APIs
+- Handle null/undefined cases explicitly
 
-```typescript
-// ✅ Good: Explicit types and safety
-function createUser(data: CreateUserRequest): Promise<User> {
-  // Implementation with proper error handling
-}
+### 2. Validate All External Input
 
-// ❌ Bad: Unsafe patterns
-function createUser(data: any): any {
-  // Unsafe implementation
-}
-```
+- Every API endpoint must validate request data
+- Environment variables must be validated on startup
+- Use schema validation (Zod) for runtime safety
+- Never trust external data sources
 
-### Zod Validation: MANDATORY for All Inputs
+### 3. Fail Fast, Fail Clear
 
-- **All inputs validated** - Request bodies, query params, environment variables
-- **ESLint enforces** - No direct `process.env` access or unvalidated requests
+- Validate early in the request lifecycle
+- Provide clear, actionable error messages
+- Use framework-specific error patterns
+- Log errors with appropriate context
 
-```typescript
-// ✅ Good: Zod schema with validation
-const CreateUserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1).max(100),
-});
+### 4. Maintain Clean Architecture
 
-// Route with validation
-fastify.post(
-  '/users',
-  {
-    schema: { body: CreateUserSchema },
-  },
-  async (request, reply) => {
-    const userData = CreateUserSchema.parse(request.body);
-  }
-);
+- Separate concerns (routes, services, data access)
+- Keep business logic in service layer
+- Use dependency injection for testability
+- Follow consistent patterns across the codebase
 
-// ❌ Bad: Unvalidated input
-fastify.post('/users', async req => {
-  const data = req.body; // ESLint error
-});
-```
+For specific implementation patterns and code examples, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-### Error Handling: Fastify Patterns Only
+## 🚨 API Contract Stability
 
-```typescript
-// ✅ Good: Fastify error handling
-if (!user) {
-  throw fastify.httpErrors.notFound('User not found');
-}
+**CRITICAL: Never break existing API contracts without explicit human approval.**
 
-// ❌ Bad: Generic error throwing
-throw new Error('Something went wrong'); // Too generic!
-```
+Airbolt is deployed by users with production applications. Breaking changes can cause production outages.
 
-### API Contract Stability
+### Golden Rule of API Evolution
 
-**🚨 CRITICAL: Never break existing API contracts without explicit human approval.** Airbolt is deployed by users with production applications depending on the API.
+**You can ADD, but you cannot REMOVE or CHANGE.**
 
-#### Backward Compatibility is Mandatory
+### Safe Changes (No Approval Needed)
 
-- **Never** remove or rename existing endpoints
-- **Never** change required fields to optional or vice versa
-- **Never** change response structure in breaking ways
-- **Never** change authentication mechanisms without migration path
-
-#### Safe Changes vs Breaking Changes
-
-**Safe Changes** (can be made freely):
-
-- Adding optional request fields
-- Adding new response fields (clients should ignore unknown fields)
 - Adding new endpoints
-- Adding new optional query parameters
-- Expanding enums with new values (if clients handle unknown values)
-
-**Breaking Changes** (require human consultation and versioning strategy):
-
-- Removing or renaming fields
-- Changing field types
-- Changing error response formats
-- Removing endpoints
-- Changing authentication requirements
-- Modifying validation rules for existing fields
-
-#### API Versioning Strategy
-
-If breaking changes are absolutely necessary:
-
-- **MUST** consult with human before implementing
-- Consider implementing versioned endpoints (e.g., `/api/v1/chat`, `/api/v2/chat`)
-- Use deprecation warnings for features that will be removed
-- Maintain old versions for a reasonable deprecation period (minimum 6 months)
-- Document version compatibility in SDK releases
-- Include upgrade guides in release notes
-
-#### Documentation Requirements for API Changes
-
-- Mark all deprecated features clearly with `@deprecated` comments
-- Provide migration timelines in deprecation notices
-- Document which SDK versions work with which API versions
-- Include before/after examples for any changes
-- Update all affected example code
-
-## Code Templates
-
-### Route Template
-
-```typescript
-import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+- Adding optional request fields
+- Adding response fields (clients must ignore unknown fields)
+- Adding optional query parameters
+- Expanding enums (if clients handle unknowns gracefully)
 
-const RequestSchema = z.object({
-  // Define request schema
-});
-
-const routes: FastifyPluginAsync = async fastify => {
-  fastify.post(
-    '/endpoint',
-    {
-      schema: {
-        body: RequestSchema,
-        response: { 201: ResponseSchema },
-      },
-    },
-    async (request, reply) => {
-      const data = RequestSchema.parse(request.body);
-      const result = await fastify.service.operation(data);
-      return reply.code(201).send(result);
-    }
-  );
-};
-
-export default routes;
-```
-
-### Service Layer Template
-
-```typescript
-export class ServiceImplementation {
-  constructor(
-    private readonly db: DatabaseClient,
-    private readonly logger: Logger
-  ) {}
-
-  async operation(data: InputType): Promise<OutputType> {
-    this.logger.info({ data: sanitizedData }, 'Starting operation');
-
-    try {
-      const result = await this.db.collection.operation(data);
-      this.logger.info({ resultId: result.id }, 'Operation completed');
-      return result;
-    } catch (error) {
-      this.logger.error({ error, data: sanitizedData }, 'Operation failed');
-      throw error;
-    }
-  }
-}
-```
-
-### Environment Configuration Template
-
-```typescript
-import { z } from 'zod';
-
-const EnvSchema = z.object({
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
-  PORT: z.string().regex(/^\d+$/).transform(Number).default('3000'),
-  DATABASE_URL: z.string().url(),
-  JWT_SECRET: z.string().min(32),
-});
-
-export const env = EnvSchema.parse(process.env);
-```
+### Breaking Changes (Require Human Approval)
 
-## 🚨 CRITICAL: Mutation Testing for Critical Decision Points
+- Removing or renaming anything
+- Changing field types or formats
+- Modifying validation rules
+- Changing authentication methods
+- Altering error response structures
 
-**Philosophy**: Mutation testing validates critical decision points only (see `.github/TESTING.md`)
+### If Breaking Changes Are Necessary
 
-**Focus Areas**:
+1. **STOP** - Consult with a human first
+2. Plan versioning strategy (e.g., `/api/v2/`)
+3. Implement migration path
+4. Document compatibility clearly
+5. Maintain old version for deprecation period
 
-- Authentication checks - `if (!isValid) throw`
-- Rate limit calculations - `requests > limit`
-- Retry conditions - `shouldRetry(error)`
-- Token expiration logic - `isExpired(token)`
+For detailed versioning strategies, see [ARCHITECTURE.md](./ARCHITECTURE.md#api-versioning-strategy).
 
-**Skip Mutations On**:
+## Testing Philosophy
 
-- Error messages
-- Configuration objects
-- Data transformations
-- Logging statements
+### The Goal: Confidence, Not Coverage
 
-**Commands**:
+Tests should give you confidence that your code works correctly. A test that doesn't fail when the logic is broken is worse than no test at all.
 
-- `pnpm ai:mutation` - Run mutation testing
-- `pnpm ai:compliance` - Full pipeline including mutations
+### Key Testing Principles
 
-**Why**: The goal isn't coverage, it's confidence that critical logic is properly tested.
+1. **Test Behavior, Not Implementation**
+   - Focus on what the code does, not how it does it
+   - Tests should survive refactoring
 
-**Testing Philosophy**: See [.github/TESTING.md](/.github/TESTING.md) for comprehensive testing guidelines.
+2. **Edge Cases Are Mandatory**
+   - Always test null, undefined, empty values
+   - Test boundary conditions
+   - Consider error scenarios
 
-## 🚨 CRITICAL: Testing Anti-Patterns
+3. **Mutation Testing for Critical Logic**
+   - Authentication checks
+   - Authorization decisions
+   - Rate limiting calculations
+   - Business rule validations
 
-**The goal is not coverage, it's confidence.** Tests that don't fail when logic is broken are worse than no tests.
+4. **Integration Over Unit Tests**
+   - Test complete workflows
+   - Verify components work together
+   - Catch real-world issues
 
-### AI Testing Anti-Patterns to Avoid
+For specific testing patterns and examples, see [ARCHITECTURE.md](./ARCHITECTURE.md#testing-architecture).
 
-```typescript
-// ❌ BAD: Coverage theater - achieves coverage but tests nothing
-it('should work', () => {
-  const result = calculateTax(100);
-  expect(result).toBeDefined();
-  expect(typeof result).toBe('number');
-});
+## Development Workflow Principles
 
-// ✅ GOOD: Logic validation
-it('should calculate 10% tax on standard items', () => {
-  const result = calculateTax(100, 'standard');
-  expect(result).toBe(10);
-});
+### Quality Gates at Every Stage
 
-it('should throw error for negative amounts', () => {
-  expect(() => calculateTax(-100, 'standard')).toThrow(
-    'Amount must be positive'
-  );
-});
+1. **During Development** - Fast, cached validation
+2. **Before Commit** - Automatic formatting and linting
+3. **Before Push** - Comprehensive validation matching CI
+4. **Before PR** - Full compliance including security checks
 
-// ❌ BAD: Testing framework instead of business logic
-it('should return 200', async () => {
-  const response = await app.inject({ method: 'GET', url: '/users' });
-  expect(response.statusCode).toBe(200);
-});
+### Working with Linear
 
-// ✅ GOOD: Testing complete workflow
-it('should create and retrieve user', async () => {
-  // Create user
-  const createResponse = await app.inject({
-    method: 'POST',
-    url: '/users',
-    payload: { email: 'test@example.com', name: 'Test User' },
-  });
+When creating issues, always include the project ID and track cascading updates. Many changes require updates across multiple files - document these dependencies in the issue description.
 
-  expect(createResponse.statusCode).toBe(201);
-  const { id } = JSON.parse(createResponse.payload);
+### Commit Best Practices
 
-  // Retrieve created user
-  const getResponse = await app.inject({
-    method: 'GET',
-    url: `/users/${id}`,
-  });
+- Use conventional commits: `feat:`, `fix:`, `docs:`, etc.
+- Reference Linear tickets: `feat(auth): add login (LIN-123)`
+- Keep commits focused and atomic
+- Write clear, descriptive messages
 
-  expect(getResponse.statusCode).toBe(200);
-  const user = JSON.parse(getResponse.payload);
-  expect(user).toMatchObject({
-    id,
-    email: 'test@example.com',
-    name: 'Test User',
-  });
-});
-```
+For detailed workflow commands and examples, see [DEVELOPMENT.md](./DEVELOPMENT.md).
 
-### Test Quality Checklist
+## Cascading Updates Principle
 
-- [ ] **Does the test fail when the business logic is broken?**
-- [ ] **Would this test catch common production bugs?**
-- [ ] **Are all edge cases covered?** (null, undefined, empty, boundary values)
-- [ ] **Do integration tests verify complete workflows?**
+**Many changes require updates across multiple files.** This is by design - it ensures consistency and type safety across the monorepo.
 
-### Testing Requirements
+### Common Update Patterns
 
-- **Unit tests**: For all business logic and utility functions
-- **Integration tests**: For all API routes - full CRUD workflows
-- **Edge cases MANDATORY**: Every function MUST test null, undefined, empty, boundary values
-- **Property-based testing**: Use fast-check for business logic functions (ESLint enforced)
+1. **API Changes** → OpenAPI spec → SDK generation → Types → Tests → Docs
+2. **Environment Variables** → .env.example → Validation schema → Tests → Docs
+3. **Type Changes** → All consumers → Runtime validation → Tests
+4. **New Features** → Implementation → Tests → Examples → Documentation
 
-## AI Agent Workflow
+### The Golden Rule
 
-### Development Process
+**When you change something, search for all its usages and update them.**
 
-1. **Run validation constantly**: `pnpm ai:quick` during development
-2. **Before every commit**: `pnpm ci:check` (MUST pass)
-3. **Before pushing**: Git pre-push hook runs `pnpm pre-push` automatically
-   - Validates test configurations match
-   - Ensures mutation testing will work in CI
-4. **Before PR submission**: `pnpm ai:compliance` (includes mutation testing gate)
-5. **Create proper branches**: `git checkout -b feature/LIN-XXX-description`
-6. **Conventional commits**: `feat(scope): description`
-7. **Quality gates**: ALL checks must pass including mutation testing on critical decision points
+Our tooling helps:
 
-### Local Validation Commands
+- TypeScript catches type mismatches
+- ESLint enforces validation patterns
+- Pre-push hooks regenerate SDKs
+- CI validates everything works together
 
-- `pnpm test:config:verify` - Validate test configs match
-- `pnpm pre-push` - Complete pre-push validation
+### Priority: What Must Be Updated
 
-### Linear MCP Integration Rules
+**CI Will Fail Without These:**
 
-**🚨 CRITICAL: Always include `projectId` when creating issues**
+- API contract changes require SDK regeneration
+- New environment variables need validation schemas
+- Type changes must be propagated everywhere
+- Tests must match implementation
 
-```typescript
-// ✅ CORRECT: Always specify projectId
-mcp__linear__create_issue({
-  teamId: '...',
-  projectId: '...', // REQUIRED - determine from context
-  title: '...',
-  description: '...',
-});
+**Best Practices (Won't Block CI):**
 
-// ❌ WRONG: Missing projectId creates orphaned issues
-```
+- Update examples when APIs change
+- Document new features in READMEs
+- Add tests for bug fixes
+- Keep deployment docs current
 
-**When creating tickets, include cascading update requirements in the description:**
-
-For features with API changes, include subtasks like:
-
-- [ ] Update OpenAPI specification
-- [ ] Regenerate SDK types
-- [ ] Update SDK wrapper functions
-- [ ] Update React hooks if needed
-- [ ] Update example applications
-- [ ] Update package documentation
+For detailed checklists by change type, see [DEVELOPMENT.md](./DEVELOPMENT.md#cascading-updates).
 
-For features with new environment variables:
+## Key Technical Decisions
 
-- [ ] Update .env.example
-- [ ] Update env.ts schema
-- [ ] Update deployment documentation
-- [ ] Update backend README
-
-This helps ensure all necessary updates are tracked and completed.
-
-### GitHub CLI Integration
-
-```bash
-# Create PR with proper formatting
-gh pr create --title "feat(auth): implement user authentication (LIN-123)" \
-             --body "## Summary\n- Add user authentication\n\n## Testing\n- Unit tests added\n\nCloses LIN-123"
-```
-
-## 🚨 CRITICAL: Cascading Updates Checklist
-
-**When making code changes, multiple files often need updates to maintain consistency.** This section provides comprehensive checklists for different types of changes to ensure nothing is missed.
+### Environment Configuration
 
-### API Endpoint Changes
-
-When modifying any API endpoint (adding, changing, or removing):
-
-- [ ] Update route handler in `apps/backend-api/src/routes/`
-- [ ] Update OpenAPI spec: Run `pnpm openapi:generate` in backend-api directory
-- [ ] Regenerate SDK: Run `pnpm generate` in packages/sdk (automatic via pre-push)
-- [ ] Update SDK wrapper functions in `packages/sdk/src/api/` if needed
-- [ ] Update React hooks in `packages/react-sdk/src/hooks/` if API usage changed
-- [ ] Update all example code that uses the endpoint
-- [ ] Update tests: unit, integration, and property tests for all affected code
-- [ ] Update README documentation in affected packages
-- [ ] Update API documentation comments
-
-### Environment Variable Changes
-
-When adding or modifying environment variables:
-
-- [ ] Update `.env.example` with new variable and descriptive comment
-- [ ] Update `apps/backend-api/src/plugins/env.ts` Zod schema with validation
-- [ ] Update backend-api README configuration section
-- [ ] Update deployment docs (`render.yaml` if deployment-specific)
-- [ ] Update test setup files that use the environment variable
-- [ ] If breaking change, follow API versioning strategy instead
-- [ ] Add default values in env.ts schema when appropriate
-- [ ] Update any example configurations
+All environment access goes through validated schemas. Direct `process.env` access is prevented by ESLint rules. This ensures type safety and validation at startup.
 
-### AI Provider Additions
+### Monorepo Dependencies
 
-When adding a new AI provider:
+- Apps can depend on packages
+- Packages can depend on other packages
+- Apps cannot depend on other apps
+- Packages cannot depend on apps
 
-- [ ] Add provider implementation in `apps/backend-api/src/services/ai-provider.ts`
-- [ ] Update `AI_PROVIDER` enum in `apps/backend-api/src/plugins/env.ts`
-- [ ] Add API key validation pattern in env.ts
-- [ ] Update `.env.example` with provider configuration example
-- [ ] Add comprehensive provider tests:
-  - Unit tests for provider logic
-  - Integration tests for API calls
-  - Property tests for edge cases
-- [ ] Update OpenAPI spec provider enum
-- [ ] Regenerate SDK to include new provider types
-- [ ] Update SDK and React SDK type definitions
-- [ ] Update all documentation mentioning available providers
-- [ ] Update README with provider setup instructions
+### Type Safety with Branded Types
 
-### Type/Interface Changes
-
-When modifying types or interfaces:
-
-- [ ] Update TypeScript interfaces in source files
-- [ ] Update corresponding Zod schemas for runtime validation
-- [ ] Update branded types in `packages/types` if applicable
-- [ ] Regenerate SDK if API contract types changed
-- [ ] Update type exports in package index files
-- [ ] Update all example code using the types
-- [ ] Update all tests using the types
-- [ ] Update documentation showing type usage
-- [ ] Verify no type mismatches across package boundaries
+We use branded types to prevent ID mixing bugs at compile time. A `UserId` cannot be accidentally passed where an `OrderId` is expected.
 
-### Feature Additions
+### Runtime Safety with ESLint
 
-When adding new features:
+Our minimal ESLint configuration focuses on catching runtime issues that TypeScript cannot:
 
-- [ ] Create feature flag in env.ts if feature should be toggleable
-- [ ] Add feature documentation to relevant README files
-- [ ] Create example usage in example applications
-- [ ] Add integration tests demonstrating the feature
-- [ ] Update package.json if new dependencies added
-- [ ] Update CHANGELOG.md or create changeset
-- [ ] Add feature to main README if user-facing
-- [ ] Update any getting started guides
+- Enforces environment validation
+- Requires request validation
+- Prevents direct environment access
+- Ensures proper error handling
 
-### Breaking Changes
-
-When making breaking changes (try to avoid these!):
-
-- [ ] Follow API versioning strategy defined above
-- [ ] Create detailed migration guide in documentation
-- [ ] Include before/after code examples
-- [ ] Document all affected APIs
-- [ ] Create deprecation notices if doing phased rollout
-- [ ] Update all examples to use new patterns
-- [ ] Consider backwards compatibility layer
-- [ ] Plan communication strategy for users
-- [ ] Maintain old version for deprecation period
-
-### Update Priority Matrix
-
-**MUST Update (CI will fail if not done):**
-
-- API contract changes → OpenAPI spec + SDK regeneration
-- New required env vars → env.ts schema + .env.example
-- Breaking changes → Follow API versioning strategy
-- Type changes → All dependent code must be updated
-- Test changes → All test configs must stay in sync
-
-**SHOULD Update (Best practices, may not block CI):**
-
-- New features → Examples and README documentation
-- New providers/models → All provider documentation
-- Performance improvements → Mention in relevant docs
-- Bug fixes → Add regression tests
-- Configuration changes → Update deployment docs
-
-### Pre-Commit Checklist
-
-Before committing any code changes, verify:
-
-- [ ] All tests updated and passing (`pnpm test`)
-- [ ] OpenAPI regenerated if routes changed: `pnpm openapi:generate`
-- [ ] SDK regenerated if API changed: `pnpm generate` in packages/sdk
-- [ ] Examples updated if public API changed
-- [ ] Documentation updated in all affected locations
-- [ ] Environment variables documented if added
-- [ ] No orphaned code or documentation
-- [ ] Lint and type-check pass: `pnpm ai:quick`
-
-### Common Cascading Patterns
-
-1. **Route Change** → OpenAPI → SDK → Types → Examples → Tests → Docs
-2. **Env Variable** → .env.example → env.ts → Tests → Deployment → Docs
-3. **New Provider** → ai-provider.ts → env.ts → Types → SDK → Examples → Docs
-4. **Type Change** → All imports → Zod schemas → Tests → Examples → Docs
-
-**Remember**: When in doubt, search for all usages of what you're changing and update them all.
-
-## 🚨 CRITICAL: Environment Handling Standards
-
-**MANDATORY**: Use centralized utilities (ESLint enforced):
-
-```typescript
-// ✅ Source code: Use @airbolt/config utilities
-import { isDevelopment, isProduction, isTest } from '@airbolt/config';
-if (isDevelopment()) {
-  /* dev logic */
-}
-
-// ✅ Tests: Use @airbolt/test-utils standardized setup
-import { createTestEnv, TEST_ENV_PRESETS } from '@airbolt/test-utils';
-beforeEach(() => createTestEnv()); // Standard test setup
-beforeEach(() => TEST_ENV_PRESETS.production()); // Test prod behavior
-
-// ❌ WRONG: Direct environment checks (ESLint error)
-if (process.env.NODE_ENV === 'development') {
-  /* NO */
-}
-process.env.NODE_ENV = 'test'; // Manual setup - inconsistent
-```
-
-**Environment Mapping**: `production|prod` → `production`, `test` → `test`, `dev|development|undefined|*` → `development`
-
-**Test Patterns**: `createTestEnv()` (standard), `createTestEnv({KEY: 'val'})` (custom), `TEST_ENV_PRESETS.production()` (behavior testing)
-
-## ESLint Runtime Safety Rules
-
-Our ESLint is **minimal** (~40 lines) and focused on runtime safety that TypeScript can't catch:
-
-```typescript
-// ✅ Environment validation required
-const env = EnvSchema.parse(process.env);
-
-// ❌ Direct access forbidden
-const port = process.env.PORT; // ESLint error
-
-// ✅ Request validation required
-fastify.post(
-  '/users',
-  {
-    schema: { body: CreateUserSchema },
-  },
-  handler
-);
-
-// ❌ Unvalidated requests forbidden
-fastify.post('/users', async req => {
-  const data = req.body; // ESLint error
-});
-
-// ✅ Environment utilities enforced
-import { isDevelopment } from '@airbolt/config';
-
-// ❌ Direct checks forbidden in source code
-if (process.env.NODE_ENV === 'development') {
-  /* ESLint warning */
-}
-```
-
-## Monorepo Structure Rules
-
-- **Apps → Packages**: ✅ Apps can depend on packages
-- **Packages → Packages**: ✅ Packages can depend on other packages
-- **Apps → Apps**: ❌ Apps cannot depend on other apps
-- **Packages → Apps**: ❌ Packages cannot depend on apps
-
-## Branded Types (Enterprise ID Safety)
-
-Prevent ID mixups at compile time:
-
-```typescript
-import { UserId, OrderId, ZodBrandedSchemas } from '@airbolt/types';
-
-// ✅ Type-safe ID creation
-const userId = UserId('550e8400-e29b-41d4-a716-446655440000');
-const orderId = OrderId('660e8400-e29b-41d4-a716-446655440000');
-
-// ❌ Compile error: Cannot mix ID types
-processOrder(userId); // TypeScript Error
-
-// ✅ Zod integration for routes
-const GetUserParams = z.object({
-  userId: ZodBrandedSchemas.UserId,
-});
-```
-
-## Troubleshooting Common Issues
-
-### Quality Check Failures
-
-```bash
-# If ci:check fails
-pnpm lint:fix          # Auto-fix formatting issues
-pnpm type-check        # Check TypeScript errors
-pnpm test              # Run failing tests
-pnpm build             # Check build issues
-```
-
-### TypeScript Errors
-
-- Check for missing types, incorrect imports
-- Ensure Zod schemas match TypeScript interfaces
-- Verify no `any` types are used
-
-### Test Failures
-
-- Verify mocks and test data setup
-- Ensure tests validate business logic, not just coverage
-- Check edge cases are covered
-
-### Build Errors
-
-- Check for circular dependencies: `pnpm graph:validate`
-- Verify import/export statements
+For implementation details and examples, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Success Metrics
 
-**First-Try Success Indicators**:
+**Your code is successful when:**
 
-- ✅ `pnpm ci:check` passes immediately
-- ✅ All TypeScript strict mode checks pass
-- ✅ All Zod validations in place
-- ✅ Tests validate business logic (not just coverage)
-- ✅ Proper error handling with Fastify patterns
-- ✅ Clean separation of concerns
+- All validation passes on first try
+- Tests actually catch bugs when logic changes
+- Other developers can understand and modify it
+- It handles edge cases gracefully
+- It follows established patterns consistently
 
-Remember: These guidelines exist to help AI agents generate high-quality, maintainable code that passes all quality gates on the first try (or at least minimize the number of iterations to pass all quality gates).
+## Final Thoughts
 
-## Claude Code Specific Features
+These principles are designed to help AI agents (and humans) write high-quality code that:
 
-### Automatic Hooks Integration
+- Passes all quality gates immediately
+- Is maintainable and understandable
+- Prevents common production issues
+- Scales with the project's growth
 
-When using Claude Code, you get additional real-time feedback through hooks configured in `.claude-code/settings.json`:
+The specific tools and commands may change, but these principles remain constant. When in doubt, prioritize clarity, safety, and maintainability over cleverness or brevity.
 
-#### 🔄 What Happens Automatically
-
-1. **After Every Edit**:
-   - Runs `ai:quick` validation (10s timeout)
-   - Auto-formats TypeScript/JavaScript files with Prettier
-   - Alerts when utils require mutation testing
-   - Reminds about test quality for test files
-
-2. **Before File Modifications**:
-   - Blocks direct env/secrets modifications
-   - Prevents writes to system directories
-   - Detects and blocks path traversal attempts
-   - Protects against symlink bypasses
-
-3. **During Your Session**:
-   - Logs all bash commands for audit trail
-   - Records notifications with timestamps
-   - Provides session summary on completion
-   - Suggests next steps based on git status
-
-#### 🚫 Security Blocks
-
-Claude Code will prevent you from:
-
-- Modifying `.env` files directly (use Zod schemas)
-- Writing to `node_modules/`, `dist/`, `.git/`
-- Creating files with path traversal (`../`)
-- Modifying symbolic links
-
-#### 💡 Working with Hooks
-
-- **Hooks are non-blocking**: Validation has a 10s timeout
-- **Smart skipping**: Generated/vendor files are ignored
-- **Immediate feedback**: Errors shown inline as you work
-- **Learn from patterns**: Hooks teach best practices
-
-See `.claude-code/README.md` for detailed hook documentation and troubleshooting.
+**Remember**: The best code is code that works correctly, is easy to understand, and is a joy to maintain.
