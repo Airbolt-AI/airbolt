@@ -51,30 +51,25 @@ export default {
   },
 } satisfies StoryDefault<ChatWidgetProps>;
 
+// Basic Examples
 export const Default: Story<ChatWidgetProps> = ({ ...args }) => (
   <div style={{ height: '600px', width: '100%' }}>
     <ChatWidget {...args} />
   </div>
 );
+Default.storyName = 'Default';
 
-export const DarkTheme: Story<ChatWidgetProps> = () => (
-  <div
-    style={{
-      height: '600px',
-      width: '100%',
-      backgroundColor: '#1a1a1a',
-      padding: '20px',
-    }}
-  >
-    <ChatWidget
-      baseURL="http://localhost:3000"
-      theme="dark"
-      title="Dark Mode Chat"
-    />
+export const MinimalSetup: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <h3>Minimal Setup Example</h3>
+    <p>This shows the ChatWidget with only the required baseURL prop:</p>
+    <ChatWidget baseURL="http://localhost:3000" />
   </div>
 );
+MinimalSetup.storyName = 'Minimal Setup';
 
-export const LightTheme: Story<ChatWidgetProps> = () => (
+// Theme Variations
+export const ThemeLight: Story<ChatWidgetProps> = () => (
   <div
     style={{
       height: '600px',
@@ -90,47 +85,27 @@ export const LightTheme: Story<ChatWidgetProps> = () => (
     />
   </div>
 );
+ThemeLight.storyName = 'Theme/Light';
 
-export const FixedPosition: Story<ChatWidgetProps> = () => (
-  <div style={{ height: '100vh', position: 'relative' }}>
-    <div style={{ padding: '20px' }}>
-      <h2>Page Content</h2>
-      <p>This demonstrates the fixed-bottom-right positioning mode.</p>
-      <p>The chat widget appears in the bottom right corner.</p>
-    </div>
+export const ThemeDark: Story<ChatWidgetProps> = () => (
+  <div
+    style={{
+      height: '600px',
+      width: '100%',
+      backgroundColor: '#1a1a1a',
+      padding: '20px',
+    }}
+  >
     <ChatWidget
       baseURL="http://localhost:3000"
-      position="fixed-bottom-right"
-      title="Support Chat"
+      theme="dark"
+      title="Dark Mode Chat"
     />
   </div>
 );
+ThemeDark.storyName = 'Theme/Dark';
 
-export const OpenAIProvider: Story<ChatWidgetProps> = () => (
-  <div style={{ height: '600px', width: '100%' }}>
-    <ChatWidget
-      baseURL="http://localhost:3000"
-      provider="openai"
-      model="gpt-4o-mini"
-      system="You are a helpful assistant powered by OpenAI. Keep responses concise."
-      title="OpenAI Assistant"
-    />
-  </div>
-);
-
-export const AnthropicProvider: Story<ChatWidgetProps> = () => (
-  <div style={{ height: '600px', width: '100%' }}>
-    <ChatWidget
-      baseURL="http://localhost:3000"
-      provider="anthropic"
-      model="claude-3-5-sonnet-20241022"
-      system="You are Claude, an AI assistant created by Anthropic. Be helpful and concise."
-      title="Claude Assistant"
-    />
-  </div>
-);
-
-export const CustomTheme: Story<ChatWidgetProps> = () => (
+export const ThemeCustom: Story<ChatWidgetProps> = () => (
   <div style={{ height: '600px', width: '100%' }}>
     <ChatWidget
       baseURL="http://localhost:3000"
@@ -144,8 +119,65 @@ export const CustomTheme: Story<ChatWidgetProps> = () => (
     />
   </div>
 );
+ThemeCustom.storyName = 'Theme/Custom';
 
-export const CustomerSupport: Story<ChatWidgetProps> = () => (
+// Provider Configurations
+export const ProviderOpenAI: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      provider="openai"
+      model="gpt-4o-mini"
+      system="You are a helpful assistant powered by OpenAI. Keep responses concise."
+      title="OpenAI Assistant"
+    />
+  </div>
+);
+ProviderOpenAI.storyName = 'Provider/OpenAI';
+
+export const ProviderAnthropic: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      provider="anthropic"
+      model="claude-3-5-sonnet-20241022"
+      system="You are Claude, an AI assistant created by Anthropic. Be helpful and concise."
+      title="Claude Assistant"
+    />
+  </div>
+);
+ProviderAnthropic.storyName = 'Provider/Anthropic';
+
+// Position Variations
+export const PositionInline: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      position="inline"
+      title="Inline Chat"
+    />
+  </div>
+);
+PositionInline.storyName = 'Position/Inline';
+
+export const PositionFixed: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '100vh', position: 'relative' }}>
+    <div style={{ padding: '20px' }}>
+      <h2>Page Content</h2>
+      <p>This demonstrates the fixed-bottom-right positioning mode.</p>
+      <p>The chat widget appears in the bottom right corner.</p>
+    </div>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      position="fixed-bottom-right"
+      title="Support Chat"
+    />
+  </div>
+);
+PositionFixed.storyName = 'Position/Fixed Bottom Right';
+
+// Use Case Examples
+export const UseCaseCustomerSupport: Story<ChatWidgetProps> = () => (
   <div style={{ height: '600px', width: '100%' }}>
     <ChatWidget
       baseURL="http://localhost:3000"
@@ -161,8 +193,9 @@ export const CustomerSupport: Story<ChatWidgetProps> = () => (
     />
   </div>
 );
+UseCaseCustomerSupport.storyName = 'Use Cases/Customer Support';
 
-export const TechnicalAssistant: Story<ChatWidgetProps> = () => (
+export const UseCaseTechnicalAssistant: Story<ChatWidgetProps> = () => (
   <div style={{ height: '600px', width: '100%' }}>
     <ChatWidget
       baseURL="http://localhost:3000"
@@ -174,16 +207,9 @@ export const TechnicalAssistant: Story<ChatWidgetProps> = () => (
     />
   </div>
 );
+UseCaseTechnicalAssistant.storyName = 'Use Cases/Technical Assistant';
 
-export const MinimalSetup: Story<ChatWidgetProps> = () => (
-  <div style={{ height: '600px', width: '100%' }}>
-    <h3>Minimal Setup Example</h3>
-    <p>This shows the ChatWidget with only the required baseURL prop:</p>
-    <ChatWidget baseURL="http://localhost:3000" />
-  </div>
-);
-
-export const WithCodeExample: Story<ChatWidgetProps> = () => (
+export const UseCaseWithCodeExample: Story<ChatWidgetProps> = () => (
   <div style={{ display: 'flex', gap: '20px', height: '600px' }}>
     <div style={{ flex: 1 }}>
       <h3>Live Demo</h3>
@@ -220,3 +246,4 @@ function App() {
     </div>
   </div>
 );
+UseCaseWithCodeExample.storyName = 'Use Cases/With Code Example';

@@ -167,6 +167,7 @@ interface StoryArgs {
   model?: string;
 }
 
+// Basic Examples
 export const Default: Story<StoryArgs> = ({
   baseURL,
   system,
@@ -181,6 +182,7 @@ export const Default: Story<StoryArgs> = ({
 
   return <ChatDemo options={options} />;
 };
+Default.storyName = 'Default (Interactive)';
 
 export const BasicUsage: Story = () => (
   <div>
@@ -235,22 +237,10 @@ function ChatComponent() {
     </div>
   </div>
 );
+BasicUsage.storyName = 'Basic Usage';
 
-export const WithSystemPrompt: Story = () => (
-  <div>
-    <h3>Chat with Custom System Prompt</h3>
-    <p>This example uses a system prompt to make the AI respond as a pirate.</p>
-    <ChatDemo
-      options={{
-        baseURL: 'http://localhost:3000',
-        system:
-          'You are a friendly pirate. Speak like a pirate in all your responses. Use pirate slang and expressions.',
-      }}
-    />
-  </div>
-);
-
-export const OpenAIExample: Story = () => (
+// Provider Configurations
+export const ProviderOpenAI: Story = () => (
   <div>
     <h3>OpenAI Provider Example</h3>
     <ChatDemo
@@ -263,8 +253,9 @@ export const OpenAIExample: Story = () => (
     />
   </div>
 );
+ProviderOpenAI.storyName = 'Provider/OpenAI';
 
-export const AnthropicExample: Story = () => (
+export const ProviderAnthropic: Story = () => (
   <div>
     <h3>Anthropic Claude Example</h3>
     <ChatDemo
@@ -277,8 +268,26 @@ export const AnthropicExample: Story = () => (
     />
   </div>
 );
+ProviderAnthropic.storyName = 'Provider/Anthropic';
 
-export const ErrorHandling: Story = () => {
+// System Prompt Examples
+export const SystemPromptPirate: Story = () => (
+  <div>
+    <h3>Custom System Prompt - Pirate</h3>
+    <p>This example uses a system prompt to make the AI respond as a pirate.</p>
+    <ChatDemo
+      options={{
+        baseURL: 'http://localhost:3000',
+        system:
+          'You are a friendly pirate. Speak like a pirate in all your responses. Use pirate slang and expressions.',
+      }}
+    />
+  </div>
+);
+SystemPromptPirate.storyName = 'System Prompt/Pirate';
+
+// Advanced Features
+export const AdvancedErrorHandling: Story = () => {
   const [simulateError, setSimulateError] = useState(false);
 
   return (
@@ -305,8 +314,9 @@ export const ErrorHandling: Story = () => {
     </div>
   );
 };
+AdvancedErrorHandling.storyName = 'Advanced/Error Handling';
 
-export const WithInitialMessages: Story = () => {
+export const AdvancedInitialMessages: Story = () => {
   const initialMessages = [
     {
       role: 'assistant' as const,
@@ -413,3 +423,4 @@ export const WithInitialMessages: Story = () => {
     </div>
   );
 };
+AdvancedInitialMessages.storyName = 'Advanced/Initial Messages';
