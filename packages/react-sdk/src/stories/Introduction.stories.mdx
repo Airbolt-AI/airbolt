@@ -1,0 +1,97 @@
+import { Meta } from '@ladle/react';
+
+<Meta title="Introduction" />
+
+# Airbolt React SDK Interactive Demo
+
+Welcome to the **Airbolt React SDK** interactive demo! This is your playground for exploring and understanding how to integrate AI chat capabilities into your React applications.
+
+## 🚀 Quick Start
+
+Airbolt provides two main ways to add AI chat to your React app:
+
+### 1. ChatWidget Component
+A pre-built, fully-featured chat interface that works out of the box:
+
+```jsx
+import { ChatWidget } from '@airbolt/react-sdk';
+
+function App() {
+  return <ChatWidget baseURL="https://your-api.com" />;
+}
+```
+
+### 2. useChat Hook
+Build your own custom chat UI with complete control:
+
+```jsx
+import { useChat } from '@airbolt/react-sdk';
+
+function CustomChat() {
+  const { messages, input, setInput, send } = useChat({
+    baseURL: 'https://your-api.com'
+  });
+  
+  // Build your own UI...
+}
+```
+
+## 🎯 What You'll Find Here
+
+### Components
+- **ChatWidget** - Explore all the configuration options for the pre-built chat component
+  - Theme customization (light/dark/auto)
+  - Position modes (inline/fixed)
+  - Custom styling options
+  - Provider selection (OpenAI/Anthropic)
+
+### Hooks
+- **useChat** - See examples of building custom chat interfaces
+  - Basic usage patterns
+  - Error handling
+  - Authentication flows
+  - Advanced configurations
+
+## 🔧 Key Features
+
+### Multi-Provider Support
+Switch between AI providers on the fly:
+- **OpenAI** (GPT-4, GPT-3.5)
+- **Anthropic** (Claude 3.5 Sonnet)
+
+### Theming & Customization
+- Built-in light and dark themes
+- Custom color schemes
+- Flexible positioning
+- Custom CSS styles
+
+### Developer Experience
+- TypeScript support out of the box
+- Interactive prop controls
+- Live code examples
+- Copy-paste ready snippets
+
+## 📚 Resources
+
+- [GitHub Repository](https://github.com/Airbolt-AI/airbolt)
+- [Full Documentation](https://github.com/Airbolt-AI/airbolt/tree/main/packages/react-sdk)
+- [Backend Setup Guide](https://github.com/Airbolt-AI/airbolt#getting-started)
+
+## 🎮 How to Use This Demo
+
+1. **Browse Stories** - Use the sidebar to navigate between different examples
+2. **Interact with Controls** - Use the controls panel to modify props in real-time
+3. **View Source** - Click the source button to see the code for each example
+4. **Copy Code** - All examples include copy-paste ready code snippets
+
+## 🏃‍♂️ Getting Started with Your Own Project
+
+1. Deploy the Airbolt backend (see [main README](https://github.com/Airbolt-AI/airbolt))
+2. Install the SDK: `npm install @airbolt/react-sdk`
+3. Add the ChatWidget or useChat hook to your app
+4. Configure with your backend URL
+5. Start chatting!
+
+---
+
+Ready to explore? Navigate to the **Components** or **Hooks** section in the sidebar to see live examples!

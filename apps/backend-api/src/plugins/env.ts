@@ -8,6 +8,7 @@ const COMMON_DEV_PORTS = [
   'http://localhost:5174',
   'http://localhost:4200',
   'http://localhost:8080',
+  'http://localhost:61000', // Ladle development server
 ] as const;
 
 const DEFAULT_TEST_ORIGINS = 'http://localhost:3000,http://localhost:3001';
