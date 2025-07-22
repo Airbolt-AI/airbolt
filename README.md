@@ -100,7 +100,7 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 **Function calling** - Let AI models call your application functions and APIs.
 
-**Enhanced multi-provider support** - Already supports OpenAI and Anthropic (see [migration guide](MIGRATION.md) for details). Coming soon: Google Gemini, local models, and more.
+**Enhanced multi-provider support** - Already supports OpenAI and Anthropic. Coming soon: Google Gemini, local models, and more.
 
 **Conversation management** - Persistent chat sessions, message history, and context management.
 
