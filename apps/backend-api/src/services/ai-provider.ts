@@ -43,6 +43,18 @@ export type ProviderConfig = z.infer<typeof ProviderConfigSchema>;
 
 export { PROVIDER_FEATURES } from './provider-config.js';
 
+// Provider factory registry
+const PROVIDER_FACTORIES = {
+  openai: (apiKey: string, model: string) => {
+    const provider = createOpenAI({ apiKey });
+    return provider.chat(model);
+  },
+  anthropic: (apiKey: string, model: string) => {
+    const provider = createAnthropic({ apiKey });
+    return provider.messages(model);
+  },
+} as const;
+
 // Error class for AI provider errors
 export class AIProviderError extends Error {
   constructor(
@@ -132,25 +144,12 @@ export class AIProviderService {
     // Get model name from config or use default
     const modelName = config.model || getDefaultModel(config.provider);
 
-    // Initialize the appropriate provider
-    switch (config.provider) {
-      case 'openai':
-        const openaiProvider = createOpenAI({
-          apiKey: config.apiKey,
-        });
-        this.model = openaiProvider.chat(modelName);
-        break;
-      case 'anthropic':
-        const anthropicProvider = createAnthropic({
-          apiKey: config.apiKey,
-        });
-        this.model = anthropicProvider.messages(modelName);
-        break;
-      default:
-        // This ensures TypeScript exhaustiveness checking
-        const _exhaustiveCheck: never = config.provider;
-        throw new Error(`Unsupported provider: ${String(_exhaustiveCheck)}`);
+    // Initialize the appropriate provider using the factory
+    const factory = PROVIDER_FACTORIES[config.provider];
+    if (!factory) {
+      throw new Error(`Unsupported provider: ${config.provider}`);
     }
+    this.model = factory(config.apiKey, modelName);
 
     if (systemPrompt !== undefined) {
       this.systemPrompt = systemPrompt;
@@ -172,20 +171,12 @@ export class AIProviderService {
     model: string,
     apiKey: string
   ): LanguageModel {
-    // For now, still use the switch pattern but we'll migrate to registry later
-    // This ensures backward compatibility during migration
-    switch (provider) {
-      case 'openai':
-        const openaiProvider = createOpenAI({ apiKey });
-        return openaiProvider.chat(model);
-      case 'anthropic':
-        const anthropicProvider = createAnthropic({ apiKey });
-        return anthropicProvider.messages(model);
-      default:
-        // This ensures TypeScript exhaustiveness checking
-        const _exhaustiveCheck: never = provider as never;
-        throw new Error(`Unsupported provider: ${String(_exhaustiveCheck)}`);
+    const factory =
+      PROVIDER_FACTORIES[provider as keyof typeof PROVIDER_FACTORIES];
+    if (!factory) {
+      throw new Error(`Unsupported provider: ${provider}`);
     }
+    return factory(apiKey, model);
   }
 
   async createChatCompletion(
@@ -208,7 +199,7 @@ export class AIProviderService {
       const provider = providerOverride || this.provider;
 
       // Validate provider first
-      if (provider !== 'openai' && provider !== 'anthropic') {
+      if (!PROVIDER_FACTORIES[provider as keyof typeof PROVIDER_FACTORIES]) {
         throw new AIProviderError(
           `Unsupported provider: ${provider}`,
           400,
@@ -220,13 +211,7 @@ export class AIProviderService {
       const modelName = modelOverride || defaultModel;
 
       // Get the appropriate API key from stored keys
-      const providerName = provider;
-      const apiKey =
-        providerName === 'openai'
-          ? this.apiKeys.openai
-          : providerName === 'anthropic'
-            ? this.apiKeys.anthropic
-            : undefined;
+      const apiKey = this.apiKeys[provider as ProviderName];
 
       if (!apiKey) {
         throw new AIProviderError(
