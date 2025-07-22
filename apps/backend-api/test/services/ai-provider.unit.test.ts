@@ -4,6 +4,7 @@ import {
   AIProviderError,
   PROVIDER_FEATURES,
 } from '../../src/services/ai-provider.js';
+import { UnknownProviderError } from '../../src/services/provider-config.js';
 import { generateText } from 'ai';
 
 // Mock the AI SDK
@@ -73,7 +74,7 @@ describe('AIProviderService', () => {
           provider: 'unsupported',
           apiKey: 'test-key',
         });
-      }).toThrow('Unsupported provider: unsupported');
+      }).toThrow(UnknownProviderError);
     });
   });
 

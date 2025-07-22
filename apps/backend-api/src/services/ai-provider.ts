@@ -3,6 +3,16 @@ import { generateText, type LanguageModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import {
+  PROVIDER_CONFIG,
+  type ProviderName,
+  type ProviderFeature,
+  getProviderConfig,
+  getDefaultModel,
+  getProviderFeatures,
+  UnknownProviderError,
+} from './provider-config.js';
+
 // Message schemas matching AI provider types
 export const MessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
@@ -32,23 +42,17 @@ export const ProviderConfigSchema = z.object({
 
 export type ProviderConfig = z.infer<typeof ProviderConfigSchema>;
 
-// Model configurations with defaults
-const DEFAULT_MODELS = {
-  openai: 'gpt-4o-mini',
-  anthropic: 'claude-3-5-sonnet-20241022',
-} as const;
+export { PROVIDER_FEATURES } from './provider-config.js';
 
-// Provider feature flags
-export const PROVIDER_FEATURES = {
-  openai: {
-    streaming: true,
-    functionCalling: true,
-    vision: true,
+// Provider factory registry
+const PROVIDER_FACTORIES = {
+  openai: (apiKey: string, model: string) => {
+    const provider = createOpenAI({ apiKey });
+    return provider.chat(model);
   },
-  anthropic: {
-    streaming: true,
-    functionCalling: true,
-    vision: true,
+  anthropic: (apiKey: string, model: string) => {
+    const provider = createAnthropic({ apiKey });
+    return provider.messages(model);
   },
 } as const;
 
@@ -70,10 +74,7 @@ export class AIProviderService {
   private maxRetries: number = 3;
   private baseDelay: number = 1000;
   private provider: string;
-  private apiKeys: {
-    openai?: string;
-    anthropic?: string;
-  } = {};
+  private apiKeys: Partial<Record<ProviderName, string>> = {};
 
   static createFromEnv(config: {
     AI_PROVIDER?: string;
@@ -81,38 +82,43 @@ export class AIProviderService {
     ANTHROPIC_API_KEY?: string | undefined;
     AI_MODEL?: string | undefined;
     SYSTEM_PROMPT?: string | undefined;
+    NODE_ENV?: string;
   }): AIProviderService {
     const provider = (config.AI_PROVIDER || 'openai') as 'openai' | 'anthropic';
 
-    let apiKey: string | undefined;
-    switch (provider) {
-      case 'openai':
-        apiKey = config.OPENAI_API_KEY;
-        break;
-      case 'anthropic':
-        apiKey = config.ANTHROPIC_API_KEY;
-        break;
-      default:
-        // This ensures TypeScript exhaustiveness checking
-        const _exhaustiveCheck: never = provider;
-        throw new Error(`Unsupported AI provider: ${String(_exhaustiveCheck)}`);
+    // Get API key from config based on provider
+    const providerConfig = getProviderConfig(provider);
+    if (!providerConfig) {
+      throw new Error(`Unsupported AI provider: ${provider}`);
     }
+
+    const envKey = providerConfig.envKey as keyof typeof config;
+    const apiKey =
+      envKey === 'OPENAI_API_KEY'
+        ? config.OPENAI_API_KEY
+        : envKey === 'ANTHROPIC_API_KEY'
+          ? config.ANTHROPIC_API_KEY
+          : undefined;
 
     if (!apiKey) {
       throw new Error(`${provider.toUpperCase()}_API_KEY is not configured`);
     }
 
     // Store all available API keys for dynamic provider switching
-    const apiKeys: {
-      openai?: string;
-      anthropic?: string;
-    } = {};
+    const apiKeys: Partial<Record<ProviderName, string>> = {};
 
-    if (config.OPENAI_API_KEY) {
-      apiKeys.openai = config.OPENAI_API_KEY;
-    }
-    if (config.ANTHROPIC_API_KEY) {
-      apiKeys.anthropic = config.ANTHROPIC_API_KEY;
+    // Collect all available API keys from config
+    for (const [name, providerConf] of Object.entries(PROVIDER_CONFIG)) {
+      const envKey = providerConf.envKey as keyof typeof config;
+      const key =
+        envKey === 'OPENAI_API_KEY'
+          ? config.OPENAI_API_KEY
+          : envKey === 'ANTHROPIC_API_KEY'
+            ? config.ANTHROPIC_API_KEY
+            : undefined;
+      if (key) {
+        apiKeys[name as ProviderName] = key;
+      }
     }
 
     return new AIProviderService(
@@ -122,7 +128,11 @@ export class AIProviderService {
         model: config.AI_MODEL,
       },
       config.SYSTEM_PROMPT,
-      { apiKeys }
+      {
+        apiKeys,
+        // eslint-disable-next-line runtime-safety/prefer-environment-utils
+        isProduction: config.NODE_ENV === 'production',
+      }
     );
   }
 
@@ -132,48 +142,33 @@ export class AIProviderService {
     options?: {
       maxRetries?: number;
       baseDelay?: number;
-      apiKeys?: {
-        openai?: string;
-        anthropic?: string;
-      };
+      apiKeys?: Partial<Record<ProviderName, string>>;
+      isProduction?: boolean;
     }
   ) {
     this.provider = config.provider;
+
+    // Get model name from config or use default
     let modelName: string;
-    if (config.model) {
-      modelName = config.model;
-    } else {
-      switch (config.provider) {
-        case 'openai':
-          modelName = DEFAULT_MODELS.openai;
-          break;
-        case 'anthropic':
-          modelName = DEFAULT_MODELS.anthropic;
-          break;
-        default:
-          modelName = 'gpt-4o-mini';
+    try {
+      modelName = config.model || getDefaultModel(config.provider);
+    } catch (error) {
+      if (error instanceof UnknownProviderError && options?.isProduction) {
+        console.warn(
+          `[AI Provider] Unknown provider "${error.provider}", using fallback model "${error.suggestedFallback}"`
+        );
+        modelName = error.suggestedFallback;
+      } else {
+        throw error;
       }
     }
 
-    // Initialize the appropriate provider
-    switch (config.provider) {
-      case 'openai':
-        const openaiProvider = createOpenAI({
-          apiKey: config.apiKey,
-        });
-        this.model = openaiProvider.chat(modelName);
-        break;
-      case 'anthropic':
-        const anthropicProvider = createAnthropic({
-          apiKey: config.apiKey,
-        });
-        this.model = anthropicProvider.messages(modelName);
-        break;
-      default:
-        // This ensures TypeScript exhaustiveness checking
-        const _exhaustiveCheck: never = config.provider;
-        throw new Error(`Unsupported provider: ${String(_exhaustiveCheck)}`);
+    // Initialize the appropriate provider using the factory
+    const factory = PROVIDER_FACTORIES[config.provider];
+    if (!factory) {
+      throw new Error(`Unsupported provider: ${config.provider}`);
     }
+    this.model = factory(config.apiKey, modelName);
 
     if (systemPrompt !== undefined) {
       this.systemPrompt = systemPrompt;
@@ -195,18 +190,12 @@ export class AIProviderService {
     model: string,
     apiKey: string
   ): LanguageModel {
-    switch (provider) {
-      case 'openai':
-        const openaiProvider = createOpenAI({ apiKey });
-        return openaiProvider.chat(model);
-      case 'anthropic':
-        const anthropicProvider = createAnthropic({ apiKey });
-        return anthropicProvider.messages(model);
-      default:
-        // This ensures TypeScript exhaustiveness checking
-        const _exhaustiveCheck: never = provider as never;
-        throw new Error(`Unsupported provider: ${String(_exhaustiveCheck)}`);
+    const factory =
+      PROVIDER_FACTORIES[provider as keyof typeof PROVIDER_FACTORIES];
+    if (!factory) {
+      throw new Error(`Unsupported provider: ${provider}`);
     }
+    return factory(apiKey, model);
   }
 
   async createChatCompletion(
@@ -229,7 +218,7 @@ export class AIProviderService {
       const provider = providerOverride || this.provider;
 
       // Validate provider first
-      if (provider !== 'openai' && provider !== 'anthropic') {
+      if (!PROVIDER_FACTORIES[provider as keyof typeof PROVIDER_FACTORIES]) {
         throw new AIProviderError(
           `Unsupported provider: ${provider}`,
           400,
@@ -237,31 +226,11 @@ export class AIProviderService {
         );
       }
 
-      let defaultModel: string;
-      switch (provider) {
-        case 'openai':
-          defaultModel = DEFAULT_MODELS.openai;
-          break;
-        case 'anthropic':
-          defaultModel = DEFAULT_MODELS.anthropic;
-          break;
-        default:
-          defaultModel = 'gpt-4o-mini';
-      }
+      const defaultModel = getDefaultModel(provider);
       const modelName = modelOverride || defaultModel;
 
       // Get the appropriate API key from stored keys
-      let apiKey: string | undefined;
-      switch (provider) {
-        case 'openai':
-          apiKey = this.apiKeys.openai;
-          break;
-        case 'anthropic':
-          apiKey = this.apiKeys.anthropic;
-          break;
-        default:
-          apiKey = undefined;
-      }
+      const apiKey = this.apiKeys[provider as ProviderName];
 
       if (!apiKey) {
         throw new AIProviderError(
@@ -439,12 +408,21 @@ export class AIProviderService {
     });
   }
 
-  supportsFeature(feature: keyof typeof PROVIDER_FEATURES.openai): boolean {
-    const provider = this.provider as keyof typeof PROVIDER_FEATURES;
-    // eslint-disable-next-line security/detect-object-injection
-    const features = PROVIDER_FEATURES[provider];
-    // eslint-disable-next-line security/detect-object-injection
-    return features?.[feature] ?? false;
+  supportsFeature(feature: ProviderFeature): boolean {
+    const features = getProviderFeatures(this.provider);
+    if (!features) return false;
+
+    // Explicit property checks to avoid object injection
+    switch (feature) {
+      case 'streaming':
+        return features.streaming;
+      case 'functionCalling':
+        return features.functionCalling;
+      case 'vision':
+        return features.vision;
+      default:
+        return false;
+    }
   }
 }
 
