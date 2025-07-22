@@ -49,7 +49,7 @@ export class UnknownProviderError extends Error {
  * Type guard to check if a string is a valid provider name
  */
 export function isProviderName(provider: string): provider is ProviderName {
-  return provider in PROVIDER_CONFIG;
+  return Object.hasOwn(PROVIDER_CONFIG, provider);
 }
 
 export function getProviderConfig<T extends ProviderName>(
