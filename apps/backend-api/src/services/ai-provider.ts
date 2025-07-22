@@ -289,7 +289,7 @@ export class AIProviderService {
     this.handleProviderError(lastError, providerForError);
   }
 
-  async createChatCompletionStream(
+  createChatCompletionStream(
     messages: Message[],
     systemPromptOverride?: string,
     providerOverride?: string,
@@ -366,7 +366,7 @@ export class AIProviderService {
         }
       }
 
-      return stringStream();
+      return Promise.resolve(stringStream());
     } catch (error) {
       this.handleProviderError(error, providerForError);
     }

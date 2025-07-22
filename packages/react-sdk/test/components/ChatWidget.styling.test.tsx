@@ -37,6 +37,7 @@ describe('ChatWidget Styling', () => {
     send: vi.fn(),
     clear: vi.fn(),
     isLoading: false,
+    isStreaming: false,
     error: null,
     clearToken: vi.fn(),
     hasValidToken: vi.fn(() => true),
