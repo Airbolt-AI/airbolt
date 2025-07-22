@@ -59,6 +59,8 @@ function ChatComponent() {
 }
 ```
 
+> 💡 **Want to see it in action?** Check out our [Interactive Demo](#interactive-demo) to explore all features with live examples!
+
 ## API Reference
 
 ### ChatWidget
@@ -174,6 +176,28 @@ interface UseChatOptions {
   initialMessages?: Message[];
 }
 ```
+
+## Interactive Demo
+
+Explore all the features of the Airbolt React SDK with our interactive Ladle demo:
+
+```bash
+# Navigate to the react-sdk package
+cd packages/react-sdk
+
+# Start the interactive demo
+pnpm ladle
+```
+
+This will open an interactive environment where you can:
+
+- 🎮 Experiment with all ChatWidget props using live controls
+- 🎨 Try different themes and styling options
+- 🔄 Switch between AI providers (OpenAI/Anthropic)
+- 📝 See live code examples for each configuration
+- 🪝 Explore useChat hook patterns and examples
+
+Visit http://localhost:61000 after running the command to start exploring!
 
 ## Examples
 
