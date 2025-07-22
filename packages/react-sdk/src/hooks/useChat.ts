@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   chat,
+  chatStream,
   clearAuthToken,
   hasValidToken,
   getTokenInfo,
@@ -59,6 +60,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   );
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   // Use ref to track if component is mounted to prevent state updates after unmount
@@ -79,7 +81,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   }, []);
 
   const send = useCallback(async () => {
-    if (!input.trim() || isLoading) {
+    if (!input.trim() || isLoading || isStreaming) {
       return;
     }
 
@@ -99,7 +101,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     setError(null);
 
     try {
-      // Call the SDK chat function with all messages
+      // Prepare chat options
       const allMessages = [...messages, userMessage];
       const chatOptions: Parameters<typeof chat>[1] = {};
       if (options?.baseURL !== undefined) {
@@ -114,16 +116,66 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       if (options?.model !== undefined) {
         chatOptions.model = options.model;
       }
-      const response = await chat(allMessages, chatOptions);
 
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
+      if (options?.streaming) {
+        // Streaming mode
+        setIsStreaming(true);
+        setIsLoading(false);
+
+        // Add an empty assistant message that we'll update
         const assistantMessage: Message = {
           role: 'assistant',
-          content: response,
+          content: '',
         };
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
+
+        if (isMountedRef.current) {
+          setMessages(prev => [...prev, assistantMessage]);
+        }
+
+        let fullContent = '';
+
+        for await (const chunk of chatStream(allMessages, chatOptions)) {
+          if (!isMountedRef.current) break;
+
+          if (chunk.type === 'chunk') {
+            fullContent += chunk.content;
+
+            // Update the last message with accumulated content
+            if (isMountedRef.current) {
+              setMessages(prev => {
+                const newMessages = [...prev];
+                if (newMessages.length > 0) {
+                  newMessages[newMessages.length - 1] = {
+                    role: 'assistant',
+                    content: fullContent,
+                  };
+                }
+                return newMessages;
+              });
+
+              // Call onChunk callback if provided
+              options.onChunk?.(chunk.content);
+            }
+          } else if (chunk.type === 'done') {
+            if (isMountedRef.current) {
+              setIsStreaming(false);
+            }
+            break;
+          }
+        }
+      } else {
+        // Non-streaming mode (existing logic)
+        const response = await chat(allMessages, chatOptions);
+
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response,
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+          setIsLoading(false);
+        }
       }
     } catch (err) {
       // Only update state if component is still mounted and request wasn't aborted
@@ -134,19 +186,21 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       ) {
         setError(err);
         setIsLoading(false);
-        // Remove the optimistically added user message on error
-        setMessages(prev => prev.slice(0, -1));
+        setIsStreaming(false);
+        // Remove the optimistically added messages on error
+        setMessages(prev => prev.slice(0, -2)); // Remove user and assistant messages
         // Restore the input so user can retry
         setInput(userMessage.content);
       }
     }
-  }, [input, isLoading, messages, options]);
+  }, [input, isLoading, isStreaming, messages, options]);
 
   const clear = useCallback(() => {
     setMessages([]);
     setInput('');
     setError(null);
     setIsLoading(false);
+    setIsStreaming(false);
     // Cancel any pending requests
     abortControllerRef.current?.abort();
   }, []);
@@ -169,6 +223,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     input,
     setInput,
     isLoading,
+    isStreaming,
     error,
     send,
     clear,

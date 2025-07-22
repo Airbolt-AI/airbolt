@@ -24,6 +24,15 @@ export interface UseChatOptions {
    * Initial messages to populate the chat history
    */
   initialMessages?: Message[];
+  /**
+   * Enable streaming responses
+   * @default false
+   */
+  streaming?: boolean;
+  /**
+   * Callback for streaming chunks
+   */
+  onChunk?: (chunk: string) => void;
 }
 
 /**
@@ -46,6 +55,10 @@ export interface UseChatReturn {
    * Whether a message is currently being sent
    */
   isLoading: boolean;
+  /**
+   * Whether a response is currently streaming
+   */
+  isStreaming: boolean;
   /**
    * Error from the last send attempt, if any
    */

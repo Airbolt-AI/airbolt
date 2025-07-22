@@ -6,7 +6,8 @@
   "description": "Simple CLI chat example using @airbolt/sdk in Node.js",
   "scripts": {
     "start": "node index.js",
-    "start:ts": "tsx index.ts"
+    "start:ts": "tsx index.ts",
+    "stream": "tsx streaming.ts"
   },
   "dependencies": {
     "@airbolt/sdk": "workspace:*"

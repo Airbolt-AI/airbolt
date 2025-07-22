@@ -53,6 +53,10 @@ export interface ChatWidgetProps {
    */
   minimalTheme?: MinimalTheme;
   /**
+   * Enable streaming responses
+   */
+  streaming?: boolean;
+  /**
    * Custom styles for widget elements
    */
   customStyles?: {
@@ -98,6 +102,7 @@ export function ChatWidget({
   position = 'inline',
   className,
   minimalTheme,
+  streaming = false,
   customStyles,
 }: ChatWidgetProps): React.ReactElement {
   const chatOptions: UseChatOptions = {};
@@ -113,8 +118,11 @@ export function ChatWidget({
   if (model !== undefined) {
     chatOptions.model = model;
   }
+  if (streaming !== undefined) {
+    chatOptions.streaming = streaming;
+  }
 
-  const { messages, input, setInput, send, isLoading, error } =
+  const { messages, input, setInput, send, isLoading, isStreaming, error } =
     useChat(chatOptions);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -206,9 +214,9 @@ export function ChatWidget({
           </div>
         ))}
 
-        {isLoading && (
+        {(isLoading || isStreaming) && (
           <div style={styles['typing']} aria-label="Assistant is typing">
-            <span>Typing...</span>
+            <span>{isStreaming ? 'Streaming...' : 'Typing...'}</span>
           </div>
         )}
 
@@ -231,7 +239,7 @@ export function ChatWidget({
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
           placeholder={placeholder}
-          disabled={isLoading}
+          disabled={isLoading || isStreaming}
           style={{
             ...styles['input'],
             ...(isInputFocused ? styles['inputFocus'] : {}),
@@ -242,15 +250,17 @@ export function ChatWidget({
         />
         <button
           type="submit"
-          disabled={isLoading || !input.trim()}
+          disabled={isLoading || isStreaming || !input.trim()}
           onMouseEnter={() => setIsButtonHovered(true)}
           onMouseLeave={() => setIsButtonHovered(false)}
           style={{
             ...styles['button'],
-            ...(isButtonHovered && !isLoading && input.trim()
+            ...(isButtonHovered && !isLoading && !isStreaming && input.trim()
               ? styles['buttonHover']
               : {}),
-            ...(isLoading || !input.trim() ? styles['buttonDisabled'] : {}),
+            ...(isLoading || isStreaming || !input.trim()
+              ? styles['buttonDisabled']
+              : {}),
           }}
           aria-label="Send message"
         >

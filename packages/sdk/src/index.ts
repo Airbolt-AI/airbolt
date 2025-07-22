@@ -21,6 +21,7 @@ export * from './core/index.js';
 // Export API functions
 export {
   chat,
+  chatStream,
   createChatSession,
   clearAuthToken,
   hasValidToken,

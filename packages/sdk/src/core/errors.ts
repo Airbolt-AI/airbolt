@@ -16,3 +16,20 @@ export class ColdStartError extends Error {
     Object.setPrototypeOf(this, ColdStartError.prototype);
   }
 }
+
+/**
+ * General Airbolt API error
+ */
+export class AirboltError extends Error {
+  override readonly name = 'AirboltError';
+
+  constructor(
+    message: string,
+    public readonly statusCode: number,
+    public readonly code?: string
+  ) {
+    super(message);
+    // Maintains proper prototype chain for instanceof checks
+    Object.setPrototypeOf(this, AirboltError.prototype);
+  }
+}
