@@ -97,7 +97,7 @@ describe('Streaming E2E - Full Stack Integration', () => {
 
       // Start streaming but abort early
       const controller = new AbortController();
-      const streamPromise = fetch(`${baseURL}/api/chat`, {
+      void fetch(`${baseURL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ describe('Streaming E2E - Full Stack Integration', () => {
         'Concurrent-chunk-3',
       ];
 
-      results.forEach((result, i) => {
+      results.forEach(result => {
         expect(result.chunks).toEqual(expectedChunks);
         expect(result.error).toBeUndefined();
       });
