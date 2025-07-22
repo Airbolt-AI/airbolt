@@ -4,10 +4,43 @@ import {
   getProviderConfig,
   getDefaultModel,
   getProviderFeatures,
+  isProviderName,
+  UnknownProviderError,
   PROVIDER_CONFIG,
 } from '../../src/services/provider-config.js';
 
 describe('Provider Config Property Tests', () => {
+  describe('isProviderName', () => {
+    it('should return true for valid providers', () => {
+      fc.assert(
+        fc.property(fc.constantFrom('openai', 'anthropic'), provider => {
+          expect(isProviderName(provider)).toBe(true);
+        })
+      );
+    });
+
+    it('should return false for invalid providers', () => {
+      fc.assert(
+        fc.property(
+          fc.string().filter(s => s !== 'openai' && s !== 'anthropic'),
+          provider => {
+            expect(isProviderName(provider)).toBe(false);
+          }
+        )
+      );
+    });
+
+    it('should be deterministic', () => {
+      fc.assert(
+        fc.property(fc.string(), provider => {
+          const result1 = isProviderName(provider);
+          const result2 = isProviderName(provider);
+          expect(result1).toBe(result2);
+        })
+      );
+    });
+  });
+
   describe('getProviderConfig', () => {
     it('should return config for valid providers', () => {
       fc.assert(
@@ -22,7 +55,12 @@ describe('Provider Config Property Tests', () => {
     it('should return undefined for invalid providers', () => {
       fc.assert(
         fc.property(
-          fc.string().filter(s => s !== 'openai' && s !== 'anthropic'),
+          fc
+            .string()
+            .filter(
+              s =>
+                s !== 'openai' && s !== 'anthropic' && !(s in PROVIDER_CONFIG)
+            ),
           provider => {
             const config = getProviderConfig(provider);
             expect(config).toBeUndefined();
@@ -53,21 +91,31 @@ describe('Provider Config Property Tests', () => {
       );
     });
 
-    it('should return fallback model for invalid providers', () => {
+    it('should throw UnknownProviderError for invalid providers', () => {
       fc.assert(
         fc.property(
           fc.string().filter(s => s !== 'openai' && s !== 'anthropic'),
           provider => {
-            const model = getDefaultModel(provider);
-            expect(model).toBe('gpt-4o-mini');
+            expect(() => getDefaultModel(provider)).toThrow(
+              UnknownProviderError
+            );
+            try {
+              getDefaultModel(provider);
+            } catch (error) {
+              expect(error).toBeInstanceOf(UnknownProviderError);
+              expect((error as UnknownProviderError).provider).toBe(provider);
+              expect((error as UnknownProviderError).suggestedFallback).toBe(
+                'gpt-4o-mini'
+              );
+            }
           }
         )
       );
     });
 
-    it('should never return empty string', () => {
+    it('should never return empty string for valid providers', () => {
       fc.assert(
-        fc.property(fc.string(), provider => {
+        fc.property(fc.constantFrom('openai', 'anthropic'), provider => {
           const model = getDefaultModel(provider);
           expect(model).toBeTruthy();
           expect(model.length).toBeGreaterThan(0);
@@ -93,7 +141,12 @@ describe('Provider Config Property Tests', () => {
     it('should return undefined for invalid providers', () => {
       fc.assert(
         fc.property(
-          fc.string().filter(s => s !== 'openai' && s !== 'anthropic'),
+          fc
+            .string()
+            .filter(
+              s =>
+                s !== 'openai' && s !== 'anthropic' && !(s in PROVIDER_CONFIG)
+            ),
           provider => {
             const features = getProviderFeatures(provider);
             expect(features).toBeUndefined();

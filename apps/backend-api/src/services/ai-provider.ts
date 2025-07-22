@@ -7,9 +7,11 @@ import {
   PROVIDER_CONFIG,
   PROVIDER_FEATURES,
   type ProviderName,
+  type ProviderFeature,
   getProviderConfig,
   getDefaultModel,
   getProviderFeatures,
+  UnknownProviderError,
 } from './provider-config.js';
 
 // Message schemas matching AI provider types
@@ -81,6 +83,7 @@ export class AIProviderService {
     ANTHROPIC_API_KEY?: string | undefined;
     AI_MODEL?: string | undefined;
     SYSTEM_PROMPT?: string | undefined;
+    NODE_ENV?: string;
   }): AIProviderService {
     const provider = (config.AI_PROVIDER || 'openai') as 'openai' | 'anthropic';
 
@@ -126,7 +129,11 @@ export class AIProviderService {
         model: config.AI_MODEL,
       },
       config.SYSTEM_PROMPT,
-      { apiKeys }
+      {
+        apiKeys,
+        // eslint-disable-next-line runtime-safety/prefer-environment-utils
+        isProduction: config.NODE_ENV === 'production',
+      }
     );
   }
 
@@ -137,12 +144,25 @@ export class AIProviderService {
       maxRetries?: number;
       baseDelay?: number;
       apiKeys?: Partial<Record<ProviderName, string>>;
+      isProduction?: boolean;
     }
   ) {
     this.provider = config.provider;
 
     // Get model name from config or use default
-    const modelName = config.model || getDefaultModel(config.provider);
+    let modelName: string;
+    try {
+      modelName = config.model || getDefaultModel(config.provider);
+    } catch (error) {
+      if (error instanceof UnknownProviderError && options?.isProduction) {
+        console.warn(
+          `[AI Provider] Unknown provider "${error.provider}", using fallback model "${error.suggestedFallback}"`
+        );
+        modelName = error.suggestedFallback;
+      } else {
+        throw error;
+      }
+    }
 
     // Initialize the appropriate provider using the factory
     const factory = PROVIDER_FACTORIES[config.provider];
@@ -389,15 +409,21 @@ export class AIProviderService {
     });
   }
 
-  supportsFeature(feature: keyof typeof PROVIDER_FEATURES.openai): boolean {
+  supportsFeature(feature: ProviderFeature): boolean {
     const features = getProviderFeatures(this.provider);
     if (!features) return false;
 
-    if (feature === 'streaming') return features.streaming;
-    if (feature === 'functionCalling') return features.functionCalling;
-    if (feature === 'vision') return features.vision;
-
-    return false;
+    // Explicit property checks to avoid object injection
+    switch (feature) {
+      case 'streaming':
+        return features.streaming;
+      case 'functionCalling':
+        return features.functionCalling;
+      case 'vision':
+        return features.vision;
+      default:
+        return false;
+    }
   }
 }
 

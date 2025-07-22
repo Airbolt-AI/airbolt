@@ -1,3 +1,35 @@
+// Core configuration that all providers must have
+interface CoreProviderConfig {
+  envKey: string;
+  defaultModel: string;
+  keyRegex: RegExp;
+  keyFormat: string;
+  features: {
+    streaming: boolean;
+    functionCalling: boolean;
+    vision: boolean;
+  };
+}
+
+// Common optional extensions for future provider needs
+interface CommonExtensions {
+  headers?: Record<string, string>;
+  baseUrl?: string;
+  rateLimit?: {
+    requestsPerMinute: number;
+    retryAfter?: number;
+  };
+  retryConfig?: {
+    maxRetries: number;
+    baseDelay: number;
+  };
+}
+
+// Type for provider configuration with optional extensions
+type ProviderConfiguration<
+  T extends Record<string, unknown> = Record<string, never>,
+> = CoreProviderConfig & CommonExtensions & T;
+
 export const PROVIDER_CONFIG = {
   openai: {
     envKey: 'OPENAI_API_KEY',
@@ -9,7 +41,7 @@ export const PROVIDER_CONFIG = {
       functionCalling: true,
       vision: true,
     },
-  },
+  } satisfies ProviderConfiguration,
   anthropic: {
     envKey: 'ANTHROPIC_API_KEY',
     defaultModel: 'claude-3-5-sonnet-20241022',
@@ -20,27 +52,77 @@ export const PROVIDER_CONFIG = {
       functionCalling: true,
       vision: true,
     },
-  },
+  } satisfies ProviderConfiguration,
 } as const;
 
 export type ProviderName = keyof typeof PROVIDER_CONFIG;
+export type ProviderFeature = keyof typeof PROVIDER_CONFIG.openai.features;
 
+export class UnknownProviderError extends Error {
+  constructor(
+    public readonly provider: string,
+    public readonly suggestedFallback = 'gpt-4o-mini'
+  ) {
+    super(
+      `Unknown AI provider: "${provider}". Valid providers are: ${Object.keys(
+        PROVIDER_CONFIG
+      ).join(', ')}`
+    );
+    this.name = 'UnknownProviderError';
+  }
+}
+
+/**
+ * Type guard to check if a string is a valid provider name
+ */
+export function isProviderName(provider: string): provider is ProviderName {
+  return provider in PROVIDER_CONFIG;
+}
+
+export function getProviderConfig<T extends ProviderName>(
+  provider: T
+): (typeof PROVIDER_CONFIG)[T];
+export function getProviderConfig(
+  provider: string
+): (typeof PROVIDER_CONFIG)[ProviderName] | undefined;
 export function getProviderConfig(
   provider: string
 ): (typeof PROVIDER_CONFIG)[ProviderName] | undefined {
-  return PROVIDER_CONFIG[provider as ProviderName];
+  if (isProviderName(provider)) {
+    // Safe: isProviderName type guard ensures provider is a known key
+    // eslint-disable-next-line security/detect-object-injection
+    return PROVIDER_CONFIG[provider];
+  }
+  return undefined;
 }
 
+export function getDefaultModel<T extends ProviderName>(provider: T): string;
+export function getDefaultModel(provider: string): string;
 export function getDefaultModel(provider: string): string {
-  const config = PROVIDER_CONFIG[provider as ProviderName];
-  return config?.defaultModel ?? 'gpt-4o-mini';
+  if (isProviderName(provider)) {
+    // Safe: isProviderName type guard ensures provider is a known key
+    // eslint-disable-next-line security/detect-object-injection
+    return PROVIDER_CONFIG[provider].defaultModel;
+  }
+
+  throw new UnknownProviderError(provider);
 }
 
+export function getProviderFeatures<T extends ProviderName>(
+  provider: T
+): (typeof PROVIDER_CONFIG)[T]['features'];
+export function getProviderFeatures(
+  provider: string
+): (typeof PROVIDER_CONFIG)[ProviderName]['features'] | undefined;
 export function getProviderFeatures(
   provider: string
 ): (typeof PROVIDER_CONFIG)[ProviderName]['features'] | undefined {
-  const config = PROVIDER_CONFIG[provider as ProviderName];
-  return config?.features;
+  if (isProviderName(provider)) {
+    // Safe: isProviderName type guard ensures provider is a known key
+    // eslint-disable-next-line security/detect-object-injection
+    return PROVIDER_CONFIG[provider].features;
+  }
+  return undefined;
 }
 
 export const PROVIDER_FEATURES = Object.entries(PROVIDER_CONFIG).reduce(
