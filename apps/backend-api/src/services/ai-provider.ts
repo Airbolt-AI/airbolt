@@ -5,7 +5,6 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import {
   PROVIDER_CONFIG,
-  PROVIDER_FEATURES,
   type ProviderName,
   type ProviderFeature,
   getProviderConfig,

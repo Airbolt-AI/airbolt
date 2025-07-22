@@ -1,34 +1,7 @@
-// Core configuration that all providers must have
-interface CoreProviderConfig {
-  envKey: string;
-  defaultModel: string;
-  keyRegex: RegExp;
-  keyFormat: string;
-  features: {
-    streaming: boolean;
-    functionCalling: boolean;
-    vision: boolean;
-  };
-}
-
-// Common optional extensions for future provider needs
-interface CommonExtensions {
-  headers?: Record<string, string>;
-  baseUrl?: string;
-  rateLimit?: {
-    requestsPerMinute: number;
-    retryAfter?: number;
-  };
-  retryConfig?: {
-    maxRetries: number;
-    baseDelay: number;
-  };
-}
-
-// Type for provider configuration with optional extensions
-type ProviderConfiguration<
-  T extends Record<string, unknown> = Record<string, never>,
-> = CoreProviderConfig & CommonExtensions & T;
+// Provider configuration structure
+// Required fields: envKey, defaultModel, keyRegex, keyFormat, features
+// Optional fields can be added directly when needed
+// Example: headers?: Record<string, string>, baseUrl?: string, etc.
 
 export const PROVIDER_CONFIG = {
   openai: {
@@ -41,7 +14,7 @@ export const PROVIDER_CONFIG = {
       functionCalling: true,
       vision: true,
     },
-  } satisfies ProviderConfiguration,
+  },
   anthropic: {
     envKey: 'ANTHROPIC_API_KEY',
     defaultModel: 'claude-3-5-sonnet-20241022',
@@ -52,7 +25,7 @@ export const PROVIDER_CONFIG = {
       functionCalling: true,
       vision: true,
     },
-  } satisfies ProviderConfiguration,
+  },
 } as const;
 
 export type ProviderName = keyof typeof PROVIDER_CONFIG;
