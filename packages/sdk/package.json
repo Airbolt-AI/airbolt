@@ -70,8 +70,11 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@airbolt/test-utils": "workspace:*",
     "@types/node": "^20.0.0",
+    "@types/node-fetch": "^2.6.12",
     "fast-check": "^4.1.1",
+    "node-fetch": "^3.3.2",
     "typedoc": "^0.28.7",
     "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.0.0",

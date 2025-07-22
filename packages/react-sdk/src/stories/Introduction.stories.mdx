@@ -11,6 +11,7 @@ Welcome to the **Airbolt React SDK** interactive demo! This is your playground f
 Airbolt provides two main ways to add AI chat to your React app:
 
 ### 1. ChatWidget Component
+
 A pre-built, fully-featured chat interface that works out of the box:
 
 ```jsx
@@ -22,6 +23,7 @@ function App() {
 ```
 
 ### 2. useChat Hook
+
 Build your own custom chat UI with complete control:
 
 ```jsx
@@ -29,9 +31,9 @@ import { useChat } from '@airbolt/react-sdk';
 
 function CustomChat() {
   const { messages, input, setInput, send } = useChat({
-    baseURL: 'https://your-api.com'
+    baseURL: 'https://your-api.com',
   });
-  
+
   // Build your own UI...
 }
 ```
@@ -39,6 +41,7 @@ function CustomChat() {
 ## 🎯 What You'll Find Here
 
 ### Components
+
 - **ChatWidget** - Explore all the configuration options for the pre-built chat component
   - Theme customization (light/dark/auto)
   - Position modes (inline/fixed)
@@ -46,6 +49,7 @@ function CustomChat() {
   - Provider selection (OpenAI/Anthropic)
 
 ### Hooks
+
 - **useChat** - See examples of building custom chat interfaces
   - Basic usage patterns
   - Error handling
@@ -55,17 +59,21 @@ function CustomChat() {
 ## 🔧 Key Features
 
 ### Multi-Provider Support
+
 Switch between AI providers on the fly:
+
 - **OpenAI** (GPT-4, GPT-3.5)
 - **Anthropic** (Claude 3.5 Sonnet)
 
 ### Theming & Customization
+
 - Built-in light and dark themes
 - Custom color schemes
 - Flexible positioning
 - Custom CSS styles
 
 ### Developer Experience
+
 - TypeScript support out of the box
 - Interactive prop controls
 - Live code examples

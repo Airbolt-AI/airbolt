@@ -13,3 +13,11 @@ export {
   createMinimalTestEnv,
   TEST_ENV_PRESETS,
 } from './env.js';
+
+// SSE testing utilities
+export {
+  SSETestServer,
+  type SSEScenario,
+  type SSEEvent,
+} from './sse-test-server.js';
+export { SSEScenarioBuilder, SSETestUtils } from './sse-test-utils.js';

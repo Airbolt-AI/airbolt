@@ -164,6 +164,10 @@ export async function* chatStream(
                 );
             }
           } catch (e) {
+            // Re-throw AirboltError instances
+            if (e instanceof AirboltError) {
+              throw e;
+            }
             // Ignore parse errors for now
           }
         }

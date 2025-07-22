@@ -1,28 +1,28 @@
 export default {
-  stories: "src/**/*.stories.{js,jsx,ts,tsx,mdx}",
-  viteConfig: ".ladle/vite.config.mjs",
+  stories: 'src/**/*.stories.{js,jsx,ts,tsx,mdx}',
+  viteConfig: '.ladle/vite.config.mjs',
   addons: {
     theme: {
       enabled: true,
-      defaultState: "auto"
+      defaultState: 'auto',
     },
     mode: {
       enabled: true,
-      defaultState: "full"
+      defaultState: 'full',
     },
     rtl: {
       enabled: true,
-      defaultState: false
+      defaultState: false,
     },
     lazyLoad: {
-      enabled: false
+      enabled: false,
     },
     source: {
       enabled: true,
-      defaultState: false
+      defaultState: false,
     },
     a11y: {
-      enabled: true
+      enabled: true,
     },
     width: {
       enabled: true,
@@ -31,7 +31,7 @@ export default {
         medium: 768,
         large: 1024,
       },
-      defaultState: 0
-    }
-  }
+      defaultState: 0,
+    },
+  },
 };

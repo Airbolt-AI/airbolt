@@ -262,7 +262,18 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
                   error instanceof Error ? error.message : 'Stream failed',
               }),
             });
-            throw error;
+
+            // Log the error but don't throw - SSE response already started
+            request.log.error(
+              {
+                error,
+                streaming: true,
+              },
+              'Error during streaming response'
+            );
+
+            // Return to end the SSE stream gracefully
+            return;
           }
         } else {
           // Non-streaming response (existing logic)
