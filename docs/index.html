@@ -296,7 +296,11 @@
 
       /* Beta CTA Section */
       .beta-cta {
-        background: linear-gradient(135deg, var(--beta-gradient-start), var(--beta-gradient-end));
+        background: linear-gradient(
+          135deg,
+          var(--beta-gradient-start),
+          var(--beta-gradient-end)
+        );
         margin: 1.5rem 0 3rem 0;
         border-radius: var(--beta-border-radius);
         padding: 3rem 2rem;
@@ -457,14 +461,16 @@
           <div class="beta-cta-content">
             <h2>🚀 Try Hosted Airbolt Beta</h2>
             <p>
-              Skip the deployment! Get AI chat in your app with zero backend setup. 
-              No servers, no configuration, no hassle.
+              Skip the deployment! Get AI chat in your app with zero backend
+              setup. No servers, no configuration, no hassle.
             </p>
-            <a href="https://forms.gle/2yWKszvJBZReN6kf7" 
-               class="beta-cta-button" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               aria-label="Join Airbolt private beta - opens in new tab">
+            <a
+              href="https://forms.gle/2yWKszvJBZReN6kf7"
+              class="beta-cta-button"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Join Airbolt private beta - opens in new tab"
+            >
               Join Private Beta
             </a>
             <div class="beta-cta-secondary">
@@ -474,59 +480,125 @@
         </div>
       </section>
 
-      <section id="deployment" class="container" style="margin: 4rem auto;">
-        <h2 style="font-size: 2rem; margin-bottom: 2rem; text-align: center;">Deploy Your Own Backend</h2>
-        
-        <div style="max-width: 800px; margin: 0 auto;">
-          <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; text-align: center;">
-            Deploy your own private Airbolt backend in minutes. Get a secure LLM proxy with JWT authentication, rate limiting, and production-ready error handling.
+      <section id="deployment" class="container" style="margin: 4rem auto">
+        <h2 style="font-size: 2rem; margin-bottom: 2rem; text-align: center">
+          Deploy Your Own Backend
+        </h2>
+
+        <div style="max-width: 800px; margin: 0 auto">
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 1.1rem;
+              margin-bottom: 2rem;
+              text-align: center;
+            "
+          >
+            Deploy your own private Airbolt backend in minutes. Get a secure LLM
+            proxy with JWT authentication, rate limiting, and production-ready
+            error handling.
           </p>
-          
-          <div style="background: var(--bg-light); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">🚀 One-Click Deploy to Render</h3>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
-              The fastest way to get started. Click the button below to deploy your own Airbolt backend:
+
+          <div
+            style="
+              background: var(--bg-light);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              padding: 2rem;
+              margin-bottom: 2rem;
+            "
+          >
+            <h3 style="margin-bottom: 1rem">🚀 One-Click Deploy to Render</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem">
+              The fastest way to get started. Click the button below to deploy
+              your own Airbolt backend:
             </p>
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-              <a href="https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt" 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 style="display: inline-block;">
-                <img src="https://render.com/images/deploy-to-render-button.svg" 
-                     alt="Deploy to Render" 
-                     style="height: 40px;">
+            <div style="text-align: center; margin-bottom: 1.5rem">
+              <a
+                href="https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display: inline-block"
+              >
+                <img
+                  src="https://render.com/images/deploy-to-render-button.svg"
+                  alt="Deploy to Render"
+                  style="height: 40px"
+                />
               </a>
             </div>
-            
-            <h4 style="margin-bottom: 0.5rem;">What you'll need:</h4>
-            <ul style="color: var(--text-muted); margin-bottom: 1rem;">
-              <li>A service name (becomes your URL: <code>my-ai-backend.onrender.com</code>)</li>
-              <li>Your OpenAI API key (<a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--primary);">get one here</a>)</li>
+
+            <h4 style="margin-bottom: 0.5rem">What you'll need:</h4>
+            <ul style="color: var(--text-muted); margin-bottom: 1rem">
+              <li>
+                A service name (becomes your URL:
+                <code>my-ai-backend.onrender.com</code>)
+              </li>
+              <li>
+                Your OpenAI API key (<a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  style="color: var(--primary)"
+                  >get one here</a
+                >)
+              </li>
             </ul>
-            
-            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-              <p style="margin: 0; font-size: 0.95rem;">
-                <strong>Free tier note:</strong> Render's free tier sleeps after 15 minutes of inactivity. 
-                The SDK automatically handles cold starts with smart retries and extended timeouts.
+
+            <div
+              style="
+                background: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-top: 1rem;
+              "
+            >
+              <p style="margin: 0; font-size: 0.95rem">
+                <strong>Free tier note:</strong> Render's free tier sleeps after
+                15 minutes of inactivity. The SDK automatically handles cold
+                starts with smart retries and extended timeouts.
               </p>
             </div>
           </div>
-          
-          <div style="text-align: center; margin-top: 2rem;">
-            <p style="color: var(--text-muted); margin-bottom: 1rem;">
-              After deployment, copy your API URL and use it with the SDKs below:
+
+          <div style="text-align: center; margin-top: 2rem">
+            <p style="color: var(--text-muted); margin-bottom: 1rem">
+              After deployment, copy your API URL and use it with the SDKs
+              below:
             </p>
-            <div style="background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; display: inline-block;">
-              <code style="color: var(--text);">baseURL: "https://my-ai-backend.onrender.com"</code>
+            <div
+              style="
+                background: #0d1117;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 1rem;
+                display: inline-block;
+              "
+            >
+              <code style="color: var(--text)"
+                >baseURL: "https://my-ai-backend.onrender.com"</code
+              >
             </div>
           </div>
         </div>
       </section>
 
       <section id="sdks" class="container">
-        <h2 style="font-size: 2rem; margin-bottom: 1rem; text-align: center;">Install the SDKs</h2>
-        <p style="color: var(--text-muted); text-align: center; margin-bottom: 3rem; max-width: 700px; margin-left: auto; margin-right: auto;">
-          Now that you have your backend deployed, install one of our SDKs to start building secure AI features:
+        <h2 style="font-size: 2rem; margin-bottom: 1rem; text-align: center">
+          Install the SDKs
+        </h2>
+        <p
+          style="
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+          "
+        >
+          Now that you have your backend deployed, install one of our SDKs to
+          start building secure AI features:
         </p>
         <div class="sdk-grid">
           <div class="sdk-card">

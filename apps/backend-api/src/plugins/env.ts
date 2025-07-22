@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
+import { PROVIDER_CONFIG } from '../services/provider-config.js';
 // CORS constants inlined for simplicity
 const COMMON_DEV_PORTS = [
   'http://localhost:3000',
@@ -11,6 +12,11 @@ const COMMON_DEV_PORTS = [
 ] as const;
 
 const DEFAULT_TEST_ORIGINS = 'http://localhost:3000,http://localhost:3001';
+
+const providerNames = Object.keys(PROVIDER_CONFIG) as [
+  keyof typeof PROVIDER_CONFIG,
+  ...Array<keyof typeof PROVIDER_CONFIG>,
+];
 
 export const EnvSchema = z
   .object({
@@ -41,11 +47,11 @@ export const EnvSchema = z
       })
       .default('info'),
 
-    // AI Provider Configuration
+    // AI Provider Configuration - now dynamic!
     AI_PROVIDER: z
-      .enum(['openai', 'anthropic'], {
+      .enum(providerNames, {
         errorMap: () => ({
-          message: 'AI_PROVIDER must be one of: openai, anthropic',
+          message: `AI_PROVIDER must be one of: ${providerNames.join(', ')}`,
         }),
       })
       .default('openai'),
@@ -56,14 +62,15 @@ export const EnvSchema = z
       })
       .optional(),
 
+    // Keep these for backward compatibility - will be validated dynamically
     OPENAI_API_KEY: z
       .string({
         invalid_type_error: 'OPENAI_API_KEY must be a string',
       })
       .min(1, 'OPENAI_API_KEY cannot be empty')
       .regex(
-        /^sk-(?:proj-)?[A-Za-z0-9_-]+$/,
-        'OPENAI_API_KEY must be a valid OpenAI API key format (sk-... or sk-proj-...)'
+        PROVIDER_CONFIG.openai.keyRegex,
+        `OPENAI_API_KEY must be a valid OpenAI API key format (${PROVIDER_CONFIG.openai.keyFormat})`
       )
       .optional(),
 
@@ -73,8 +80,8 @@ export const EnvSchema = z
       })
       .min(1, 'ANTHROPIC_API_KEY cannot be empty')
       .regex(
-        /^sk-ant-[A-Za-z0-9_-]+$/,
-        'ANTHROPIC_API_KEY must be a valid Anthropic API key format (sk-ant-...)'
+        PROVIDER_CONFIG.anthropic.keyRegex,
+        `ANTHROPIC_API_KEY must be a valid Anthropic API key format (${PROVIDER_CONFIG.anthropic.keyFormat})`
       )
       .optional(),
 
@@ -195,11 +202,12 @@ export const EnvSchema = z
   .refine(
     data => {
       // Ensure the appropriate API key is provided for the selected provider
-      if (data.AI_PROVIDER === 'openai' && !data.OPENAI_API_KEY) {
-        return false;
-      }
-      if (data.AI_PROVIDER === 'anthropic' && !data.ANTHROPIC_API_KEY) {
-        return false;
+      const providerConfig = PROVIDER_CONFIG[data.AI_PROVIDER];
+      if (providerConfig) {
+        const apiKey = data[providerConfig.envKey as keyof typeof data];
+        if (!apiKey) {
+          return false;
+        }
       }
       return true;
     },
