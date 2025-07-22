@@ -180,22 +180,22 @@ export class SSETestServer {
   useScenario(name: keyof typeof SSETestServer.scenarios): void {
     switch (name) {
       case 'connectionDrop':
-        this.currentScenario = SSETestServer.scenarios.connectionDrop;
+        this.currentScenario = SSETestServer.scenarios['connectionDrop']!;
         break;
       case 'partialMessage':
-        this.currentScenario = SSETestServer.scenarios.partialMessage;
+        this.currentScenario = SSETestServer.scenarios['partialMessage']!;
         break;
       case 'errorMidStream':
-        this.currentScenario = SSETestServer.scenarios.errorMidStream;
+        this.currentScenario = SSETestServer.scenarios['errorMidStream']!;
         break;
       case 'slowStart':
-        this.currentScenario = SSETestServer.scenarios.slowStart;
+        this.currentScenario = SSETestServer.scenarios['slowStart']!;
         break;
       case 'success':
-        this.currentScenario = SSETestServer.scenarios.success;
+        this.currentScenario = SSETestServer.scenarios['success']!;
         break;
       case 'invalidFormat':
-        this.currentScenario = SSETestServer.scenarios.invalidFormat;
+        this.currentScenario = SSETestServer.scenarios['invalidFormat']!;
         break;
       default:
         throw new Error(`Unknown scenario: ${name}`);
