@@ -68,7 +68,6 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@airbolt/sdk": "workspace:*",
     "@airbolt/test-utils": "workspace:*",
     "@stryker-mutator/core": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",
