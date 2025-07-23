@@ -30,8 +30,9 @@ Build your own custom chat UI with complete control:
 import { useChat } from '@airbolt/react-sdk';
 
 function CustomChat() {
-  const { messages, input, setInput, send } = useChat({
+  const { messages, input, setInput, send, isStreaming } = useChat({
     baseURL: 'https://your-api.com',
+    // streaming: true is the default
   });
 
   // Build your own UI...
@@ -52,11 +53,38 @@ function CustomChat() {
 
 - **useChat** - See examples of building custom chat interfaces
   - Basic usage patterns
+  - Streaming responses with real-time updates
   - Error handling
   - Authentication flows
   - Advanced configurations
 
 ## 🔧 Key Features
+
+### 🌊 Streaming Responses (New Default!)
+
+Experience real-time AI responses that stream word-by-word:
+
+- **Better UX** - Users see responses immediately as they're generated
+- **Default behavior** - Streaming is enabled by default for both ChatWidget and useChat
+- **Easy control** - Disable with `streaming={false}` when needed
+- **onChunk callback** - Handle individual chunks for custom behaviors
+
+```jsx
+// Streaming is the default
+<ChatWidget baseURL="https://your-api.com" />
+
+// Or explicitly control it
+<ChatWidget 
+  baseURL="https://your-api.com" 
+  streaming={false}  // Use chatSync for non-streaming
+/>
+
+// With useChat hook
+const { messages, isStreaming } = useChat({
+  baseURL: 'https://your-api.com',
+  onChunk: (chunk) => console.log('Received:', chunk)
+});
+```
 
 ### Multi-Provider Support
 

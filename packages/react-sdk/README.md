@@ -61,7 +61,7 @@ function ChatComponent() {
 }
 ```
 
-> 💡 **Want to see it in action?** Check out our [Interactive Demo](#interactive-demo) to explore all features with live examples!
+> 💡 **Want to see it in action?** Check out our [Interactive Demo](#interactive-demo) to explore all features with live examples including streaming responses!
 
 ## API Reference
 
@@ -226,6 +226,26 @@ This will open an interactive environment where you can:
 - 🪝 Explore useChat hook patterns and examples
 
 Visit http://localhost:61000 after running the command to start exploring!
+
+## Interactive Demo
+
+The best way to explore all SDK features is through our interactive Ladle demo:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start the interactive demo
+pnpm run ladle
+```
+
+This will open an interactive environment at http://localhost:61000 where you can:
+
+- 🎮 Try all ChatWidget configurations with live controls
+- 🌊 See streaming responses in action (now the default!)
+- 🎨 Experiment with themes and positioning
+- 🪝 Explore useChat hook patterns
+- 📝 Copy production-ready code snippets
 
 ## Examples
 
@@ -590,13 +610,21 @@ The widget inherits typography (font-family, font-size, line-height) from its pa
 
 This package is written in TypeScript and provides full type definitions. All exports are properly typed for an excellent development experience.
 
-## More Examples
+## Example Code
 
-Check out our example applications:
+For comprehensive, interactive examples of all SDK features, run the Ladle demo:
 
-- **[React Widget Example](examples/widget-demo/)** - Shows how to use the pre-built ChatWidget
-- **[React Hooks Example](examples/hooks-demo/)** - Demonstrates building a custom chat interface with useChat
-- **[Node.js CLI Example](../sdk/examples/node-cli/)** - Command-line chat using the core SDK
+```bash
+pnpm run ladle
+```
+
+The Ladle demo is the canonical source for:
+
+- All ChatWidget configurations and use cases
+- useChat hook patterns and streaming examples
+- Theme customization options
+- Error handling patterns
+- Authentication flows
 
 ## License
 
