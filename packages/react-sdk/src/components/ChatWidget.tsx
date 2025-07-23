@@ -240,8 +240,8 @@ export function ChatWidget({
         ))}
 
         {(isLoading || isStreaming) && (
-          <div style={styles['typing']} aria-label="Assistant is typing">
-            <span>{isStreaming ? 'Streaming...' : 'Typing...'}</span>
+          <div style={styles['typing']} aria-label="Assistant is thinking">
+            <span>Thinking...</span>
           </div>
         )}
 

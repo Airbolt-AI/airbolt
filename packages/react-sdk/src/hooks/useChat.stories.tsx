@@ -79,7 +79,7 @@ const ChatDemo = ({ options }: { options?: UseChatOptions }) => {
         ))}
         {isLoading && (
           <div style={{ fontStyle: 'italic', color: '#666' }}>
-            AI is typing...
+            AI is thinking...
           </div>
         )}
       </div>
@@ -738,7 +738,7 @@ export const AdvancedInitialMessages: Story = () => {
           ))}
           {isLoading && (
             <div style={{ fontStyle: 'italic', color: '#666' }}>
-              AI is typing...
+              AI is thinking...
             </div>
           )}
         </div>
