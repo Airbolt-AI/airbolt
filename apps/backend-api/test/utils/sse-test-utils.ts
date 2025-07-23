@@ -1,5 +1,3 @@
-import type { Message } from '@airbolt/sdk';
-
 /**
  * Utilities for testing streaming behaviors in backend tests
  */
@@ -26,7 +24,7 @@ export class SSETestUtils {
       error = e as Error;
     }
 
-    return { chunks, error };
+    return error ? { chunks, error } : { chunks };
   }
 
   /**
