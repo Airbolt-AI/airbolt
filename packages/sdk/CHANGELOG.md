@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1
+
+### Patch Changes
+
+- Fix double slash issue in URL construction for streaming API
+  - Added shared `joinUrl` utility to properly handle trailing slashes in base URLs
+  - Fixed streaming API endpoints (`/api/tokens` and `/api/chat`) that were creating malformed URLs like `//api/tokens`
+  - Improved URL normalization to handle edge cases (dot paths, multiple slashes, backslashes)
+  - Added comprehensive tests including property-based testing
+
 ## 0.5.0
 
 ### Minor Changes
