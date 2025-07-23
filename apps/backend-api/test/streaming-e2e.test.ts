@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { createTestEnv } from '@airbolt/test-utils';
-import { SSETestUtils } from '@airbolt/test-utils';
 import { chatStream } from '@airbolt/sdk';
 import { buildApp } from '../src/app.js';
+import { SSETestUtils } from './utils/sse-test-utils.js';
 import type { FastifyInstance } from 'fastify';
 
 describe('Streaming E2E - Full Stack Integration', () => {
