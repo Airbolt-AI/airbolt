@@ -177,6 +177,10 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           request.body
         );
 
+        // Check if streaming is requested
+        const acceptHeader = request.headers.accept || '';
+        const isStreaming = acceptHeader.includes('text/event-stream');
+
         // Log request (without sensitive content)
         request.log.info(
           {
@@ -184,6 +188,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             hasSystemPrompt: !!system,
             provider: provider,
             model: model,
+            streaming: isStreaming,
             jwt: {
               iat: request.jwt?.iat,
               exp: request.jwt?.exp,
@@ -192,31 +197,111 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           'Processing chat request'
         );
 
-        // Call AI provider service with optional system prompt and provider/model overrides
-        const response = await fastify.aiProvider.createChatCompletion(
-          messages,
-          system,
-          provider,
-          model
-        );
+        if (isStreaming) {
+          // Streaming response
+          reply.sse({
+            event: 'start',
+            data: JSON.stringify({ type: 'start' }),
+          });
 
-        // Log successful response
-        const duration = Date.now() - startTime;
-        request.log.info(
-          {
-            duration,
-            usage: response.usage,
-            responseLength: response.content.length,
-          },
-          'Chat request completed successfully'
-        );
+          try {
+            // Get the stream from AI provider
+            const stream = await fastify.aiProvider.createChatCompletionStream(
+              messages,
+              system,
+              provider,
+              model
+            );
 
-        // Validate response in development
-        if (isDevelopment()) {
-          ChatResponseSchema.parse(response);
+            let fullContent = '';
+            let tokenCount = 0;
+
+            // Stream the response
+            for await (const chunk of stream) {
+              fullContent += chunk;
+              tokenCount++;
+
+              // Send SSE event with the chunk
+              reply.sse({
+                event: 'chunk',
+                data: JSON.stringify({ content: chunk }),
+              });
+            }
+
+            // Send completion event with usage data
+            const duration = Date.now() - startTime;
+            reply.sse({
+              event: 'done',
+              data: JSON.stringify({
+                usage: {
+                  total_tokens: tokenCount,
+                },
+                duration,
+              }),
+            });
+
+            request.log.info(
+              {
+                duration,
+                responseLength: fullContent.length,
+                tokenCount,
+                streaming: true,
+              },
+              'Streaming chat request completed successfully'
+            );
+          } catch (error) {
+            // Send error event before closing
+            reply.sse({
+              event: 'error',
+              data: JSON.stringify({
+                error:
+                  error instanceof AIProviderError
+                    ? error.code
+                    : 'STREAM_ERROR',
+                message:
+                  error instanceof Error ? error.message : 'Stream failed',
+              }),
+            });
+
+            // Log the error but don't throw - SSE response already started
+            request.log.error(
+              {
+                error,
+                streaming: true,
+              },
+              'Error during streaming response'
+            );
+
+            // Return to end the SSE stream gracefully
+            return;
+          }
+        } else {
+          // Non-streaming response (existing logic)
+          const response = await fastify.aiProvider.createChatCompletion(
+            messages,
+            system,
+            provider,
+            model
+          );
+
+          // Log successful response
+          const duration = Date.now() - startTime;
+          request.log.info(
+            {
+              duration,
+              usage: response.usage,
+              responseLength: response.content.length,
+            },
+            'Chat request completed successfully'
+          );
+
+          // Validate response in development
+          if (isDevelopment()) {
+            ChatResponseSchema.parse(response);
+          }
+
+          return reply.code(200).send(response);
         }
-
-        return reply.code(200).send(response);
       } catch (error) {
         const duration = Date.now() - startTime;
 

@@ -1,5 +1,5 @@
 // Main vanilla API exports
-export { chat } from './chat.js';
+export { chat, chatStream } from './chat.js';
 export { createChatSession } from './session.js';
 
 // Client utility functions

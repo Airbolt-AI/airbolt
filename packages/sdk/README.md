@@ -75,6 +75,44 @@ function chat(messages: Message[], options?: ChatOptions): Promise<string>;
 
 **Returns:** The AI assistant's response as a string
 
+#### `chatStream(messages, options?)`
+
+Stream AI responses in real-time for a better user experience.
+
+```typescript
+async function* chatStream(
+  messages: Message[],
+  options?: ChatOptions
+): AsyncGenerator<{ content: string; type: 'chunk' | 'done' | 'error' }>;
+```
+
+**Parameters:**
+
+- Same as `chat()` function
+
+**Returns:** An async generator that yields:
+
+- `{ content: string, type: 'chunk' }` - Content chunks as they arrive
+- `{ content: '', type: 'done' }` - Indicates streaming is complete
+- Throws error if streaming fails
+
+**Example:**
+
+```typescript
+import { chatStream } from '@airbolt/sdk';
+
+// Stream the response
+for await (const chunk of chatStream([
+  { role: 'user', content: 'Tell me a story' },
+])) {
+  if (chunk.type === 'chunk') {
+    process.stdout.write(chunk.content); // Print as it arrives
+  } else if (chunk.type === 'done') {
+    console.log('\nStreaming complete!');
+  }
+}
+```
+
 #### `createChatSession(options?)`
 
 Create a persistent chat session for maintaining conversation context.

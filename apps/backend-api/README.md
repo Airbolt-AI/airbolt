@@ -29,35 +29,13 @@ pnpm test
 
 The API will be available at [http://localhost:3000](http://localhost:3000)
 
-## AI Provider Support
-
-Airbolt supports multiple AI providers out of the box:
-
-### OpenAI (Default)
-
-- Models: `gpt-4o-mini` (default), `gpt-4o`, `gpt-4`, `gpt-3.5-turbo`
-- Get API key: https://platform.openai.com/api-keys
-
-### Anthropic
-
-- Models: `claude-3-5-sonnet-20241022` (default), `claude-3-opus-20240229`, `claude-3-sonnet-20240229`
-- Get API key: https://console.anthropic.com/
-
-To switch providers, set the `AI_PROVIDER` environment variable:
-
-```bash
-# Use Anthropic instead of OpenAI
-AI_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-```
-
 ## Environment Configuration
 
 All environment variables are validated using Zod schemas for type safety and runtime validation.
 
 ### Required Variables
 
-Choose your AI provider and provide the corresponding API key:
+Provide your AI provider's API key:
 
 | Variable            | Description                            | Format       | Example                   |
 | ------------------- | -------------------------------------- | ------------ | ------------------------- |

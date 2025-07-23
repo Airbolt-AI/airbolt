@@ -63,10 +63,12 @@
     "ai": "^4.3.19",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
+    "fastify-sse-v2": "^4.2.1",
     "openai": "^5.8.2",
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@airbolt/sdk": "workspace:*",
     "@airbolt/test-utils": "workspace:*",
     "@stryker-mutator/core": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",

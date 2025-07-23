@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { generateText, type LanguageModel } from 'ai';
+import { generateText, streamText, type LanguageModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
@@ -287,6 +287,89 @@ export class AIProviderService {
 
     // Handle the error
     this.handleProviderError(lastError, providerForError);
+  }
+
+  createChatCompletionStream(
+    messages: Message[],
+    systemPromptOverride?: string,
+    providerOverride?: string,
+    modelOverride?: string
+  ): Promise<AsyncIterable<string>> {
+    const messagesWithSystem = this.injectSystemPrompt(
+      messages,
+      systemPromptOverride
+    );
+
+    // Determine which model to use
+    let modelToUse = this.model;
+    let providerForError = this.provider;
+
+    if (providerOverride || modelOverride) {
+      // Use the override provider or fall back to current provider
+      const provider = providerOverride || this.provider;
+
+      // Validate provider first
+      if (!PROVIDER_FACTORIES[provider as keyof typeof PROVIDER_FACTORIES]) {
+        throw new AIProviderError(
+          `Unsupported provider: ${provider}`,
+          400,
+          'INVALID_PROVIDER'
+        );
+      }
+
+      const defaultModel = getDefaultModel(provider);
+      const modelName = modelOverride || defaultModel;
+
+      // Get the appropriate API key from stored keys
+      const apiKey = this.apiKeys[provider as ProviderName];
+
+      if (!apiKey) {
+        throw new AIProviderError(
+          `API key not configured for provider: ${provider}`,
+          400,
+          'MISSING_API_KEY'
+        );
+      }
+
+      modelToUse = this.createModel(provider, modelName, apiKey);
+      providerForError = provider;
+    }
+
+    // Check if provider supports streaming
+    if (!this.supportsFeature('streaming')) {
+      throw new AIProviderError(
+        `Streaming not supported by provider: ${providerForError}`,
+        400,
+        'STREAMING_NOT_SUPPORTED'
+      );
+    }
+
+    try {
+      // Convert messages to Vercel AI SDK format
+      const formattedMessages = messagesWithSystem.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      // Use Vercel AI SDK's streamText function
+      const stream = streamText({
+        model: modelToUse,
+        messages: formattedMessages,
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+
+      // Convert the stream to an async iterable of strings
+      async function* stringStream(): AsyncIterable<string> {
+        for await (const part of stream.textStream) {
+          yield part;
+        }
+      }
+
+      return Promise.resolve(stringStream());
+    } catch (error) {
+      this.handleProviderError(error, providerForError);
+    }
   }
 
   private injectSystemPrompt(

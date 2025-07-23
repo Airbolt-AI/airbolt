@@ -17,6 +17,7 @@ import corsPlugin from './plugins/cors.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import fastifyJwt from '@fastify/jwt';
 import aiProviderService from './services/ai-provider.js';
+import fastifySse from 'fastify-sse-v2';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -162,6 +163,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
 
   // Register rate limit plugin after env (it depends on RATE_LIMIT_* from env)
   await fastify.register(rateLimitPlugin);
+
+  // Register SSE plugin for streaming support
+  await fastify.register(fastifySse);
 
   // Register JWT plugin after env (it depends on JWT_SECRET from env)
   // Use config which is decorated by the env plugin

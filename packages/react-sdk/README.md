@@ -86,6 +86,7 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 | `className`    | `string`                           | -                     | Additional CSS class for custom styling            |
 | `minimalTheme` | `MinimalTheme`                     | -                     | New minimal theme using CSS custom properties      |
 | `customStyles` | `object`                           | -                     | Custom styles for widget elements                  |
+| `streaming`    | `boolean`                          | `false`               | Enable streaming responses                         |
 
 #### Example Usage
 
@@ -147,18 +148,21 @@ function useChat(options?: UseChatOptions): UseChatReturn;
 | `provider`        | `'openai' \| 'anthropic'` | Optional. AI provider to use.                            |
 | `model`           | `string`                  | Optional. Specific model to use.                         |
 | `initialMessages` | `Message[]`               | Optional. Initial messages to populate the chat history. |
+| `streaming`       | `boolean`                 | Optional. Enable streaming responses (default: false).   |
+| `onChunk`         | `(chunk: string) => void` | Optional. Callback for streaming chunks.                 |
 
 #### Return Value
 
-| Property    | Type                      | Description                                    |
-| ----------- | ------------------------- | ---------------------------------------------- |
-| `messages`  | `Message[]`               | Array of all messages in the conversation.     |
-| `input`     | `string`                  | Current input value.                           |
-| `setInput`  | `(value: string) => void` | Function to update the input value.            |
-| `isLoading` | `boolean`                 | Whether a message is currently being sent.     |
-| `error`     | `Error \| null`           | Error from the last send attempt, if any.      |
-| `send`      | `() => Promise<void>`     | Send the current input as a message.           |
-| `clear`     | `() => void`              | Clear all messages and reset the conversation. |
+| Property      | Type                      | Description                                    |
+| ------------- | ------------------------- | ---------------------------------------------- |
+| `messages`    | `Message[]`               | Array of all messages in the conversation.     |
+| `input`       | `string`                  | Current input value.                           |
+| `setInput`    | `(value: string) => void` | Function to update the input value.            |
+| `isLoading`   | `boolean`                 | Whether a message is currently being sent.     |
+| `isStreaming` | `boolean`                 | Whether a response is currently streaming.     |
+| `error`       | `Error \| null`           | Error from the last send attempt, if any.      |
+| `send`        | `() => Promise<void>`     | Send the current input as a message.           |
+| `clear`       | `() => void`              | Clear all messages and reset the conversation. |
 
 ### Types
 
@@ -322,6 +326,59 @@ function AdvancedChat() {
           {isLoading ? 'Sending...' : 'Send'}
         </button>
       </div>
+    </div>
+  );
+}
+```
+
+### Streaming Responses
+
+Enable real-time streaming for a more interactive experience:
+
+```tsx
+import { useChat } from '@airbolt/react-sdk';
+
+function StreamingChat() {
+  const { messages, input, setInput, send, isLoading, isStreaming, error } =
+    useChat({
+      baseURL: 'https://your-deployment.onrender.com',
+      streaming: true, // Enable streaming
+      onChunk: chunk => {
+        // Optional: Handle individual chunks
+        console.log('Received:', chunk);
+      },
+    });
+
+  return (
+    <div className="chat-container">
+      <div className="messages">
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.role}`}>
+            {msg.content}
+          </div>
+        ))}
+
+        {/* Show different states */}
+        {isLoading && <div className="status">Connecting...</div>}
+        {isStreaming && <div className="status">AI is responding...</div>}
+      </div>
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          send();
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={isLoading || isStreaming}
+          placeholder="Type a message..."
+        />
+        <button type="submit" disabled={isLoading || isStreaming || !input}>
+          {isStreaming ? 'Streaming...' : 'Send'}
+        </button>
+      </form>
     </div>
   );
 }

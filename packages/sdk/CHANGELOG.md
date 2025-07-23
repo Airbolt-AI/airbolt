@@ -127,10 +127,6 @@ The SDK version is automatically managed through:
 | ----------- | ----------- | --------------- | ------------------ |
 | 1.x.x       | 1.x.x       | ≥18.0.0         | ≥4.9.0             |
 
-### Migration Guides
-
-When breaking changes occur, migration guides will be provided in this changelog to help users upgrade their implementations.
-
 ---
 
 _This changelog is automatically maintained by the SDK generation pipeline._
