@@ -214,8 +214,7 @@ await askAI('Explain how React hooks work');
 
 **See more examples**:
 
-- [React Widget Example](packages/react-sdk/examples/widget-demo/) - Pre-built chat widget
-- [React Hooks Example](packages/react-sdk/examples/hooks-demo/) - Custom chat interface
+- [React SDK Interactive Examples](packages/react-sdk#interactive-demo) - Live Ladle demos with ChatWidget and useChat hook
 - [Node.js CLI Example](packages/sdk/examples/node-cli/) - Command-line chat
 
 ## Alternative deployment options
