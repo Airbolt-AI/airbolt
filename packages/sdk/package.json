@@ -1,6 +1,6 @@
 {
   "name": "@airbolt/sdk",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Type-safe TypeScript SDK for the Airbolt API with automatic token management",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -70,7 +70,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@airbolt/test-utils": "workspace:*",
     "@types/node": "^20.0.0",
     "@types/node-fetch": "^2.6.12",
     "fast-check": "^4.1.1",

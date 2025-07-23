@@ -292,9 +292,6 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
-      '@airbolt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.7

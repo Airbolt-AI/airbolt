@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- feat(streaming): make streaming the default behavior for SDK
+
+  BREAKING CHANGE: The `chat()` function now returns an AsyncIterator for streaming responses by default.
+
+  **Migration Guide:**
+  - If you want streaming (recommended): No changes needed, streaming is now the default
+  - If you need the complete response: Replace `chat()` with `chatSync()`
+
+  **Before:**
+
+  ```typescript
+  const response = await chat(messages); // Returns complete string
+  ```
+
+  **After:**
+
+  ```typescript
+  // Streaming (new default)
+  for await (const chunk of chat(messages)) {
+    console.log(chunk.content);
+  }
+
+  // Non-streaming (use chatSync)
+  const response = await chatSync(messages); // Returns complete string
+  ```
+
+  This change provides better user experience with real-time responses.
+  EOF < /dev/null
+
 ## 0.4.0
 
 ### Minor Changes
