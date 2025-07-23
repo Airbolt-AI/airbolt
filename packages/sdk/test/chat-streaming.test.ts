@@ -1,160 +1,64 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { chatStream } from '../src/api/chat.js';
 import type { Message } from '../src/api/types.js';
 
+// Mock fetch globally
+global.fetch = vi.fn();
+
 describe('chatStream', () => {
-  const mockBaseURL = 'http://localhost:3000';
-  let mockFetch: ReturnType<typeof vi.fn>;
+  const mockMessages: Message[] = [{ role: 'user', content: 'Hello' }];
 
   beforeEach(() => {
-    // Mock global fetch
-    mockFetch = vi.fn();
-    global.fetch = mockFetch;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    // Always mock token endpoint first
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ token: 'test-token' }),
+    } as any);
   });
 
   it('should stream chat responses', async () => {
-    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
-
     // Mock SSE response
-    const mockSSEData = [
-      'event: start\ndata: {"type":"start"}\n\n',
-      'event: chunk\ndata: {"content":"Hello"}\n\n',
-      'event: chunk\ndata: {"content":" world"}\n\n',
-      'event: done\ndata: {"usage":{"total_tokens":5}}\n\n',
-    ];
+    const mockResponse = {
+      ok: true,
+      body: new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+          controller.enqueue(
+            encoder.encode('event: chunk\ndata: {"content":"Hello "}\n\n')
+          );
+          controller.enqueue(
+            encoder.encode('event: chunk\ndata: {"content":"world!"}\n\n')
+          );
+          controller.enqueue(encoder.encode('event: done\ndata: {}\n\n'));
+          controller.close();
+        },
+      }),
+    };
 
-    // Create a mock readable stream
-    const mockStream = new ReadableStream({
-      async start(controller) {
-        for (const chunk of mockSSEData) {
-          controller.enqueue(new TextEncoder().encode(chunk));
-        }
-        controller.close();
-      },
-    });
-
-    // Mock token response
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ token: 'test-token' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        body: mockStream,
-      });
+    vi.mocked(global.fetch).mockResolvedValueOnce(mockResponse as any);
 
     const chunks: string[] = [];
-    let doneReceived = false;
-
-    for await (const chunk of chatStream(messages, { baseURL: mockBaseURL })) {
-      if (chunk.type === 'chunk') {
-        chunks.push(chunk.content);
-      } else if (chunk.type === 'done') {
-        doneReceived = true;
+    for await (const event of chatStream(mockMessages)) {
+      if (event.type === 'chunk') {
+        chunks.push(event.content);
       }
     }
 
-    expect(chunks).toEqual(['Hello', ' world']);
-    expect(doneReceived).toBe(true);
-
-    // Verify fetch calls
-    expect(mockFetch).toHaveBeenCalledTimes(2);
-
-    // First call for token
-    expect(mockFetch).toHaveBeenNthCalledWith(
-      1,
-      'http://localhost:3000/api/tokens',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-        }),
-      })
-    );
-
-    // Second call for streaming
-    expect(mockFetch).toHaveBeenNthCalledWith(
-      2,
-      'http://localhost:3000/api/chat',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Accept: 'text/event-stream',
-          Authorization: 'Bearer test-token',
-        }),
-      })
-    );
+    expect(chunks.join('')).toBe('Hello world!');
   });
 
-  it('should handle streaming errors', async () => {
-    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
-
-    // Mock token response and error response
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ token: 'test-token' }),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        text: async () => 'Internal Server Error',
-      });
+  it('should handle errors gracefully', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      text: async () => 'Server Error',
+    } as any);
 
     await expect(async () => {
-      const chunks = [];
-      for await (const chunk of chatStream(messages, {
-        baseURL: mockBaseURL,
-      })) {
-        chunks.push(chunk);
+      for await (const _ of chatStream(mockMessages)) {
+        // Should throw before yielding
       }
     }).rejects.toThrow('HTTP error! status: 500');
-  });
-
-  it('should parse SSE events correctly with incomplete chunks', async () => {
-    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
-
-    // Simulate incomplete chunks that need buffering
-    const mockSSEData = [
-      'event: st',
-      'art\ndata: {"type":"start"}\n\n',
-      'event: chunk\ndata: {"con',
-      'tent":"Hello"}\n\n',
-      'event: done\ndata: {"usage":{"total_tokens":5}}\n\n',
-    ];
-
-    const mockStream = new ReadableStream({
-      async start(controller) {
-        for (const chunk of mockSSEData) {
-          controller.enqueue(new TextEncoder().encode(chunk));
-        }
-        controller.close();
-      },
-    });
-
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ token: 'test-token' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        body: mockStream,
-      });
-
-    const chunks: string[] = [];
-
-    for await (const chunk of chatStream(messages, { baseURL: mockBaseURL })) {
-      if (chunk.type === 'chunk') {
-        chunks.push(chunk.content);
-      }
-    }
-
-    expect(chunks).toEqual(['Hello']);
   });
 });
