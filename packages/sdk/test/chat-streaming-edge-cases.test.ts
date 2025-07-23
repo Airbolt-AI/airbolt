@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-  SSETestServer,
-  SSEScenarioBuilder,
-  SSETestUtils,
-} from '@airbolt/test-utils';
+import { SSETestServer } from './utils/sse-test-server.js';
+import { SSEScenarioBuilder, SSETestUtils } from './utils/sse-test-utils.js';
 import { chatStream } from '../src/api/chat.js';
 import type { Message } from '../src/api/types.js';
 

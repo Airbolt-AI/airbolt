@@ -1,5 +1,5 @@
 import { describe, it } from 'vitest';
-import { SSETestServer } from '@airbolt/test-utils';
+import { SSETestServer } from './utils/sse-test-server.js';
 import { chatStream } from '../src/api/chat.js';
 
 describe('Debug Streaming', () => {
