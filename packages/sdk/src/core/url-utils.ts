@@ -62,7 +62,9 @@ export function joinUrl(base: string, ...segments: string[]): string {
       const trimmed = normalized.trim();
       // Then remove leading and trailing slashes
       const withoutSlashes = trimmed.replace(/^\/+|\/+$/g, '');
-      return withoutSlashes;
+      // Also normalize any double slashes within the segment
+      const cleanedSegment = withoutSlashes.replace(/\/+/g, '/');
+      return cleanedSegment;
     })
     .filter(segment => segment.length > 0);
 
