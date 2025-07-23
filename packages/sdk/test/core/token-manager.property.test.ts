@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import fc from 'fast-check';
 import { TokenManager } from '../../src/core/token-manager';
+import { joinUrl } from '../../src/core/url-utils';
 
 describe('TokenManager property-based tests', () => {
   describe('URL construction', () => {
@@ -38,9 +39,9 @@ describe('TokenManager property-based tests', () => {
             await tokenManager.getToken();
 
             // Verify the URL is correctly formed
-            // Note: baseUrl might have a path component, so we normalize it
-            const normalizedBase = baseUrl.replace(/\/+$/, '');
-            expect(capturedUrl).toBe(`${normalizedBase}/api/tokens`);
+            // TokenManager uses joinUrl internally, so we use it to calculate expected URL
+            const expectedUrl = joinUrl(baseURLWithSlash, 'api/tokens');
+            expect(capturedUrl).toBe(expectedUrl);
             expect(capturedUrl).not.toContain('//api');
             // URL should end with /api/tokens
             expect(capturedUrl).toMatch(/\/api\/tokens$/);

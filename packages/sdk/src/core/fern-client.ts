@@ -56,8 +56,14 @@ export class AirboltClient {
   private hasRetriedThisSession = false;
 
   constructor(options: AirboltClientOptions) {
+    // Normalize baseURL to prevent double slashes in generated URLs
+    // This fixes a bug in Fern's URL joining logic where trailing slashes
+    // in baseURL result in double slashes (e.g., //api/tokens)
+    const normalizedBaseURL = options.baseURL.replace(/\/+$/, '');
+
     this.options = {
       ...options,
+      baseURL: normalizedBaseURL,
       timeoutSeconds: options.timeoutSeconds ?? 60,
     };
 
@@ -65,13 +71,13 @@ export class AirboltClient {
     this.tokenManager =
       options.tokenManager ||
       new TokenManager({
-        baseURL: options.baseURL,
+        baseURL: normalizedBaseURL,
         userId: options.userId,
       });
 
     // Initialize Fern client with async token supplier
     this.client = new AirboltAPIClient({
-      baseUrl: options.baseURL,
+      baseUrl: normalizedBaseURL,
       token: async () => this.tokenManager.getToken(),
     });
   }

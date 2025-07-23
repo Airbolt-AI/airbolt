@@ -1,6 +1,7 @@
 import { AirboltClient } from '../core/fern-client.js';
 import type { Message, ChatOptions } from './types.js';
 import { AirboltError } from '../core/errors.js';
+import { joinUrl } from '../core/url-utils.js';
 
 /**
  * Send a chat message to Airbolt and receive a complete response (non-streaming)
@@ -83,7 +84,7 @@ export async function* chatStream(
 
   try {
     // Create EventSource-like connection for SSE
-    const response = await fetch(`${baseURL}/api/chat`, {
+    const response = await fetch(joinUrl(baseURL, 'api/chat'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,7 +192,7 @@ export async function* chatStream(
 
 // Helper function to get or create token
 async function getOrCreateToken(baseURL: string): Promise<string> {
-  const response = await fetch(`${baseURL}/api/tokens`, {
+  const response = await fetch(joinUrl(baseURL, 'api/tokens'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

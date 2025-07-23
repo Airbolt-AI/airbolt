@@ -36,3 +36,6 @@ export { ColdStartError } from './errors.js';
 
 // Export timeout utilities
 export { createTimeoutSignal, isTimeoutError } from './timeout-utils.js';
+
+// Export URL utilities
+export { joinUrl, normalizeUrl } from './url-utils.js';
