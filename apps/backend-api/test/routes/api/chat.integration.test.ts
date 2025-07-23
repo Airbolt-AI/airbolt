@@ -17,6 +17,10 @@ describe('Chat Route Integration Tests', () => {
     vi.stubEnv('JWT_SECRET', 'test-secret-key-for-integration-tests-32');
     vi.stubEnv('NODE_ENV', 'test');
     vi.stubEnv('ALLOWED_ORIGIN', 'http://localhost:3000,http://localhost:3001');
+    vi.stubEnv('TOKEN_LIMIT_MAX', '100000');
+    vi.stubEnv('TOKEN_LIMIT_TIME_WINDOW', '3600000');
+    vi.stubEnv('REQUEST_LIMIT_MAX', '100');
+    vi.stubEnv('REQUEST_LIMIT_TIME_WINDOW', '3600000');
 
     // Create mock AI Provider service
     mockAIProviderService = {
@@ -38,6 +42,8 @@ describe('Chat Route Integration Tests', () => {
     validToken = app.jwt.sign({
       // Include required claims
       iss: 'airbolt-api',
+      userId: 'test-user-123',
+      role: 'user',
     });
   });
 
@@ -84,7 +90,15 @@ describe('Chat Route Integration Tests', () => {
       expect(response.statusCode).toBe(200);
 
       const responseBody = JSON.parse(response.payload);
-      expect(responseBody).toEqual(mockResponse);
+      // Verify the response content matches (ignoring the added usage info)
+      expect(responseBody.content).toEqual(mockResponse.content);
+      expect(responseBody.usage).toBeDefined();
+      expect(responseBody.usage.total_tokens).toEqual(
+        mockResponse.usage.total_tokens
+      );
+      // Verify the additional usage info is included
+      expect(responseBody.usage.tokens).toBeDefined();
+      expect(responseBody.usage.requests).toBeDefined();
 
       // Verify the AI provider service was called with correct messages
       expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
@@ -287,7 +301,13 @@ describe('Chat Route Integration Tests', () => {
       });
 
       expect(response1.statusCode).toBe(200);
-      expect(JSON.parse(response1.payload)).toEqual(mockResponses[0]);
+      const response1Body = JSON.parse(response1.payload);
+      expect(response1Body.content).toEqual(mockResponses[0]!.content);
+      expect(response1Body.usage.total_tokens).toEqual(
+        mockResponses[0]!.usage.total_tokens
+      );
+      expect(response1Body.usage.tokens).toBeDefined();
+      expect(response1Body.usage.requests).toBeDefined();
 
       // Second exchange with context
       const response2 = await app.inject({
@@ -306,7 +326,13 @@ describe('Chat Route Integration Tests', () => {
       });
 
       expect(response2.statusCode).toBe(200);
-      expect(JSON.parse(response2.payload)).toEqual(mockResponses[1]);
+      const response2Body = JSON.parse(response2.payload);
+      expect(response2Body.content).toEqual(mockResponses[1]!.content);
+      expect(response2Body.usage.total_tokens).toEqual(
+        mockResponses[1]!.usage.total_tokens
+      );
+      expect(response2Body.usage.tokens).toBeDefined();
+      expect(response2Body.usage.requests).toBeDefined();
 
       // Third exchange with full context
       const response3 = await app.inject({
@@ -330,7 +356,13 @@ describe('Chat Route Integration Tests', () => {
       });
 
       expect(response3.statusCode).toBe(200);
-      expect(JSON.parse(response3.payload)).toEqual(mockResponses[2]);
+      const response3Body = JSON.parse(response3.payload);
+      expect(response3Body.content).toEqual(mockResponses[2]!.content);
+      expect(response3Body.usage.total_tokens).toEqual(
+        mockResponses[2]!.usage.total_tokens
+      );
+      expect(response3Body.usage.tokens).toBeDefined();
+      expect(response3Body.usage.requests).toBeDefined();
 
       // Verify all OpenAI calls received the correct conversation context
       expect(
@@ -404,7 +436,13 @@ describe('Chat Route Integration Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.payload)).toEqual(mockResponse);
+      const responseBody = JSON.parse(response.payload);
+      expect(responseBody.content).toEqual(mockResponse.content);
+      expect(responseBody.usage.total_tokens).toEqual(
+        mockResponse.usage.total_tokens
+      );
+      expect(responseBody.usage.tokens).toBeDefined();
+      expect(responseBody.usage.requests).toBeDefined();
       expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
         maxMessages,
         undefined,
@@ -437,7 +475,13 @@ describe('Chat Route Integration Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.payload)).toEqual(mockResponse);
+      const responseBody = JSON.parse(response.payload);
+      expect(responseBody.content).toEqual(mockResponse.content);
+      expect(responseBody.usage.total_tokens).toEqual(
+        mockResponse.usage.total_tokens
+      );
+      expect(responseBody.usage.tokens).toBeDefined();
+      expect(responseBody.usage.requests).toBeDefined();
     });
   });
 });

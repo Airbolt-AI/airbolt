@@ -55,10 +55,34 @@ describe('Chat Route Unit Tests', () => {
       RATE_LIMIT_MAX: 60,
       RATE_LIMIT_TIME_WINDOW: 60000,
       TRUST_PROXY: false,
+      TOKEN_LIMIT_MAX: 100000,
+      TOKEN_LIMIT_TIME_WINDOW: 3600000,
+      REQUEST_LIMIT_MAX: 100,
+      REQUEST_LIMIT_TIME_WINDOW: 3600000,
     });
 
     // Mock AI Provider service
     app.decorate('aiProvider', mockAIProviderService as any);
+
+    // Mock user rate limit functions
+    app.decorate('checkUserRateLimit', async () => {});
+    app.decorate('consumeTokens', async () => {});
+    app.decorate('getUserUsage', async () => ({
+      tokens: {
+        used: 1000,
+        remaining: 99000,
+        limit: 100000,
+        resetAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+      requests: {
+        used: 10,
+        remaining: 90,
+        limit: 100,
+        resetAt: new Date(Date.now() + 3600000).toISOString(),
+      },
+    }));
+    app.decorate('reserveTokens', async () => {});
+    app.decorate('refundTokens', async () => {});
 
     // Register chat routes
     await app.register(chatRoutes, { prefix: '/api' });
@@ -66,7 +90,10 @@ describe('Chat Route Unit Tests', () => {
     await app.ready();
 
     // Generate valid token for tests
-    validToken = app.jwt.sign({});
+    validToken = app.jwt.sign({
+      userId: 'test-user-123',
+      role: 'user',
+    });
   });
 
   describe('POST /api/chat', () => {
@@ -377,7 +404,13 @@ describe('Chat Route Unit Tests', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        expect(JSON.parse(response.payload)).toEqual(mockResponse);
+        const responseBody = JSON.parse(response.payload);
+        expect(responseBody.content).toEqual(mockResponse.content);
+        expect(responseBody.usage.total_tokens).toEqual(
+          mockResponse.usage.total_tokens
+        );
+        expect(responseBody.usage.tokens).toBeDefined();
+        expect(responseBody.usage.requests).toBeDefined();
       });
 
       it('should handle OpenAI rate limit errors', async () => {
@@ -518,10 +551,13 @@ describe('Chat Route Unit Tests', () => {
 
         expect(response.statusCode).toBe(200);
         const responseBody = JSON.parse(response.payload);
-        expect(responseBody).toEqual({
-          content: 'Hello! How can I help you today?',
-        });
-        expect(responseBody.usage).toBeUndefined();
+        expect(responseBody.content).toEqual(
+          'Hello! How can I help you today?'
+        );
+        // Usage info is always added from the getUserUsage mock
+        expect(responseBody.usage).toBeDefined();
+        expect(responseBody.usage.tokens).toBeDefined();
+        expect(responseBody.usage.requests).toBeDefined();
       });
 
       it('should return response with usage when provided by OpenAI', async () => {
@@ -546,7 +582,13 @@ describe('Chat Route Unit Tests', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        expect(JSON.parse(response.payload)).toEqual(mockResponse);
+        const responseBody = JSON.parse(response.payload);
+        expect(responseBody.content).toEqual(mockResponse.content);
+        expect(responseBody.usage.total_tokens).toEqual(
+          mockResponse.usage.total_tokens
+        );
+        expect(responseBody.usage.tokens).toBeDefined();
+        expect(responseBody.usage.requests).toBeDefined();
       });
     });
   });

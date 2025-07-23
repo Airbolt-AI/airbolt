@@ -146,6 +146,9 @@ importers:
       openai:
         specifier: ^5.8.2
         version: 5.9.0(zod@3.25.76)
+      rate-limiter-flexible:
+        specifier: ^7.1.1
+        version: 7.1.1
       zod:
         specifier: ^3.25.67
         version: 3.25.76
@@ -4482,6 +4485,9 @@ packages:
 
   quick-format-unescaped@4.0.4:
     resolution: {integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==}
+
+  rate-limiter-flexible@7.1.1:
+    resolution: {integrity: sha512-lsYRcqRSJrKBNt6pMzBJTiCJP5KnwsGWdObMZxd19JFUJRntM+yuHs4/2bs6NZweSLgpsDcykvzyQaumoslWQg==}
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -10591,6 +10597,8 @@ snapshots:
   queue-microtask@1.2.3: {}
 
   quick-format-unescaped@4.0.4: {}
+
+  rate-limiter-flexible@7.1.1: {}
 
   react-dom@18.3.1(react@18.3.1):
     dependencies:

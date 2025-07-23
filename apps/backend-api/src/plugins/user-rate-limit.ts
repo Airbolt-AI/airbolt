@@ -1,0 +1,190 @@
+import fp from 'fastify-plugin';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    userRateLimiters?: {
+      request: RateLimiterMemory;
+      token: RateLimiterMemory;
+    };
+  }
+}
+
+export interface UsageInfo {
+  tokens: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
+  requests: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
+}
+
+export default fp(
+  async function userRateLimit(fastify: FastifyInstance) {
+    const config = fastify.config!;
+
+    // Create rate limiters for authenticated users
+    const requestLimiter = new RateLimiterMemory({
+      keyPrefix: 'req',
+      points: config.REQUEST_LIMIT_MAX,
+      duration: Math.floor(config.REQUEST_LIMIT_TIME_WINDOW / 1000), // Convert to seconds
+    });
+
+    const tokenLimiter = new RateLimiterMemory({
+      keyPrefix: 'token',
+      points: config.TOKEN_LIMIT_MAX,
+      duration: Math.floor(config.TOKEN_LIMIT_TIME_WINDOW / 1000), // Convert to seconds
+    });
+
+    // Attach limiters to request for use in routes
+    // @ts-expect-error - Fastify decorateRequest type issue
+    fastify.decorateRequest('userRateLimiters', null);
+
+    fastify.addHook('onRequest', async (request: FastifyRequest) => {
+      request.userRateLimiters = {
+        request: requestLimiter,
+        token: tokenLimiter,
+      };
+    });
+
+    // Helper function to check user rate limits (for authenticated routes)
+    fastify.decorate(
+      'checkUserRateLimit',
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        // Skip if no JWT (will be handled by auth middleware)
+        if (!request.user) {
+          return;
+        }
+
+        const userId = (request.user as { userId: string }).userId;
+
+        try {
+          // Check request limit
+          await requestLimiter.consume(userId, 1);
+        } catch (rateLimiterRes) {
+          const resetAt = new Date(
+            Date.now() +
+              (rateLimiterRes as { msBeforeNext: number }).msBeforeNext
+          ).toISOString();
+
+          const usage = await getUserUsage(
+            userId,
+            requestLimiter,
+            tokenLimiter
+          );
+
+          reply.code(429).send({
+            error: 'RequestLimitExceeded',
+            message: `Request limit exceeded. Resets at ${resetAt}`,
+            usage,
+          });
+          throw new Error('Rate limit exceeded');
+        }
+      }
+    );
+
+    // Helper function to consume tokens
+    fastify.decorate(
+      'consumeTokens',
+      async (userId: string, tokens: number): Promise<void> => {
+        try {
+          await tokenLimiter.consume(userId, tokens);
+        } catch (rateLimiterRes) {
+          const resetAt = new Date(
+            Date.now() +
+              (rateLimiterRes as { msBeforeNext: number }).msBeforeNext
+          ).toISOString();
+
+          throw fastify.httpErrors.tooManyRequests(
+            `Token limit exceeded. Resets at ${resetAt}`
+          );
+        }
+      }
+    );
+
+    // Helper function to get current usage
+    fastify.decorate(
+      'getUserUsage',
+      async (userId: string): Promise<UsageInfo> => {
+        return getUserUsage(userId, requestLimiter, tokenLimiter);
+      }
+    );
+
+    // Helper function to reserve tokens (for streaming)
+    fastify.decorate(
+      'reserveTokens',
+      async (userId: string, tokens: number): Promise<void> => {
+        await tokenLimiter.penalty(userId, tokens);
+      }
+    );
+
+    // Helper function to refund unused tokens (for streaming)
+    fastify.decorate(
+      'refundTokens',
+      async (userId: string, tokens: number): Promise<void> => {
+        await tokenLimiter.reward(userId, tokens);
+      }
+    );
+
+    async function getUserUsage(
+      userId: string,
+      requestLimiter: RateLimiterMemory,
+      tokenLimiter: RateLimiterMemory
+    ): Promise<UsageInfo> {
+      const [requestRes, tokenRes] = await Promise.all([
+        requestLimiter.get(userId),
+        tokenLimiter.get(userId),
+      ]);
+
+      const now = Date.now();
+
+      return {
+        requests: {
+          used: requestRes ? requestRes.consumedPoints : 0,
+          remaining: requestRes
+            ? Math.max(0, config.REQUEST_LIMIT_MAX - requestRes.consumedPoints)
+            : config.REQUEST_LIMIT_MAX,
+          limit: config.REQUEST_LIMIT_MAX,
+          resetAt: requestRes
+            ? new Date(now + requestRes.msBeforeNext).toISOString()
+            : new Date(now + config.REQUEST_LIMIT_TIME_WINDOW).toISOString(),
+        },
+        tokens: {
+          used: tokenRes ? tokenRes.consumedPoints : 0,
+          remaining: tokenRes
+            ? Math.max(0, config.TOKEN_LIMIT_MAX - tokenRes.consumedPoints)
+            : config.TOKEN_LIMIT_MAX,
+          limit: config.TOKEN_LIMIT_MAX,
+          resetAt: tokenRes
+            ? new Date(now + tokenRes.msBeforeNext).toISOString()
+            : new Date(now + config.TOKEN_LIMIT_TIME_WINDOW).toISOString(),
+        },
+      };
+    }
+  },
+  {
+    name: 'user-rate-limit',
+    dependencies: ['env-plugin'],
+  }
+);
+
+// Extend Fastify instance with our custom methods
+declare module 'fastify' {
+  interface FastifyInstance {
+    checkUserRateLimit: (
+      request: FastifyRequest,
+      reply: FastifyReply
+    ) => Promise<void>;
+    consumeTokens: (userId: string, tokens: number) => Promise<void>;
+    getUserUsage: (userId: string) => Promise<UsageInfo>;
+    reserveTokens: (userId: string, tokens: number) => Promise<void>;
+    refundTokens: (userId: string, tokens: number) => Promise<void>;
+  }
+}

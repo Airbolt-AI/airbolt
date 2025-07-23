@@ -23,6 +23,8 @@ interface JWTPayload {
   iat: number;
   exp: number;
   iss: string;
+  userId: string;
+  role: string;
 }
 
 // Extend FastifyRequest with JWT payload
@@ -49,6 +51,7 @@ async function verifyJWT(
     const token = auth.slice(7);
     const payload = request.server.jwt.verify(token);
     request.jwt = payload as JWTPayload;
+    request.user = payload as JWTPayload;
   } catch (error) {
     request.log.warn({ error }, 'JWT verification failed');
     throw request.server.httpErrors.unauthorized('Invalid or expired token');
@@ -59,7 +62,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post(
     '/chat',
     {
-      preHandler: [verifyJWT],
+      preHandler: [verifyJWT, fastify.checkUserRateLimit],
       schema: {
         tags: ['Chat'],
         summary: 'Send chat messages to AI',
@@ -125,6 +128,24 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
                     type: 'number',
                     description: 'Total tokens used in the request',
                   },
+                  tokens: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                  requests: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
                 },
               },
             },
@@ -154,6 +175,29 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               error: { type: 'string' },
               message: { type: 'string' },
               statusCode: { type: 'number' },
+              usage: {
+                type: 'object',
+                properties: {
+                  tokens: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                  requests: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                },
+              },
             },
           },
           503: {
@@ -199,6 +243,23 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (isStreaming) {
           // Streaming response
+          const userId = (request.user as { userId: string }).userId;
+
+          // Reserve tokens for streaming (estimate)
+          const estimatedTokens = 2000; // Conservative estimate
+          try {
+            await fastify.reserveTokens(userId, estimatedTokens);
+          } catch (error) {
+            // Token limit would be exceeded
+            const usageInfo = await fastify.getUserUsage(userId);
+            return reply.code(429).send({
+              error: 'TokenLimitExceeded',
+              message: 'Insufficient tokens for streaming request',
+              statusCode: 429,
+              usage: usageInfo,
+            });
+          }
+
           reply.sse({
             event: 'start',
             data: JSON.stringify({ type: 'start' }),
@@ -228,13 +289,29 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               });
             }
 
+            // Calculate actual tokens used (approximate)
+            // In real implementation, we'd need to get this from the AI SDK
+            const actualTokens = Math.min(tokenCount * 4, estimatedTokens); // Rough approximation
+
+            // Refund unused tokens
+            if (actualTokens < estimatedTokens) {
+              await fastify.refundTokens(
+                userId,
+                estimatedTokens - actualTokens
+              );
+            }
+
+            // Get updated usage info
+            const usageInfo = await fastify.getUserUsage(userId);
+
             // Send completion event with usage data
             const duration = Date.now() - startTime;
             reply.sse({
               event: 'done',
               data: JSON.stringify({
                 usage: {
-                  total_tokens: tokenCount,
+                  total_tokens: actualTokens,
+                  ...usageInfo,
                 },
                 duration,
               }),
@@ -245,11 +322,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
                 duration,
                 responseLength: fullContent.length,
                 tokenCount,
+                actualTokens,
                 streaming: true,
+                userUsage: usageInfo,
               },
               'Streaming chat request completed successfully'
             );
           } catch (error) {
+            // Refund reserved tokens on error
+            await fastify.refundTokens(userId, estimatedTokens);
+
             // Send error event before closing
             reply.sse({
               event: 'error',
@@ -284,6 +366,27 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             model
           );
 
+          // Track token usage
+          const userId = (request.user as { userId: string }).userId;
+          const tokensUsed = response.usage?.total_tokens || 0;
+
+          try {
+            await fastify.consumeTokens(userId, tokensUsed);
+          } catch (error) {
+            // Token limit exceeded - get usage info for response
+            const usageInfo = await fastify.getUserUsage(userId);
+            return reply.code(429).send({
+              error: 'TokenLimitExceeded',
+              message:
+                error instanceof Error ? error.message : 'Token limit exceeded',
+              statusCode: 429,
+              usage: usageInfo,
+            });
+          }
+
+          // Get updated usage info after consumption
+          const usageInfo = await fastify.getUserUsage(userId);
+
           // Log successful response
           const duration = Date.now() - startTime;
           request.log.info(
@@ -291,6 +394,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               duration,
               usage: response.usage,
               responseLength: response.content.length,
+              userUsage: usageInfo,
             },
             'Chat request completed successfully'
           );
@@ -300,7 +404,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             ChatResponseSchema.parse(response);
           }
 
-          return reply.code(200).send(response);
+          // Add usage info to response
+          const enhancedResponse = {
+            ...response,
+            usage: {
+              ...response.usage,
+              ...usageInfo,
+            },
+          };
+
+          return reply.code(200).send(enhancedResponse);
         }
       } catch (error) {
         const duration = Date.now() - startTime;

@@ -27,6 +27,22 @@ export const ChatResponseSchema = z.object({
   usage: z
     .object({
       total_tokens: z.number(),
+      tokens: z
+        .object({
+          used: z.number(),
+          remaining: z.number(),
+          limit: z.number(),
+          resetAt: z.string(),
+        })
+        .optional(),
+      requests: z
+        .object({
+          used: z.number(),
+          remaining: z.number(),
+          limit: z.number(),
+          resetAt: z.string(),
+        })
+        .optional(),
     })
     .optional(),
 });

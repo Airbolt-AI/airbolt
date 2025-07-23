@@ -150,6 +150,10 @@ const app: FastifyPluginAsync<AppOptions> = async (
             RATE_LIMIT_TIME_WINDOW: 60000,
             TRUST_PROXY: false,
             JWT_SECRET: 'openapi-generation-only-jwt-secret-placeholder',
+            TOKEN_LIMIT_MAX: 100000,
+            TOKEN_LIMIT_TIME_WINDOW: 3600000,
+            REQUEST_LIMIT_MAX: 100,
+            REQUEST_LIMIT_TIME_WINDOW: 3600000,
           };
           fastify.decorate('config', mockConfig);
         },
@@ -163,6 +167,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
 
   // Register rate limit plugin after env (it depends on RATE_LIMIT_* from env)
   await fastify.register(rateLimitPlugin);
+
+  // Register user rate limit plugin after env (for token/request tracking)
+  await fastify.register(import('./plugins/user-rate-limit.js'));
 
   // Register SSE plugin for streaming support
   await fastify.register(fastifySse);
