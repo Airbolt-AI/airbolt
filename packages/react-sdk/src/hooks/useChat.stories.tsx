@@ -350,7 +350,7 @@ export const StreamingDemo: Story = () => {
               {msg.content}
             </div>
           ))}
-          {isStreaming && (
+          {isStreaming && messages[messages.length - 1]?.content === '' && (
             <div
               style={{
                 fontStyle: 'italic',
@@ -358,7 +358,7 @@ export const StreamingDemo: Story = () => {
                 animation: 'pulse 1.5s ease-in-out infinite',
               }}
             >
-              AI is streaming response...
+              AI is thinking...
             </div>
           )}
         </div>

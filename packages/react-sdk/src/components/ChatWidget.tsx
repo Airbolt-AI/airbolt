@@ -239,7 +239,8 @@ export function ChatWidget({
           </div>
         ))}
 
-        {(isLoading || isStreaming) && (
+        {(isLoading ||
+          (isStreaming && messages[messages.length - 1]?.content === '')) && (
           <div style={styles['typing']} aria-label="Assistant is thinking">
             <span>Thinking...</span>
           </div>
