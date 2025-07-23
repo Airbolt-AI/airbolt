@@ -61,7 +61,7 @@ Verify:
 
 ## 5. Final Quality Checklist
 
-- [ ] **Test Quality**: Tests follow pyramid (property > integration > unit > mutation), catch real production failures, avoid coverage theatre
+- [ ] **Test Quality**: Tests follow pyramid approach from @TESTING.md (property > integration > unit > mutation), catch real production failures, avoid coverage theatre
 - [ ] Tests actually validate business logic (not just coverage)
 - [ ] No console.logs or debug code left behind
 - [ ] Error handling is comprehensive

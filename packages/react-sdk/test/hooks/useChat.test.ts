@@ -6,6 +6,7 @@ import type { Message } from '@airbolt/sdk';
 // Mock the SDK functions
 vi.mock('@airbolt/sdk', () => ({
   chat: vi.fn(),
+  chatSync: vi.fn(),
   clearAuthToken: vi.fn(),
   hasValidToken: vi.fn(() => true),
   getTokenInfo: vi.fn(() => ({
@@ -22,6 +23,7 @@ import {
   getTokenInfo,
 } from '@airbolt/sdk';
 const mockChat = vi.mocked(chat);
+// const mockChatSync = vi.mocked(chatSync); // Not used in these tests
 const mockClearAuthToken = vi.mocked(clearAuthToken);
 const mockHasValidToken = vi.mocked(hasValidToken);
 const mockGetTokenInfo = vi.mocked(getTokenInfo);
@@ -76,7 +78,12 @@ describe('useChat', () => {
   });
 
   it('should send a message successfully', async () => {
-    mockChat.mockResolvedValueOnce('Hello! How can I help you?');
+    // Mock streaming response
+    mockChat.mockImplementation(async function* () {
+      yield { content: 'Hello! ', type: 'chunk' };
+      yield { content: 'How can I help you?', type: 'chunk' };
+      yield { content: '', type: 'done' };
+    });
 
     const { result } = renderHook(() => useChat({ system: 'You are helpful' }));
 
@@ -115,7 +122,9 @@ describe('useChat', () => {
 
   it('should handle errors properly', async () => {
     const testError = new Error('Network error');
-    mockChat.mockRejectedValueOnce(testError);
+    mockChat.mockImplementation(async function* () {
+      throw testError;
+    });
 
     const { result } = renderHook(() => useChat());
 
@@ -155,10 +164,12 @@ describe('useChat', () => {
   });
 
   it('should not send while loading', async () => {
-    // Mock a slow response
-    mockChat.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve('Response'), 100))
-    );
+    // Mock a slow streaming response
+    mockChat.mockImplementation(async function* () {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      yield { content: 'Response', type: 'chunk' };
+      yield { content: '', type: 'done' };
+    });
 
     const { result } = renderHook(() => useChat());
 
@@ -211,7 +222,10 @@ describe('useChat', () => {
   });
 
   it('should pass baseURL option to chat function', async () => {
-    mockChat.mockResolvedValueOnce('Response');
+    mockChat.mockImplementation(async function* () {
+      yield { content: 'Response', type: 'chunk' };
+      yield { content: '', type: 'done' };
+    });
     const customBaseURL = 'https://api.example.com';
 
     const { result } = renderHook(() => useChat({ baseURL: customBaseURL }));
@@ -230,9 +244,16 @@ describe('useChat', () => {
   });
 
   it('should maintain message history across multiple sends', async () => {
-    mockChat
-      .mockResolvedValueOnce('First response')
-      .mockResolvedValueOnce('Second response');
+    let callCount = 0;
+    mockChat.mockImplementation(async function* () {
+      callCount++;
+      if (callCount === 1) {
+        yield { content: 'First response', type: 'chunk' };
+      } else {
+        yield { content: 'Second response', type: 'chunk' };
+      }
+      yield { content: '', type: 'done' };
+    });
 
     const { result } = renderHook(() => useChat());
 
@@ -272,10 +293,12 @@ describe('useChat', () => {
   });
 
   it('should handle component unmount gracefully', async () => {
-    // Mock a slow response
-    mockChat.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve('Response'), 100))
-    );
+    // Mock a slow streaming response
+    mockChat.mockImplementation(async function* () {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      yield { content: 'Response', type: 'chunk' };
+      yield { content: '', type: 'done' };
+    });
 
     const { result, unmount } = renderHook(() => useChat());
 
@@ -300,7 +323,9 @@ describe('useChat', () => {
   it('should handle AbortError without setting error state', async () => {
     const abortError = new Error('Aborted');
     abortError.name = 'AbortError';
-    mockChat.mockRejectedValueOnce(abortError);
+    mockChat.mockImplementation(async function* () {
+      throw abortError;
+    });
 
     const { result } = renderHook(() => useChat());
 
@@ -317,7 +342,10 @@ describe('useChat', () => {
   });
 
   it('should trim whitespace from input messages', async () => {
-    mockChat.mockResolvedValueOnce('Response');
+    mockChat.mockImplementation(async function* () {
+      yield { content: 'Response', type: 'chunk' };
+      yield { content: '', type: 'done' };
+    });
 
     const { result } = renderHook(() => useChat());
 
@@ -469,7 +497,10 @@ describe('useChat', () => {
       expect(result.current.hasValidToken()).toBe(true);
 
       // Use chat functionality while authenticated
-      mockChat.mockResolvedValueOnce('Hello! I can help you.');
+      mockChat.mockImplementation(async function* () {
+        yield { content: 'Hello! I can help you.', type: 'chunk' };
+        yield { content: '', type: 'done' };
+      });
       act(() => result.current.setInput('Hi'));
       await act(async () => await result.current.send());
 

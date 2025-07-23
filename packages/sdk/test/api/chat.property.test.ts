@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { chat } from '../../src/api/chat';
+import { chatSync } from '../../src/api/chat';
 import { AirboltClient } from '../../src/core/fern-client';
 import type { Message } from '../../src/api/types';
 
 // Mock the AirboltClient
 vi.mock('../../src/core/fern-client');
 
-describe('chat - property-based tests', () => {
+describe('chatSync - property-based tests', () => {
   const mockChat = vi.fn();
   const mockClientConstructor = vi.mocked(AirboltClient);
 
@@ -39,7 +39,7 @@ describe('chat - property-based tests', () => {
             usage: { total_tokens: 10 },
           });
 
-          const result = await chat(messages as Message[]);
+          const result = await chatSync(messages as Message[]);
 
           expect(result).toBe(expectedResponse);
           expect(mockChat).toHaveBeenCalledWith(messages, {
@@ -61,7 +61,7 @@ describe('chat - property-based tests', () => {
           usage: { total_tokens: 5 },
         });
 
-        await chat(messages, { baseURL });
+        await chatSync(messages, { baseURL });
 
         expect(mockClientConstructor).toHaveBeenCalledWith({ baseURL });
       })
@@ -80,7 +80,7 @@ describe('chat - property-based tests', () => {
             usage: { total_tokens: 5 },
           });
 
-          await chat(messages, { system });
+          await chatSync(messages, { system });
 
           // When system is provided, it's prepended as a system message
           const expectedCall = system
@@ -114,7 +114,7 @@ describe('chat - property-based tests', () => {
             usage: { total_tokens: 50 },
           });
 
-          await chat(messages);
+          await chatSync(messages);
 
           // Verify the exact message array was passed
           expect(mockChat).toHaveBeenCalledWith(messages, {
@@ -148,7 +148,7 @@ describe('chat - property-based tests', () => {
         usage: { total_tokens: 10 },
       });
 
-      const result = await chat(messages);
+      const result = await chatSync(messages);
 
       expect(result).toBe('Safe response');
       expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content }], {
@@ -175,7 +175,7 @@ describe('chat - property-based tests', () => {
         usage: { total_tokens: 5 },
       });
 
-      await chat(messages, { system });
+      await chatSync(messages, { system });
 
       expect(mockChat).toHaveBeenCalledWith(
         [{ role: 'system', content: system }, ...messages],

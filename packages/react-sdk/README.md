@@ -4,6 +4,8 @@
 
 Part of **[Airbolt](https://github.com/Airbolt-AI/airbolt)** - A production-ready backend for calling LLMs from your frontend securely.
 
+**🚀 Streaming by default** - Responses stream in real-time for better UX. Set `streaming={false}` for complete responses.
+
 ```bash
 npm install @airbolt/react-sdk
 ```
@@ -73,20 +75,20 @@ function ChatWidget(props?: ChatWidgetProps): React.ReactElement;
 
 #### Props
 
-| Prop           | Type                               | Default               | Description                                        |
-| -------------- | ---------------------------------- | --------------------- | -------------------------------------------------- |
-| `baseURL`      | `string`                           | -                     | **Required**. Base URL for your Airbolt backend    |
-| `system`       | `string`                           | -                     | Optional. System prompt to guide the AI's behavior |
-| `provider`     | `'openai' \| 'anthropic'`          | -                     | Optional. AI provider to use                       |
-| `model`        | `string`                           | -                     | Optional. Specific model to use                    |
-| `placeholder`  | `string`                           | `"Type a message..."` | Placeholder text for the input field               |
-| `title`        | `string`                           | `"AI Assistant"`      | Title displayed in the widget header               |
-| `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)        |
-| `position`     | `'inline' \| 'fixed-bottom-right'` | `'inline'`            | Widget positioning mode                            |
-| `className`    | `string`                           | -                     | Additional CSS class for custom styling            |
-| `minimalTheme` | `MinimalTheme`                     | -                     | New minimal theme using CSS custom properties      |
-| `customStyles` | `object`                           | -                     | Custom styles for widget elements                  |
-| `streaming`    | `boolean`                          | `false`               | Enable streaming responses                         |
+| Prop           | Type                               | Default               | Description                                          |
+| -------------- | ---------------------------------- | --------------------- | ---------------------------------------------------- |
+| `baseURL`      | `string`                           | -                     | **Required**. Base URL for your Airbolt backend      |
+| `system`       | `string`                           | -                     | Optional. System prompt to guide the AI's behavior   |
+| `provider`     | `'openai' \| 'anthropic'`          | -                     | Optional. AI provider to use                         |
+| `model`        | `string`                           | -                     | Optional. Specific model to use                      |
+| `placeholder`  | `string`                           | `"Type a message..."` | Placeholder text for the input field                 |
+| `title`        | `string`                           | `"AI Assistant"`      | Title displayed in the widget header                 |
+| `theme`        | `'light' \| 'dark' \| 'auto'`      | `'auto'`              | Theme mode (auto follows system preference)          |
+| `position`     | `'inline' \| 'fixed-bottom-right'` | `'inline'`            | Widget positioning mode                              |
+| `className`    | `string`                           | -                     | Additional CSS class for custom styling              |
+| `minimalTheme` | `MinimalTheme`                     | -                     | New minimal theme using CSS custom properties        |
+| `customStyles` | `object`                           | -                     | Custom styles for widget elements                    |
+| `streaming`    | `boolean`                          | `true`                | Enable streaming responses (set to false to disable) |
 
 #### Example Usage
 
@@ -148,7 +150,7 @@ function useChat(options?: UseChatOptions): UseChatReturn;
 | `provider`        | `'openai' \| 'anthropic'` | Optional. AI provider to use.                            |
 | `model`           | `string`                  | Optional. Specific model to use.                         |
 | `initialMessages` | `Message[]`               | Optional. Initial messages to populate the chat history. |
-| `streaming`       | `boolean`                 | Optional. Enable streaming responses (default: false).   |
+| `streaming`       | `boolean`                 | Optional. Enable streaming responses (default: true).    |
 | `onChunk`         | `(chunk: string) => void` | Optional. Callback for streaming chunks.                 |
 
 #### Return Value
@@ -333,16 +335,28 @@ function AdvancedChat() {
 
 ### Streaming Responses
 
-Enable real-time streaming for a more interactive experience:
+Streaming is enabled by default for a more interactive experience. To disable streaming:
 
 ```tsx
 import { useChat } from '@airbolt/react-sdk';
 
+function NonStreamingChat() {
+  const { messages, input, setInput, send, isLoading, error } = useChat({
+    baseURL: 'https://your-deployment.onrender.com',
+    streaming: false, // Explicitly disable streaming
+  });
+  // ...
+}
+```
+
+For streaming mode (default), you can handle individual chunks:
+
+```tsx
 function StreamingChat() {
   const { messages, input, setInput, send, isLoading, isStreaming, error } =
     useChat({
       baseURL: 'https://your-deployment.onrender.com',
-      streaming: true, // Enable streaming
+      // streaming: true is the default
       onChunk: chunk => {
         // Optional: Handle individual chunks
         console.log('Received:', chunk);

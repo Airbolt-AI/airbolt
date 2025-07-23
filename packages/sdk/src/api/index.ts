@@ -1,5 +1,6 @@
 // Main vanilla API exports
-export { chat, chatStream } from './chat.js';
+// Streaming is the default - 'chat' is the streaming version
+export { chatStream as chat, chat as chatSync } from './chat.js';
 export { createChatSession } from './session.js';
 
 // Client utility functions

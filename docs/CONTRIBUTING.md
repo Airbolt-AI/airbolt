@@ -64,7 +64,7 @@ airbolt/
 
 ## Testing
 
-We take testing seriously. See [TESTING.md](../.github/TESTING.md) for our testing philosophy.
+We take testing seriously. See [TESTING.md](../TESTING.md) for our testing philosophy.
 
 ```bash
 pnpm test             # Run all tests

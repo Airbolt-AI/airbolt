@@ -1,15 +1,19 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   chat,
-  chatStream,
+  chatSync,
   clearAuthToken,
   hasValidToken,
   getTokenInfo,
+  type ChatOptions,
 } from '@airbolt/sdk';
 import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
 
 /**
  * React hook for managing chat conversations with Airbolt
+ *
+ * Streaming is enabled by default for better UX. To disable streaming,
+ * explicitly set `streaming: false` in options.
  *
  * @example
  * ```tsx
@@ -25,6 +29,7 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  *     getTokenInfo
  *   } = useChat({
  *     system: 'You are a helpful assistant'
+ *     // streaming: true is the default
  *   });
  *
  *   return (
@@ -103,7 +108,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     try {
       // Prepare chat options
       const allMessages = [...messages, userMessage];
-      const chatOptions: Parameters<typeof chat>[1] = {};
+      const chatOptions: ChatOptions = {};
       if (options?.baseURL !== undefined) {
         chatOptions.baseURL = options.baseURL;
       }
@@ -117,8 +122,8 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         chatOptions.model = options.model;
       }
 
-      if (options?.streaming) {
-        // Streaming mode
+      if (options?.streaming !== false) {
+        // Streaming mode (default)
         setIsStreaming(true);
         setIsLoading(false);
 
@@ -134,7 +139,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
 
         let fullContent = '';
 
-        for await (const chunk of chatStream(allMessages, chatOptions)) {
+        for await (const chunk of chat(allMessages, chatOptions)) {
           if (!isMountedRef.current) break;
 
           if (chunk.type === 'chunk') {
@@ -154,7 +159,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
               });
 
               // Call onChunk callback if provided
-              options.onChunk?.(chunk.content);
+              options?.onChunk?.(chunk.content);
             }
           } else if (chunk.type === 'done') {
             if (isMountedRef.current) {
@@ -164,8 +169,8 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
           }
         }
       } else {
-        // Non-streaming mode (existing logic)
-        const response = await chat(allMessages, chatOptions);
+        // Non-streaming mode (explicitly disabled)
+        const response = await chatSync(allMessages, chatOptions);
 
         // Only update state if component is still mounted
         if (isMountedRef.current) {

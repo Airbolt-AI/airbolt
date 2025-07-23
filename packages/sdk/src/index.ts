@@ -19,9 +19,10 @@ export * from './core/index.js';
 // export * from './generated/index.js';
 
 // Export API functions
+// Note: 'chat' now streams by default, use 'chatSync' for non-streaming
 export {
   chat,
-  chatStream,
+  chatSync,
   createChatSession,
   clearAuthToken,
   hasValidToken,

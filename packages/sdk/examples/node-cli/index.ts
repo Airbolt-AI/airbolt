@@ -18,17 +18,23 @@ async function main(): Promise<void> {
       { role: 'user', content: 'What is TypeScript?' },
     ];
 
-    // Send message with typed options
-    const response = await chat(messages, {
+    console.log('User:', messages[0].content);
+    console.log('\nAI: ');
+
+    // Stream response with typed options (default behavior)
+    for await (const chunk of chat(messages, {
       baseURL: process.env.AIRBOLT_URL || 'http://localhost:3000', // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
       system: 'You are a helpful assistant. Keep responses concise.',
-    });
+    })) {
+      if (chunk.type === 'chunk') {
+        process.stdout.write(chunk.content);
+      }
+    }
 
-    console.log('AI:', response);
-    console.log('\n✅ Full type safety with TypeScript!');
+    console.log('\n\n✅ Full type safety with TypeScript and streaming!');
   } catch (error) {
     console.error(
-      '❌ Error:',
+      '\n❌ Error:',
       error instanceof Error ? error.message : 'Unknown error'
     );
     console.log('\nMake sure the backend is running:');

@@ -13,18 +13,27 @@ async function main() {
   console.log('🤖 Airbolt Chat Example\n');
 
   try {
-    // Send a message to the AI
-    const response = await chat(
-      [{ role: 'user', content: 'Hello! Can you tell me a short joke?' }],
-      {
-        baseURL: 'http://localhost:3000', // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
-      }
-    );
+    const messages = [
+      { role: 'user', content: 'Hello! Can you tell me a short joke?' },
+    ];
 
-    console.log('AI:', response);
-    console.log('\n✅ Success! The SDK handles authentication automatically.');
+    console.log('User:', messages[0].content);
+    console.log('\nAI: ');
+
+    // Stream the response (default behavior)
+    for await (const chunk of chat(messages, {
+      baseURL: 'http://localhost:3000', // For production, use your deployed URL like 'https://my-ai-backend.onrender.com'
+    })) {
+      if (chunk.type === 'chunk') {
+        process.stdout.write(chunk.content);
+      }
+    }
+
+    console.log(
+      '\n\n✅ Success! The SDK handles authentication and streaming automatically.'
+    );
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('\n❌ Error:', error.message);
     console.log('\nMake sure the backend is running:');
     console.log('  cd apps/backend-api && pnpm dev');
   }

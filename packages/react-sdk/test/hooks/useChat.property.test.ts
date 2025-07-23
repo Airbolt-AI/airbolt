@@ -35,7 +35,10 @@ describe('useChat property-based tests', () => {
         fc.string({ minLength: 1 }).filter(s => s.trim().length > 0),
         async inputText => {
           vi.clearAllMocks();
-          mockChat.mockResolvedValueOnce('Response');
+          mockChat.mockImplementation(async function* () {
+            yield { content: 'Response', type: 'chunk' };
+            yield { content: '', type: 'done' };
+          });
           const { result } = renderHook(() => useChat());
 
           act(() => {
@@ -125,7 +128,10 @@ describe('useChat property-based tests', () => {
         fc.string({ minLength: 1 }).filter(s => s.trim().length > 0),
         async (systemPrompt, userInput) => {
           vi.clearAllMocks();
-          mockChat.mockResolvedValueOnce('Response');
+          mockChat.mockImplementation(async function* () {
+            yield { content: 'Response', type: 'chunk' };
+            yield { content: '', type: 'done' };
+          });
           const { result } = renderHook(() =>
             useChat({ system: systemPrompt })
           );
@@ -178,7 +184,10 @@ describe('useChat property-based tests', () => {
           });
 
           // Second send succeeds
-          mockChat.mockResolvedValueOnce('Success response');
+          mockChat.mockImplementation(async function* () {
+            yield { content: 'Success response', type: 'chunk' };
+            yield { content: '', type: 'done' };
+          });
 
           act(() => {
             result.current.setInput(secondInput);
@@ -214,7 +223,10 @@ describe('useChat property-based tests', () => {
           let previousLength = 0;
 
           for (const input of inputs) {
-            mockChat.mockResolvedValueOnce(`Response to: ${input}`);
+            mockChat.mockImplementation(async function* () {
+              yield { content: `Response to: ${input}`, type: 'chunk' };
+              yield { content: '', type: 'done' };
+            });
 
             act(() => {
               result.current.setInput(input);

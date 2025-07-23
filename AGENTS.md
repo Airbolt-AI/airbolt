@@ -243,7 +243,7 @@ export const env = EnvSchema.parse(process.env);
 
 ## 🚨 CRITICAL: Mutation Testing for Critical Decision Points
 
-**Philosophy**: Mutation testing validates critical decision points only (see `.github/TESTING.md`)
+**Philosophy**: Mutation testing validates critical decision points only (see @TESTING.md)
 
 **Focus Areas**:
 
@@ -266,7 +266,7 @@ export const env = EnvSchema.parse(process.env);
 
 **Why**: The goal isn't coverage, it's confidence that critical logic is properly tested.
 
-**Testing Philosophy**: See [.github/TESTING.md](/.github/TESTING.md) for comprehensive testing guidelines.
+**Testing Philosophy**: See @TESTING.md for comprehensive testing guidelines.
 
 ## 🚨 CRITICAL: Testing Anti-Patterns
 

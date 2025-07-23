@@ -1,4 +1,4 @@
-import { chat } from './chat.js';
+import { chatSync } from './chat.js';
 import type { Message, ChatSession, ChatOptions } from './types.js';
 
 /**
@@ -47,7 +47,7 @@ export function createChatSession(options?: ChatOptions): ChatSession {
 
       // Get response with full conversation history
       // Pass a copy to prevent mutation issues
-      const reply = await chat([...messages], options);
+      const reply = await chatSync([...messages], options);
 
       // Add assistant response to history
       messages.push({ role: 'assistant', content: reply });

@@ -45,7 +45,7 @@ Review these explicit quality checks:
 - **Security**: Check for vulnerabilities, exposed secrets, unsafe patterns
 - **Performance**: Assess impact on response times, memory usage
 - **Architecture**: Validate clean dependencies, proper layering
-- **Test Quality**: Ensure tests fail when logic breaks (not just coverage theater)
+- **Test Quality**: Ensure tests fail when logic breaks per @TESTING.md (not just coverage theater)
 - **Documentation**: Verify all docs are updated and accurate
 
 ## Code Review Focus Areas
@@ -59,7 +59,7 @@ Then Ultrathink about the specific context of the open PR:
    - Are edge cases properly handled?
 
 2. **Test Quality Assessment**
-   - Follow testing pyramid: property (40%) > integration (35%) > unit (20%) > mutation (5%)
+   - Follow @TESTING.md pyramid: property (40%) > integration (35%) > unit (20%) > mutation (5%)
    - Tests catch real production failures, not theoretical bugs
    - Property tests for complex logic, integration for workflows, unit for pure functions
    - Avoid coverage theatre - tests should fail when logic breaks
