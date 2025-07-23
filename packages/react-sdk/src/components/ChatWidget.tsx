@@ -53,7 +53,8 @@ export interface ChatWidgetProps {
    */
   minimalTheme?: MinimalTheme;
   /**
-   * Enable streaming responses
+   * Enable streaming responses (default: true)
+   * Set to false to disable streaming
    */
   streaming?: boolean;
   /**
@@ -102,7 +103,7 @@ export function ChatWidget({
   position = 'inline',
   className,
   minimalTheme,
-  streaming = false,
+  streaming = true,
   customStyles,
 }: ChatWidgetProps): React.ReactElement {
   const chatOptions: UseChatOptions = {};

@@ -115,7 +115,7 @@ const ticket = await mcp__Linear__create_issue({
 - [ ] [User-facing requirement 1]
 - [ ] [User-facing requirement 2]
 - [ ] [Technical requirement]
-- [ ] Tests added with >85% mutation score (if applicable)
+- [ ] Tests added following @TESTING.md principles with >85% mutation score (if applicable)
 - [ ] Documentation updated
 
 ## Scope
@@ -188,7 +188,7 @@ const ticket = await mcp__Linear__create_issue({
 - [ ] [Specific deliverable 1]
 - [ ] [Specific deliverable 2]
 - [ ] Code follows project standards
-- [ ] Tests maintain >85% mutation score
+- [ ] Tests maintain >85% mutation score per @TESTING.md guidelines
 - [ ] Documentation updated
 
 ## Technical Details

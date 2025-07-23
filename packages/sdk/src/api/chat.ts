@@ -3,11 +3,13 @@ import type { Message, ChatOptions } from './types.js';
 import { AirboltError } from '../core/errors.js';
 
 /**
- * Send a chat message to Airbolt and receive a response
+ * Send a chat message to Airbolt and receive a complete response (non-streaming)
+ *
+ * Note: For the default streaming behavior, use `chat()` instead.
  *
  * @example
  * ```typescript
- * const response = await chat([
+ * const response = await chatSync([
  *   { role: 'user', content: 'Hello, how are you?' }
  * ]);
  * console.log(response); // "I'm doing well, thank you!"
@@ -16,7 +18,7 @@ import { AirboltError } from '../core/errors.js';
  * @example
  * ```typescript
  * // With options
- * const response = await chat(
+ * const response = await chatSync(
  *   [{ role: 'user', content: 'Tell me a joke' }],
  *   {
  *     baseURL: 'https://api.airbolt.dev',
@@ -27,7 +29,7 @@ import { AirboltError } from '../core/errors.js';
  *
  * @param messages Array of messages in the conversation
  * @param options Optional configuration
- * @returns The assistant's response content
+ * @returns The complete assistant's response content
  */
 export async function chat(
   messages: Message[],
@@ -55,11 +57,14 @@ export async function chat(
 }
 
 /**
- * Stream a chat response from Airbolt
+ * Stream a chat response from Airbolt (default behavior)
+ *
+ * This is the default `chat()` function - streaming provides better UX with
+ * real-time responses. For non-streaming behavior, use `chatSync()`.
  *
  * @example
  * ```typescript
- * for await (const chunk of chatStream([
+ * for await (const chunk of chat([
  *   { role: 'user', content: 'Tell me a story' }
  * ])) {
  *   process.stdout.write(chunk.content);
@@ -204,3 +209,6 @@ async function getOrCreateToken(baseURL: string): Promise<string> {
   const data = (await response.json()) as { token: string };
   return data.token;
 }
+
+// Export aliases for renamed functions
+export { chat as chatSync };

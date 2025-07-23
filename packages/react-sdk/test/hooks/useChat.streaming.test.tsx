@@ -5,7 +5,7 @@ import { useChat } from '../../src/hooks/useChat.js';
 // Mock the SDK
 vi.mock('@airbolt/sdk', () => ({
   chat: vi.fn(),
-  chatStream: vi.fn(),
+  chatSync: vi.fn(),
   clearAuthToken: vi.fn(),
   hasValidToken: vi.fn(() => true),
   getTokenInfo: vi.fn(() => ({
@@ -15,8 +15,8 @@ vi.mock('@airbolt/sdk', () => ({
   })),
 }));
 
-import { chatStream } from '@airbolt/sdk';
-const mockChatStream = vi.mocked(chatStream);
+import { chat } from '@airbolt/sdk';
+const mockChat = vi.mocked(chat);
 
 describe('useChat streaming', () => {
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('useChat streaming', () => {
 
   it('should stream messages when streaming option is enabled', async () => {
     // Mock chatStream to return chunks
-    mockChatStream.mockImplementation(async function* () {
+    mockChat.mockImplementation(async function* () {
       yield { content: 'Hello', type: 'chunk' };
       yield { content: ' world!', type: 'chunk' };
       yield { content: '', type: 'done' };
@@ -65,7 +65,7 @@ describe('useChat streaming', () => {
 
   it('should handle streaming errors', async () => {
     // Mock error during streaming
-    mockChatStream.mockImplementation(async function* () {
+    mockChat.mockImplementation(async function* () {
       yield { content: 'Start', type: 'chunk' };
       throw new Error('Stream failed');
     });

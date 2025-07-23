@@ -3,14 +3,14 @@ import { createChatSession } from '../../src/api/session';
 
 // Mock the chat module
 vi.mock('../../src/api/chat', () => ({
-  chat: vi.fn(),
+  chatSync: vi.fn(),
 }));
 
-// Import chat after mocking
-import { chat } from '../../src/api/chat';
+// Import chatSync after mocking
+import { chatSync } from '../../src/api/chat';
 
 describe('createChatSession', () => {
-  const mockChat = vi.mocked(chat);
+  const mockChat = vi.mocked(chatSync);
 
   beforeEach(() => {
     vi.clearAllMocks();

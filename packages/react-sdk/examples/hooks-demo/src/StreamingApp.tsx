@@ -14,7 +14,7 @@ export function StreamingApp() {
   } = useChat({
     baseURL: 'http://localhost:3000', // For production, use your deployed URL
     system: 'You are a helpful assistant. Keep responses concise.',
-    streaming: true, // Enable streaming
+    // streaming: true is the default
     onChunk: chunk => {
       // Optional: Handle individual chunks (e.g., for debugging)
       console.log('Received chunk:', chunk);

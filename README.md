@@ -96,7 +96,7 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 **Auth provider integrations** - Connect your existing Auth0, Clerk, or Firebase Auth. Users automatically get secure AI access based on your app's authentication.
 
-**Streaming responses** - Real-time message streaming for better user experience.
+**Streaming responses (Available Now!)** - Real-time message streaming for better user experience.
 
 **Function calling** - Let AI models call your application functions and APIs.
 
@@ -176,22 +176,27 @@ function CustomChat() {
 import { chat } from '@airbolt/sdk';
 
 async function askAI(question) {
-  const response = await chat(
-    [
-      { role: 'system', content: 'You are a helpful assistant.' },
-      { role: 'user', content: question },
-    ],
-    {
-      baseURL: 'https://my-ai-backend.onrender.com',
-    }
-  );
+  const messages = [
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: question },
+  ];
 
-  return response;
+  console.log('AI: ');
+
+  // Stream the response (default behavior)
+  for await (const chunk of chat(messages, {
+    baseURL: 'https://my-ai-backend.onrender.com',
+  })) {
+    if (chunk.type === 'chunk') {
+      process.stdout.write(chunk.content);
+    }
+  }
+  console.log('\n');
 }
 
 // Usage
-const answer = await askAI('Explain how React hooks work');
-console.log(answer);
+await askAI('Explain how React hooks work');
+// AI will stream the response in real-time...
 ```
 
 **See more examples**:
@@ -233,7 +238,7 @@ npm start
 
 - 🚧 Hosted solution ([private beta](https://forms.gle/2yWKszvJBZReN6kf7))
 - 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
-- 🚧 Response streaming for real-time chat
+- ✅ Response streaming for real-time chat
 - 🚧 Function calling and tool use
 - 🚧 Enhanced multi-provider support (Google, local models, etc.)
 

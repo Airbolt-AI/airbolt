@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { chat } from '../../src/api/chat';
+import { chatSync } from '../../src/api/chat';
 import { AirboltClient } from '../../src/core/fern-client';
 import type { Message } from '../../src/api/types';
 
 // Mock the AirboltClient
 vi.mock('../../src/core/fern-client');
 
-describe('chat', () => {
+describe('chatSync', () => {
   const mockChat = vi.fn();
   const mockClientConstructor = vi.mocked(AirboltClient);
 
@@ -35,7 +35,7 @@ describe('chat', () => {
       usage: { total_tokens: 15 },
     });
 
-    const result = await chat(messages);
+    const result = await chatSync(messages);
 
     expect(result).toBe(expectedResponse);
     expect(mockClientConstructor).toHaveBeenCalledWith({
@@ -56,7 +56,7 @@ describe('chat', () => {
       usage: { total_tokens: 10 },
     });
 
-    await chat(messages, { baseURL });
+    await chatSync(messages, { baseURL });
 
     expect(mockClientConstructor).toHaveBeenCalledWith({ baseURL });
   });
@@ -70,7 +70,7 @@ describe('chat', () => {
       usage: { total_tokens: 25 },
     });
 
-    await chat(messages, { system });
+    await chatSync(messages, { system });
 
     expect(mockChat).toHaveBeenCalledWith(
       [{ role: 'system', content: system }, ...messages],
@@ -93,7 +93,7 @@ describe('chat', () => {
       usage: { total_tokens: 30 },
     });
 
-    const result = await chat(messages);
+    const result = await chatSync(messages);
 
     expect(result).toBe('3+3 equals 6');
     expect(mockChat).toHaveBeenCalledWith(messages, {
@@ -108,7 +108,7 @@ describe('chat', () => {
 
     mockChat.mockRejectedValue(error);
 
-    await expect(chat(messages)).rejects.toThrow('Network error');
+    await expect(chatSync(messages)).rejects.toThrow('Network error');
   });
 
   it('should handle empty messages array', async () => {
@@ -119,7 +119,7 @@ describe('chat', () => {
       usage: { total_tokens: 5 },
     });
 
-    const result = await chat(messages);
+    const result = await chatSync(messages);
 
     expect(result).toBe('No messages provided');
     expect(mockChat).toHaveBeenCalledWith([], {
@@ -140,7 +140,7 @@ describe('chat', () => {
       usage: { total_tokens: 20 },
     });
 
-    await chat(messages, options);
+    await chatSync(messages, options);
 
     expect(mockClientConstructor).toHaveBeenCalledWith({
       baseURL: options.baseURL,
@@ -166,7 +166,7 @@ describe('chat', () => {
       usage: { total_tokens: 15 },
     });
 
-    await chat(messages, options);
+    await chatSync(messages, options);
 
     expect(mockChat).toHaveBeenCalledWith(messages, {
       provider: options.provider,
@@ -188,7 +188,7 @@ describe('chat', () => {
       usage: { total_tokens: 25 },
     });
 
-    await chat(messages, options);
+    await chatSync(messages, options);
 
     expect(mockClientConstructor).toHaveBeenCalledWith({
       baseURL: options.baseURL,

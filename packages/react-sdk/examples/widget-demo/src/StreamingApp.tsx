@@ -13,11 +13,13 @@ export function StreamingApp() {
         <section>
           <h2>About Streaming</h2>
           <p>
-            With streaming enabled, you'll see AI responses appear word-by-word
-            as they're generated, providing a more interactive experience.
+            Streaming is enabled by default! You'll see AI responses appear
+            word-by-word as they're generated, providing a more interactive
+            experience.
           </p>
           <p>
-            Just add <code>streaming</code> prop to enable it!
+            To disable streaming, you can add <code>streaming={false}</code>{' '}
+            prop.
           </p>
         </section>
 
@@ -28,7 +30,7 @@ export function StreamingApp() {
             title="Streaming AI Assistant"
             placeholder="Ask me to tell a story..."
             position="inline"
-            streaming={true}
+            // streaming={true} is the default
           />
         </section>
 

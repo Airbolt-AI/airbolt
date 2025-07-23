@@ -2,6 +2,8 @@
 
 > Core TypeScript SDK for Airbolt - A production-ready backend for calling LLMs from your frontend securely
 
+**🚀 Streaming by default** - Responses stream in real-time for better UX. Use `chatSync()` for non-streaming.
+
 ```bash
 npm install @airbolt/sdk
 ```
@@ -15,21 +17,25 @@ npm install @airbolt/sdk
 ```typescript
 import { chat } from '@airbolt/sdk';
 
-// Simple chat example
-const response = await chat([
+// Simple streaming example (default)
+for await (const chunk of chat([
   { role: 'user', content: 'Hello! Tell me a joke.' },
-]);
+])) {
+  process.stdout.write(chunk.content);
+}
+// Output streams in real-time: "Why don't scientists trust atoms? Because they make up everything!"
 
-console.log(response); // "Why don't scientists trust atoms? Because they make up everything!"
+// Non-streaming example
+import { chatSync } from '@airbolt/sdk';
 
-// With custom backend URL
-const response = await chat(
+const response = await chatSync(
   [{ role: 'user', content: 'What is TypeScript?' }],
   {
     baseURL: 'https://your-airbolt-backend.onrender.com',
     system: 'You are a helpful assistant. Keep responses concise.',
   }
 );
+console.log(response); // Complete response at once
 ```
 
 ## Features
@@ -42,7 +48,7 @@ const response = await chat(
 
 ### 🚀 Developer Experience
 
-- Simple `chat()` function - just pass messages
+- Simple `chat()` function with streaming by default
 - Full TypeScript support with type safety
 - Works in Node.js, browsers, and edge runtimes
 
@@ -56,12 +62,15 @@ const response = await chat(
 
 ### Main Functions
 
-#### `chat(messages, options?)`
+#### `chat(messages, options?)` - Streaming (Default)
 
-Send messages to the AI and get a response.
+Stream AI responses in real-time for a better user experience. This is the default behavior.
 
 ```typescript
-function chat(messages: Message[], options?: ChatOptions): Promise<string>;
+async function* chat(
+  messages: Message[],
+  options?: ChatOptions
+): AsyncGenerator<{ content: string; type: 'chunk' | 'done' | 'error' }>;
 ```
 
 **Parameters:**
@@ -73,36 +82,29 @@ function chat(messages: Message[], options?: ChatOptions): Promise<string>;
   - `provider` - AI provider to use: `'openai'` or `'anthropic'` (default: uses backend environment setting)
   - `model` - Specific model to use (e.g., `'gpt-4'`, `'claude-3-5-sonnet-20241022'`). Defaults to provider's default model
 
-**Returns:** The AI assistant's response as a string
+**Returns:** An async generator that yields streaming chunks
 
-#### `chatStream(messages, options?)`
+#### `chatSync(messages, options?)` - Non-Streaming
 
-Stream AI responses in real-time for a better user experience.
+Get the complete AI response at once (traditional behavior).
 
 ```typescript
-async function* chatStream(
-  messages: Message[],
-  options?: ChatOptions
-): AsyncGenerator<{ content: string; type: 'chunk' | 'done' | 'error' }>;
+function chatSync(messages: Message[], options?: ChatOptions): Promise<string>;
 ```
 
 **Parameters:**
 
 - Same as `chat()` function
 
-**Returns:** An async generator that yields:
-
-- `{ content: string, type: 'chunk' }` - Content chunks as they arrive
-- `{ content: '', type: 'done' }` - Indicates streaming is complete
-- Throws error if streaming fails
+**Returns:** The complete AI assistant's response as a string
 
 **Example:**
 
 ```typescript
-import { chatStream } from '@airbolt/sdk';
+import { chat } from '@airbolt/sdk';
 
-// Stream the response
-for await (const chunk of chatStream([
+// Stream the response (default behavior)
+for await (const chunk of chat([
   { role: 'user', content: 'Tell me a story' },
 ])) {
   if (chunk.type === 'chunk') {
@@ -220,49 +222,60 @@ const options: ChatOptions = {
 ```javascript
 import { chat } from '@airbolt/sdk';
 
-const response = await chat([{ role: 'user', content: 'What is 2 + 2?' }]);
-console.log(response); // "2 + 2 equals 4"
+// Streaming (default)
+for await (const chunk of chat([{ role: 'user', content: 'What is 2 + 2?' }])) {
+  process.stdout.write(chunk.content);
+}
+// Output: "2 + 2 equals 4"
 ```
 
 ### Custom System Prompt
 
 ```javascript
-const response = await chat(
+for await (const chunk of chat(
   [{ role: 'user', content: 'Write a haiku about coding' }],
   {
     system: 'You are a poet who writes haikus about technology',
   }
-);
+)) {
+  process.stdout.write(chunk.content);
+}
 ```
 
 ### Using with Your Deployed Backend
 
 ```javascript
-const response = await chat([{ role: 'user', content: 'Hello!' }], {
+for await (const chunk of chat([{ role: 'user', content: 'Hello!' }], {
   baseURL: 'https://your-app.onrender.com',
-});
+})) {
+  process.stdout.write(chunk.content);
+}
 ```
 
 ### Selecting AI Provider and Model
 
 ```javascript
 // Use Anthropic Claude
-const response = await chat(
+for await (const chunk of chat(
   [{ role: 'user', content: 'Explain quantum computing' }],
   {
     provider: 'anthropic',
     model: 'claude-3-5-sonnet-20241022',
   }
-);
+)) {
+  process.stdout.write(chunk.content);
+}
 
 // Use OpenAI GPT-4
-const response = await chat(
+for await (const chunk of chat(
   [{ role: 'user', content: 'Write a TypeScript function' }],
   {
     provider: 'openai',
     model: 'gpt-4',
   }
-);
+)) {
+  process.stdout.write(chunk.content);
+}
 ```
 
 ## Running Examples

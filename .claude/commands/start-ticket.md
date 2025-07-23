@@ -49,7 +49,7 @@ Run validation at key milestones:
 - After initial implementation: `pnpm ai:quick`
 - After adding tests: `pnpm ai:check`
 - Before moving to review: `pnpm ai:compliance`
-- **Testing Strategy**: Think test-first with the pyramid approach
+- **Testing Strategy**: Follow @TESTING.md principles with the pyramid approach
   - Property tests for complex logic (retry, concurrency, edge cases)
   - Integration tests for complete workflows (auth, API contracts)
   - Unit tests for pure functions only (calculations, validations)
