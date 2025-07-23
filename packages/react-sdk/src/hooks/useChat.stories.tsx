@@ -61,22 +61,25 @@ const ChatDemo = ({ options }: { options?: UseChatOptions }) => {
             No messages yet. Start a conversation!
           </div>
         )}
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              marginBottom: '12px',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
-              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '70%',
-              marginLeft: msg.role === 'user' ? 'auto' : '0',
-            }}
-          >
-            <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong> {msg.content}
-          </div>
-        ))}
+        {messages
+          .filter(msg => msg.content !== '')
+          .map((msg, i) => (
+            <div
+              key={i}
+              style={{
+                marginBottom: '12px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '70%',
+                marginLeft: msg.role === 'user' ? 'auto' : '0',
+              }}
+            >
+              <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
+              {msg.content}
+            </div>
+          ))}
         {isLoading && (
           <div style={{ fontStyle: 'italic', color: '#666' }}>
             AI is thinking...
@@ -215,7 +218,7 @@ function ChatComponent() {
 
   return (
     <div>
-      {messages.map((msg, i) => (
+      {messages.filter(msg => msg.content !== '').map((msg, i) => (
         <div key={i}>
           <b>{msg.role}:</b> {msg.content}
         </div>
@@ -334,22 +337,24 @@ export const StreamingDemo: Story = () => {
             backgroundColor: '#f9fafb',
           }}
         >
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              style={{
-                marginBottom: '12px',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
-                maxWidth: '70%',
-                marginLeft: msg.role === 'user' ? 'auto' : '0',
-              }}
-            >
-              <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
-              {msg.content}
-            </div>
-          ))}
+          {messages
+            .filter(msg => msg.content !== '')
+            .map((msg, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
+                  maxWidth: '70%',
+                  marginLeft: msg.role === 'user' ? 'auto' : '0',
+                }}
+              >
+                <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
+                {msg.content}
+              </div>
+            ))}
           {isStreaming && messages[messages.length - 1]?.content === '' && (
             <div
               style={{
@@ -560,22 +565,25 @@ export const StreamingWithOnChunk: Story = () => {
               backgroundColor: '#f9fafb',
             }}
           >
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  marginBottom: '12px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
-                  maxWidth: '70%',
-                  marginLeft: msg.role === 'user' ? 'auto' : '0',
-                }}
-              >
-                <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
-                {msg.content}
-              </div>
-            ))}
+            {messages
+              .filter(msg => msg.content !== '')
+              .map((msg, i) => (
+                <div
+                  key={i}
+                  style={{
+                    marginBottom: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor:
+                      msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
+                    maxWidth: '70%',
+                    marginLeft: msg.role === 'user' ? 'auto' : '0',
+                  }}
+                >
+                  <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
+                  {msg.content}
+                </div>
+              ))}
           </div>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
             <input
@@ -720,22 +728,24 @@ export const AdvancedInitialMessages: Story = () => {
             backgroundColor: '#f9fafb',
           }}
         >
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              style={{
-                marginBottom: '12px',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
-                maxWidth: '70%',
-                marginLeft: msg.role === 'user' ? 'auto' : '0',
-              }}
-            >
-              <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
-              {msg.content}
-            </div>
-          ))}
+          {messages
+            .filter(msg => msg.content !== '')
+            .map((msg, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f3e5f5',
+                  maxWidth: '70%',
+                  marginLeft: msg.role === 'user' ? 'auto' : '0',
+                }}
+              >
+                <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong>{' '}
+                {msg.content}
+              </div>
+            ))}
           {isLoading && (
             <div style={{ fontStyle: 'italic', color: '#666' }}>
               AI is thinking...
