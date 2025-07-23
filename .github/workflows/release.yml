@@ -72,6 +72,19 @@ jobs:
       - run: pnpm build
         if: steps.version.outputs.changed == 'true'
 
+      # CRITICAL: Prevent accidental 1.x releases
+      - name: Validate version safety
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ "$VERSION" =~ ^[1-9] ]]; then
+            echo "❌ CRITICAL ERROR: Attempting to publish version $VERSION"
+            echo "❌ Version 1.x and above are not allowed yet!"
+            echo "❌ We are still in beta (0.x versions only)"
+            exit 1
+          fi
+          echo "✅ Version $VERSION is safe (beta range)"
+
       # Run validation
       - name: Validate release
         if: steps.version.outputs.changed == 'true'
