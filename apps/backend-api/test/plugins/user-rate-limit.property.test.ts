@@ -34,7 +34,7 @@ describe('User Rate Limiter Property Tests', () => {
   });
 
   describe('Rate limiter behavior', () => {
-    it('consumes tokens even when exceeding limit but throws error', async () => {
+    it('rejects requests that would exceed limit without consuming tokens', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(fc.integer({ min: 1, max: 200 }), {
@@ -51,15 +51,16 @@ describe('User Rate Limiter Property Tests', () => {
 
               try {
                 await app.consumeTokens(userId, tokens);
+                // Should only succeed if it doesn't exceed limit
+                expect(wouldExceedLimit).toBe(false);
                 totalConsumed += tokens;
               } catch (error) {
                 // When request would exceed limit:
-                // - It still consumes the tokens
-                // - But throws an error
+                // - It does NOT consume the tokens (atomic check-and-reject)
+                // - It throws an error
                 expect(wouldExceedLimit).toBe(true);
-                totalConsumed += tokens; // Tokens are consumed even on error!
 
-                // Verify tokens were consumed despite the error
+                // Verify tokens were NOT consumed
                 const afterUsage = await app.getUserUsage(userId);
                 expect(afterUsage.tokens.used).toBe(totalConsumed);
               }
@@ -68,13 +69,14 @@ describe('User Rate Limiter Property Tests', () => {
             // Verify final usage matches what we tracked
             const usage = await app.getUserUsage(userId);
             expect(usage.tokens.used).toBe(totalConsumed);
+            expect(usage.tokens.used).toBeLessThanOrEqual(limit);
           }
         ),
         { numRuns: 50 }
       );
     });
 
-    it('consumes requests even when exceeding limit but throws error', async () => {
+    it('rejects requests that would exceed limit without consuming', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 1, max: 20 }),
@@ -94,20 +96,21 @@ describe('User Rate Limiter Property Tests', () => {
             };
 
             for (let i = 0; i < requestCount; i++) {
-              const wouldExceedLimit = actualRequests + 1 > limit;
+              const wouldExceedLimit = actualRequests >= limit;
 
               try {
                 await app.checkUserRateLimit(fakeRequest, fakeReply);
+                expect(wouldExceedLimit).toBe(false);
                 actualRequests++;
               } catch (error) {
-                // Request is counted even when it fails
-                actualRequests++;
+                // Request is NOT counted when it fails (atomic check-and-reject)
                 expect(wouldExceedLimit).toBe(true);
               }
             }
 
             const usage = await app.getUserUsage(userId);
             expect(usage.requests.used).toBe(actualRequests);
+            expect(usage.requests.used).toBeLessThanOrEqual(limit);
           }
         ),
         { numRuns: 50 }
@@ -173,12 +176,10 @@ describe('User Rate Limiter Property Tests', () => {
               // Should fail if it would exceed limit
               expect(wouldExceedLimit).toBe(true);
 
-              // BUT tokens are still consumed even on error!
+              // Tokens are NOT consumed on error (atomic check-and-reject)
               const afterUsage = await app.getUserUsage(userId);
-              expect(afterUsage.tokens.used).toBe(
-                initialConsumption + attemptAmount
-              );
-              expect(afterUsage.tokens.used).toBeGreaterThan(1000);
+              expect(afterUsage.tokens.used).toBe(initialConsumption);
+              expect(afterUsage.tokens.used).toBeLessThanOrEqual(1000);
             }
           }
         ),
@@ -219,7 +220,7 @@ describe('User Rate Limiter Property Tests', () => {
       );
     });
 
-    it('rate limiter behavior: requests fail when limit exceeded', async () => {
+    it('rate limiter behavior: requests fail when limit would be exceeded', async () => {
       const userId = getUniqueUserId();
 
       // Use up most of the limit
@@ -230,10 +231,10 @@ describe('User Rate Limiter Property Tests', () => {
         /Token limit exceeded/
       );
 
-      // Verify the state after limit exceeded
+      // Verify the state after limit exceeded attempt
       const usage = await app.getUserUsage(userId);
-      expect(usage.tokens.used).toBeGreaterThan(1000); // rate-limiter-flexible behavior
-      expect(usage.tokens.remaining).toBe(0);
+      expect(usage.tokens.used).toBe(900); // Tokens NOT consumed on rejection
+      expect(usage.tokens.remaining).toBe(100);
     });
   });
 });

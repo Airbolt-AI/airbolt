@@ -6,6 +6,7 @@ import {
   ChatResponseSchema,
   AIProviderError,
 } from '../../services/ai-provider.js';
+import type { UsageInfo } from '../../plugins/user-rate-limit.js';
 
 // Request schema for chat endpoint
 const ChatRequestSchema = z.object({
@@ -243,7 +244,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (isStreaming) {
           // Streaming response
-          const userId = (request.user as { userId: string }).userId;
+          const userId = (request.user as JWTPayload).userId;
 
           reply.sse({
             event: 'start',
@@ -251,8 +252,8 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           });
 
           try {
-            // Get the stream from AI provider
-            const stream = await fastify.aiProvider.createChatCompletionStream(
+            // Get the stream result from AI provider
+            const result = await fastify.aiProvider.createChatCompletionStream(
               messages,
               system,
               provider,
@@ -260,12 +261,10 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             );
 
             let fullContent = '';
-            let tokenCount = 0;
 
             // Stream the response
-            for await (const chunk of stream) {
+            for await (const chunk of result.textStream) {
               fullContent += chunk;
-              tokenCount++;
 
               // Send SSE event with the chunk
               reply.sse({
@@ -274,22 +273,14 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               });
             }
 
-            // Calculate actual tokens used (approximate)
-            // In real implementation, we'd need to get this from the AI SDK
-            const actualTokens = tokenCount * 4; // Rough approximation
+            // Get actual token usage from the AI SDK
+            const usage = await result.usage;
+            const tokensUsed = usage.totalTokens;
 
-            // Consume the actual tokens used
-            try {
-              await fastify.consumeTokens(userId, actualTokens);
-            } catch (error) {
-              // Log but don't fail the request since content was already streamed
-              request.log.warn(
-                { error, actualTokens },
-                'Failed to record token usage'
-              );
-            }
+            // Track token usage
+            await fastify.consumeTokens(userId, tokensUsed);
 
-            // Get updated usage info
+            // Get updated usage info after consumption
             const usageInfo = await fastify.getUserUsage(userId);
 
             // Send completion event with usage data
@@ -298,7 +289,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               event: 'done',
               data: JSON.stringify({
                 usage: {
-                  total_tokens: actualTokens,
+                  total_tokens: tokensUsed,
                   ...usageInfo,
                 },
                 duration,
@@ -309,25 +300,39 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               {
                 duration,
                 responseLength: fullContent.length,
-                tokenCount,
-                actualTokens,
+                tokensUsed,
                 streaming: true,
                 userUsage: usageInfo,
               },
               'Streaming chat request completed successfully'
             );
           } catch (error) {
+            // Prepare error data
+            const errorData: {
+              error: string;
+              message: string;
+              usage?: UsageInfo;
+            } = {
+              error:
+                error instanceof AIProviderError
+                  ? error.code || 'STREAM_ERROR'
+                  : 'STREAM_ERROR',
+              message: error instanceof Error ? error.message : 'Stream failed',
+            };
+
+            // Include usage info if it's a rate limit error
+            const errorWithUsage = error as {
+              statusCode?: number;
+              usage?: UsageInfo;
+            };
+            if (errorWithUsage.statusCode === 429 && errorWithUsage.usage) {
+              errorData.usage = errorWithUsage.usage;
+            }
+
             // Send error event before closing
             reply.sse({
               event: 'error',
-              data: JSON.stringify({
-                error:
-                  error instanceof AIProviderError
-                    ? error.code
-                    : 'STREAM_ERROR',
-                message:
-                  error instanceof Error ? error.message : 'Stream failed',
-              }),
+              data: JSON.stringify(errorData),
             });
 
             // Log the error but don't throw - SSE response already started
@@ -352,7 +357,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           );
 
           // Track token usage
-          const userId = (request.user as { userId: string }).userId;
+          const userId = (request.user as JWTPayload).userId;
           const tokensUsed = response.usage?.total_tokens || 0;
 
           try {

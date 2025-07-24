@@ -175,7 +175,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
               setIsStreaming(false);
               // Update usage information from the done event
               if (chunk.usage) {
-                setUsage(chunk.usage as UsageInfo);
+                setUsage(chunk.usage);
               }
             }
             break;

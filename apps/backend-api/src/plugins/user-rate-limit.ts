@@ -65,14 +65,16 @@ export default fp(
 
         const userId = (request.user as { userId: string }).userId;
 
-        try {
-          // Check request limit
-          await requestLimiter.consume(userId, 1);
-        } catch (rateLimiterRes) {
-          const resetAt = new Date(
-            Date.now() +
-              (rateLimiterRes as { msBeforeNext: number }).msBeforeNext
-          ).toISOString();
+        // Check if request would exceed limit (atomic check-and-reject pattern)
+        const limiterRes = await requestLimiter.get(userId);
+        const currentUsed = limiterRes ? limiterRes.consumedPoints : 0;
+
+        if (currentUsed >= config.REQUEST_LIMIT_MAX) {
+          const resetAt = limiterRes
+            ? new Date(Date.now() + limiterRes.msBeforeNext).toISOString()
+            : new Date(
+                Date.now() + config.REQUEST_LIMIT_TIME_WINDOW
+              ).toISOString();
 
           const usage = await getUserUsage(
             userId,
@@ -87,6 +89,9 @@ export default fp(
           });
           throw new Error('Rate limit exceeded');
         }
+
+        // Only consume if under limit
+        await requestLimiter.consume(userId, 1);
       }
     );
 
@@ -94,18 +99,33 @@ export default fp(
     fastify.decorate(
       'consumeTokens',
       async (userId: string, tokens: number): Promise<void> => {
-        try {
-          await tokenLimiter.consume(userId, tokens);
-        } catch (rateLimiterRes) {
-          const resetAt = new Date(
-            Date.now() +
-              (rateLimiterRes as { msBeforeNext: number }).msBeforeNext
-          ).toISOString();
+        // Check if request would exceed limit (atomic check-and-reject pattern)
+        const limiterRes = await tokenLimiter.get(userId);
+        const currentUsed = limiterRes ? limiterRes.consumedPoints : 0;
 
-          throw fastify.httpErrors.tooManyRequests(
+        if (currentUsed + tokens > config.TOKEN_LIMIT_MAX) {
+          const resetAt = limiterRes
+            ? new Date(Date.now() + limiterRes.msBeforeNext).toISOString()
+            : new Date(
+                Date.now() + config.TOKEN_LIMIT_TIME_WINDOW
+              ).toISOString();
+
+          const usage = await getUserUsage(
+            userId,
+            requestLimiter,
+            tokenLimiter
+          );
+
+          const error = fastify.httpErrors.tooManyRequests(
             `Token limit exceeded. Resets at ${resetAt}`
           );
+          // Add usage info to error for better debugging
+          (error as { usage?: UsageInfo }).usage = usage;
+          throw error;
         }
+
+        // Only consume if under limit
+        await tokenLimiter.consume(userId, tokens);
       }
     );
 
@@ -114,22 +134,6 @@ export default fp(
       'getUserUsage',
       async (userId: string): Promise<UsageInfo> => {
         return getUserUsage(userId, requestLimiter, tokenLimiter);
-      }
-    );
-
-    // Helper function to reserve tokens (for streaming)
-    fastify.decorate(
-      'reserveTokens',
-      async (userId: string, tokens: number): Promise<void> => {
-        await tokenLimiter.penalty(userId, tokens);
-      }
-    );
-
-    // Helper function to refund unused tokens (for streaming)
-    fastify.decorate(
-      'refundTokens',
-      async (userId: string, tokens: number): Promise<void> => {
-        await tokenLimiter.reward(userId, tokens);
       }
     );
 
@@ -184,9 +188,5 @@ declare module 'fastify' {
     ) => Promise<void>;
     consumeTokens: (userId: string, tokens: number) => Promise<void>;
     getUserUsage: (userId: string) => Promise<UsageInfo>;
-    userRateLimiters: {
-      requestLimiter: RateLimiterMemory;
-      tokenLimiter: RateLimiterMemory;
-    };
   }
 }

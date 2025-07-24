@@ -101,13 +101,14 @@
     "overrides": {
       "underscore": "^1.13.6",
       "happy-dom": "^15.10.2",
-      "esbuild": "^0.25.0"
+      "esbuild": "^0.25.0",
+      "form-data": "^4.0.4"
     }
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
-    "@nx/workspace": "^21.2.1",
+    "@nx/workspace": "^21.3.5",
     "@stryker-mutator/core": "^9.0.1",
     "@stryker-mutator/typescript-checker": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",
@@ -125,7 +126,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "markdown-link-check": "^3.13.7",
-    "nx": "21.2.1",
+    "nx": "21.3.5",
     "prettier": "^3.4.2",
     "tsx": "^4.20.3",
     "typescript": "~5.8.2",
