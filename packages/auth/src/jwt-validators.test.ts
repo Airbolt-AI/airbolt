@@ -60,7 +60,11 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
   });
 
   describe('InternalJWTValidator', () => {
-    const validator = new InternalJWTValidator(mockFastify as FastifyInstance);
+    let validator: InternalJWTValidator;
+
+    beforeEach(() => {
+      validator = new InternalJWTValidator(mockFastify as FastifyInstance);
+    });
 
     it('should identify internal tokens', () => {
       const internalToken = jwt.sign({ userId: 'test-user' }, testSecret, {
