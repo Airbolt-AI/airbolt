@@ -4,6 +4,45 @@ import { AirboltError } from '../core/errors.js';
 import { joinUrl } from '../core/url-utils.js';
 
 /**
+ * Parse rate limit information from response headers
+ */
+function parseRateLimitHeaders(headers: Headers): Partial<UsageInfo> | null {
+  const requestsLimit = headers.get('x-ratelimit-requests-limit');
+  const requestsRemaining = headers.get('x-ratelimit-requests-remaining');
+  const requestsReset = headers.get('x-ratelimit-requests-reset');
+
+  const tokensLimit = headers.get('x-ratelimit-tokens-limit');
+  const tokensRemaining = headers.get('x-ratelimit-tokens-remaining');
+  const tokensReset = headers.get('x-ratelimit-tokens-reset');
+
+  if (!requestsLimit && !tokensLimit) {
+    return null;
+  }
+
+  const result: Partial<UsageInfo> = {};
+
+  if (requestsLimit && requestsRemaining && requestsReset) {
+    result.requests = {
+      used: parseInt(requestsLimit) - parseInt(requestsRemaining),
+      remaining: parseInt(requestsRemaining),
+      limit: parseInt(requestsLimit),
+      resetAt: new Date(parseInt(requestsReset) * 1000).toISOString(),
+    };
+  }
+
+  if (tokensLimit && tokensRemaining && tokensReset) {
+    result.tokens = {
+      used: parseInt(tokensLimit) - parseInt(tokensRemaining),
+      remaining: parseInt(tokensRemaining),
+      limit: parseInt(tokensLimit),
+      resetAt: new Date(parseInt(tokensReset) * 1000).toISOString(),
+    };
+  }
+
+  return result;
+}
+
+/**
  * Send a chat message to Airbolt and receive a complete response (non-streaming)
  *
  * Note: For the default streaming behavior, use `chat()` instead.
@@ -117,6 +156,9 @@ export async function* chatStream(
       throw new AirboltError('Response body is not readable', 500);
     }
 
+    // Parse rate limit headers if present
+    const rateLimitInfo = parseRateLimitHeaders(response.headers);
+
     const decoder = new TextDecoder();
     let buffer = '';
 
@@ -184,7 +226,7 @@ export async function* chatStream(
                     };
                   };
                   usage = {
-                    total_tokens: usageData.total_tokens || 0,
+                    total_tokens: usageData.total_tokens ?? 0,
                     // Include rate limit usage if present
                     ...(usageData.tokens && {
                       tokens: usageData.tokens,
@@ -192,9 +234,23 @@ export async function* chatStream(
                     ...(usageData.requests && {
                       requests: usageData.requests,
                     }),
-                  };
+                  } as UsageInfo;
                 }
-                yield { content: '', type: 'done', usage: usage as UsageInfo };
+
+                // Merge rate limit info from headers if available
+                if (rateLimitInfo) {
+                  usage = {
+                    ...usage,
+                    ...rateLimitInfo,
+                    total_tokens: usage?.total_tokens ?? 0,
+                  } as UsageInfo;
+                }
+
+                yield {
+                  content: '',
+                  type: 'done',
+                  usage: usage ? usage : undefined,
+                };
                 return;
               case 'error':
                 throw new AirboltError(

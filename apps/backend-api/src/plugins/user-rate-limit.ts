@@ -172,6 +172,57 @@ export default fp(
         },
       };
     }
+
+    // Add rate limit headers to responses for authenticated users
+    fastify.addHook(
+      'onSend',
+      async (request: FastifyRequest, reply, payload) => {
+        // Only add headers for authenticated requests
+        if (!request.user) {
+          return payload;
+        }
+
+        const userId = (request.user as { userId: string }).userId;
+
+        // Get current usage
+        const [requestRes, tokenRes] = await Promise.all([
+          requestLimiter.get(userId),
+          tokenLimiter.get(userId),
+        ]);
+
+        const now = Date.now();
+
+        // Add request rate limit headers
+        const requestsUsed = requestRes ? requestRes.consumedPoints : 0;
+        const requestsRemaining = Math.max(
+          0,
+          config.REQUEST_LIMIT_MAX - requestsUsed
+        );
+        const requestsReset = requestRes
+          ? Math.floor((now + requestRes.msBeforeNext) / 1000)
+          : Math.floor((now + config.REQUEST_LIMIT_TIME_WINDOW) / 1000);
+
+        reply.header('X-RateLimit-Requests-Limit', config.REQUEST_LIMIT_MAX);
+        reply.header('X-RateLimit-Requests-Remaining', requestsRemaining);
+        reply.header('X-RateLimit-Requests-Reset', requestsReset);
+
+        // Add token rate limit headers
+        const tokensUsed = tokenRes ? tokenRes.consumedPoints : 0;
+        const tokensRemaining = Math.max(
+          0,
+          config.TOKEN_LIMIT_MAX - tokensUsed
+        );
+        const tokensReset = tokenRes
+          ? Math.floor((now + tokenRes.msBeforeNext) / 1000)
+          : Math.floor((now + config.TOKEN_LIMIT_TIME_WINDOW) / 1000);
+
+        reply.header('X-RateLimit-Tokens-Limit', config.TOKEN_LIMIT_MAX);
+        reply.header('X-RateLimit-Tokens-Remaining', tokensRemaining);
+        reply.header('X-RateLimit-Tokens-Reset', tokensReset);
+
+        return payload;
+      }
+    );
   },
   {
     name: 'user-rate-limit',

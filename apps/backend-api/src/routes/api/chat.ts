@@ -51,8 +51,9 @@ async function verifyJWT(
   try {
     const token = auth.slice(7);
     const payload = request.server.jwt.verify(token);
-    request.jwt = payload as JWTPayload;
-    request.user = payload as JWTPayload;
+    const jwtPayload = payload as JWTPayload;
+    request.jwt = jwtPayload;
+    request.user = jwtPayload;
   } catch (error) {
     request.log.warn({ error }, 'JWT verification failed');
     throw request.server.httpErrors.unauthorized('Invalid or expired token');
