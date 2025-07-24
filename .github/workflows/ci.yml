@@ -136,8 +136,11 @@ jobs:
       - name: Build packages for mutation testing
         if: steps.check-mutation.outputs.needed == 'true'
         run: |
-          echo "📦 Building packages for mutation testing..."
-          pnpm build
+          echo "📦 Building only necessary packages for mutation testing..."
+          pnpm --filter @airbolt/config build
+          pnpm --filter @airbolt/auth build
+          pnpm --filter @airbolt/types build
+          pnpm --filter @airbolt/test-utils build
 
       - name: Run mutation testing
         if: steps.check-mutation.outputs.needed == 'true'
