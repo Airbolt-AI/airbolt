@@ -49,7 +49,7 @@ For each changed file:
 **Keep it dynamic - only include sections where you have specific feedback:**
 
 ```
-## Code Review - Changed Lines Focus
+## Code Review
 
 **Summary**: [What do the CHANGES accomplish? 2-3 sentences max]
 
