@@ -176,6 +176,64 @@ export const PositionFixed: Story<ChatWidgetProps> = () => (
 );
 PositionFixed.storyName = 'Position/Fixed Bottom Right';
 
+// Streaming Examples
+export const StreamingDefault: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <h3>Streaming Responses (Default)</h3>
+    <p>
+      Watch as AI responses stream in word-by-word for a more interactive
+      experience:
+    </p>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      title="Streaming Chat (Default)"
+      placeholder="Ask me to tell a story..."
+      system="You are a helpful assistant. When asked for stories or explanations, provide detailed responses to showcase streaming."
+    />
+  </div>
+);
+StreamingDefault.storyName = 'Streaming/Default Behavior';
+
+export const StreamingDisabled: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <h3>Non-Streaming Responses</h3>
+    <p>Responses appear all at once when streaming is disabled:</p>
+    <ChatWidget
+      baseURL="http://localhost:3000"
+      title="Non-Streaming Chat"
+      placeholder="Ask me anything..."
+      streaming={false}
+      system="You are a helpful assistant. Keep responses concise for non-streaming mode."
+    />
+  </div>
+);
+StreamingDisabled.storyName = 'Streaming/Disabled';
+
+export const StreamingComparison: Story<ChatWidgetProps> = () => (
+  <div style={{ display: 'flex', gap: '20px', height: '600px' }}>
+    <div style={{ flex: 1 }}>
+      <h3>Streaming (Default)</h3>
+      <ChatWidget
+        baseURL="http://localhost:3000"
+        title="Streaming Mode"
+        placeholder="Ask for a story..."
+        theme="light"
+      />
+    </div>
+    <div style={{ flex: 1 }}>
+      <h3>Non-Streaming</h3>
+      <ChatWidget
+        baseURL="http://localhost:3000"
+        title="Non-Streaming Mode"
+        placeholder="Ask for a story..."
+        theme="dark"
+        streaming={false}
+      />
+    </div>
+  </div>
+);
+StreamingComparison.storyName = 'Streaming/Side-by-Side Comparison';
+
 // Use Case Examples
 export const UseCaseCustomerSupport: Story<ChatWidgetProps> = () => (
   <div style={{ height: '600px', width: '100%' }}>
@@ -239,11 +297,35 @@ function App() {
   return (
     <ChatWidget 
       baseURL="http://localhost:3000"
+      // streaming={true} is the default
     />
   );
+
+  // To disable streaming:
+  // <ChatWidget 
+  //   baseURL="http://localhost:3000"
+  //   streaming={false}
+  // />
 }`}</code>
       </pre>
     </div>
   </div>
 );
 UseCaseWithCodeExample.storyName = 'Use Cases/With Code Example';
+
+export const StreamingWithError: Story<ChatWidgetProps> = () => (
+  <div style={{ height: '600px', width: '100%' }}>
+    <h3>Streaming Error Handling</h3>
+    <p>Test error handling during streaming by using an invalid URL:</p>
+    <ChatWidget
+      baseURL="http://invalid-url:9999"
+      title="Error Handling Demo"
+      placeholder="Try sending a message..."
+    />
+    <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+      Note: This intentionally uses an invalid URL to demonstrate error
+      handling.
+    </p>
+  </div>
+);
+StreamingWithError.storyName = 'Streaming/Error Handling';

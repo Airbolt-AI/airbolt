@@ -26,7 +26,7 @@ export interface UseChatOptions {
   initialMessages?: Message[];
   /**
    * Enable streaming responses
-   * @default false
+   * @default true
    */
   streaming?: boolean;
   /**

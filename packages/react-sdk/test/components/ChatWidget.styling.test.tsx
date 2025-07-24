@@ -159,7 +159,7 @@ describe('ChatWidget Styling', () => {
       const { getByText } = render(<ChatWidget />);
 
       // Should show simple text instead of animated dots
-      expect(getByText('Typing...')).toBeInTheDocument();
+      expect(getByText('Thinking...')).toBeInTheDocument();
     });
   });
 

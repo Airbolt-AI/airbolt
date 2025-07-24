@@ -71,24 +71,44 @@ Verify:
 
 ## 6. PR Creation Decision
 
-**IF all checks pass:**
+After completing all checks above, you MUST make an explicit determination:
 
-- Create comprehensive PR description including:
-  - Summary of changes
-  - Testing approach and results
-  - Breaking changes (if any)
-  - Documentation updates made
-  - Deployment considerations
-  - Screenshots/examples if applicable
-- Use gh CLI to create PR with proper formatting
-- Link to Linear ticket
-- Add appropriate labels
+**✅ ALL CHECKS PASSED** → You MUST immediately create the PR:
 
-**IF any checks fail:**
+```bash
+# Create PR with comprehensive description
+gh pr create --title "feat(scope): description (LIN-XXX)" \
+             --body "## Summary
+- Clear description of changes
 
-- List all issues found
-- Fix issues systematically
-- Re-run /self-review after fixes
-- Do NOT create PR until all checks pass
+## Testing
+- Tests added/updated
+- All quality checks pass
 
-The goal is zero back-and-forth during peer review. Take pride in submitting PRs that are ready to merge.
+## Linear Ticket
+Closes LIN-XXX
+
+## Checklist
+- [ ] All CI checks pass (pnpm ai:compliance)
+- [ ] Tests validate business logic
+- [ ] Documentation updated
+- [ ] No debug code remains"
+```
+
+Include in PR body:
+
+- Summary of changes
+- Testing approach and results
+- Breaking changes (if any)
+- Documentation updates made
+- Deployment considerations
+- Screenshots/examples if applicable
+
+**❌ ANY CHECK FAILED** → You MUST NOT create the PR:
+
+- List ALL issues found
+- Provide specific error messages
+- Suggest fixes for each issue
+- Instruct to re-run /self-review after fixes
+
+**IMPORTANT**: You must explicitly state which path you're taking. Do not ask for permission. If all checks pass, create the PR immediately. The goal is zero back-and-forth during peer review.

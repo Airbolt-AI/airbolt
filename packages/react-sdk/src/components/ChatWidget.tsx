@@ -201,7 +201,7 @@ export function ChatWidget({
         {title}
       </div>
 
-      {usage && usage.tokens && (
+      {usage && usage.tokens && usage.tokens.limit && (
         <div
           style={{
             padding: '0.5rem 1rem',
@@ -211,9 +211,11 @@ export function ChatWidget({
           }}
           aria-label="Usage information"
         >
-          Tokens: {usage.tokens.used.toLocaleString()}/
+          Tokens: {(usage.tokens.used || 0).toLocaleString()}/
           {usage.tokens.limit.toLocaleString()} • Resets{' '}
-          {new Date(usage.tokens.resetAt).toLocaleTimeString()}
+          {usage.tokens.resetAt
+            ? new Date(usage.tokens.resetAt).toLocaleTimeString()
+            : 'N/A'}
         </div>
       )}
 
@@ -223,25 +225,28 @@ export function ChatWidget({
         aria-live="polite"
         aria-label="Chat messages"
       >
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            style={{
-              ...styles['message'],
-              ...(message.role === 'user'
-                ? styles['userMessage']
-                : styles['assistantMessage']),
-            }}
-            role="article"
-            aria-label={`${message.role} message`}
-          >
-            {message.content}
-          </div>
-        ))}
+        {messages
+          .filter(message => message.content !== '')
+          .map((message, index) => (
+            <div
+              key={index}
+              style={{
+                ...styles['message'],
+                ...(message.role === 'user'
+                  ? styles['userMessage']
+                  : styles['assistantMessage']),
+              }}
+              role="article"
+              aria-label={`${message.role} message`}
+            >
+              {message.content}
+            </div>
+          ))}
 
-        {(isLoading || isStreaming) && (
-          <div style={styles['typing']} aria-label="Assistant is typing">
-            <span>{isStreaming ? 'Streaming...' : 'Typing...'}</span>
+        {(isLoading ||
+          (isStreaming && messages[messages.length - 1]?.content === '')) && (
+          <div style={styles['typing']} aria-label="Assistant is thinking">
+            <span>Thinking...</span>
           </div>
         )}
 
