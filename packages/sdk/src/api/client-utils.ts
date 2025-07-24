@@ -1,4 +1,9 @@
-import { AirboltClient } from '../core/fern-client.js';
+import {
+  AirboltClient,
+  type AirboltClientOptions,
+} from '../core/fern-client.js';
+import { detectAuthProvider } from '../auth-providers.js';
+import type { ChatOptions } from './types.js';
 
 /**
  * Token information for debugging
@@ -17,14 +22,33 @@ const clientCache = new Map<string, AirboltClient>();
 /**
  * Get or create a client instance for the given baseURL
  */
-function getClientInstance(baseURL?: string): AirboltClient {
+export function getClientInstance(
+  baseURL?: string,
+  options?: ChatOptions
+): AirboltClient {
   const url = baseURL || 'http://localhost:3000';
 
-  if (!clientCache.has(url)) {
-    clientCache.set(url, new AirboltClient({ baseURL: url }));
+  // Create cache key that includes auth method
+  const cacheKey = options?.getAuthToken ? `${url}-custom` : url;
+
+  if (!clientCache.has(cacheKey)) {
+    const clientOptions: AirboltClientOptions = { baseURL: url };
+
+    // Add auth options if provided
+    if (options?.getAuthToken) {
+      clientOptions.getAuthToken = options.getAuthToken;
+    } else {
+      // Auto-detect auth provider if no custom getter provided
+      const authProvider = detectAuthProvider();
+      if (authProvider) {
+        clientOptions.authProvider = authProvider;
+      }
+    }
+
+    clientCache.set(cacheKey, new AirboltClient(clientOptions));
   }
 
-  return clientCache.get(url)!;
+  return clientCache.get(cacheKey)!;
 }
 
 /**

@@ -1,7 +1,7 @@
-import { AirboltClient } from '../core/fern-client.js';
 import type { Message, ChatOptions, ChatResponse, UsageInfo } from './types.js';
 import { AirboltError } from '../core/errors.js';
 import { joinUrl } from '../core/url-utils.js';
+import { getClientInstance } from './client-utils.js';
 
 /**
  * Parse rate limit information from response headers
@@ -76,11 +76,8 @@ export async function chat(
   messages: Message[],
   options?: ChatOptions
 ): Promise<ChatResponse> {
-  // Create a new client instance for this request
-  // Use provided baseURL or default to localhost
-  const baseURL = options?.baseURL || 'http://localhost:3000';
-
-  const client = new AirboltClient({ baseURL });
+  // Get or create a client instance with auth support
+  const client = getClientInstance(options?.baseURL, options);
 
   // Add system message if provided
   const allMessages = options?.system

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { joinUrl } from './url-utils.js';
+import type { AuthProvider } from '../auth-providers.js';
 
 /**
  * Token response schema for validation
@@ -24,6 +25,10 @@ export interface TokenManagerOptions {
   maxRetries?: number;
   /** Retry delay in milliseconds (default: 1000) */
   retryDelay?: number;
+  /** External auth token getter function */
+  getAuthToken?: () => Promise<string> | string;
+  /** Auto-detected auth provider */
+  authProvider?: AuthProvider | null;
 }
 
 /**
@@ -64,6 +69,7 @@ export class TokenManager {
   private tokenInfo: TokenInfo | null = null;
   private refreshPromise: Promise<TokenInfo> | null = null;
   private readonly options: Required<TokenManagerOptions>;
+  private authMethod: 'internal' | 'external' = 'internal';
 
   constructor(options: TokenManagerOptions) {
     this.options = {
@@ -72,14 +78,34 @@ export class TokenManager {
       maxRetries: 3,
       retryDelay: 1000,
       ...options,
-    };
+    } as Required<TokenManagerOptions>;
+
+    // Determine auth method
+    if (options.getAuthToken || options.authProvider) {
+      this.authMethod = 'external';
+    }
   }
 
   /**
    * Get a valid token, refreshing if necessary
    */
   async getToken(): Promise<string> {
-    // If we don't have a token or it's expired/expiring soon, refresh it
+    if (this.authMethod === 'external') {
+      try {
+        const token = this.options.getAuthToken
+          ? await this.options.getAuthToken()
+          : await this.options.authProvider!.getToken();
+
+        if (!token)
+          throw new TokenError('No token returned from auth provider');
+        return token;
+      } catch (error) {
+        console.warn('External auth failed, falling back to internal', error);
+        this.authMethod = 'internal'; // Fallback
+      }
+    }
+
+    // Internal auth flow
     if (!this.tokenInfo || this.isTokenExpiring()) {
       await this.refreshToken();
     }

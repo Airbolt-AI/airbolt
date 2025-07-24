@@ -188,6 +188,25 @@ const app: FastifyPluginAsync<AppOptions> = async (
     },
   });
 
+  // Register external JWT namespace if configured
+  if (
+    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
+    fastify.config?.EXTERNAL_JWT_SECRET
+  ) {
+    await fastify.register(fastifyJwt, {
+      namespace: 'external',
+      secret:
+        fastify.config.EXTERNAL_JWT_PUBLIC_KEY ||
+        fastify.config.EXTERNAL_JWT_SECRET ||
+        '',
+      verify: {
+        algorithms: fastify.config.EXTERNAL_JWT_PUBLIC_KEY
+          ? ['RS256']
+          : ['HS256'],
+      },
+    });
+  }
+
   // Register AI provider service after env (it depends on API keys from env)
   // Only register if env validation was not skipped (meaning we have real config)
   if (!opts.skipEnvValidation) {

@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { isDevelopment } from '@airbolt/config';
 import {
@@ -7,6 +7,12 @@ import {
   AIProviderError,
 } from '../../services/ai-provider.js';
 import type { UsageInfo } from '../../plugins/user-rate-limit.js';
+import {
+  InternalJWTValidator,
+  ExternalJWTValidator,
+  createAuthMiddleware,
+  type JWTValidator,
+} from '@airbolt/auth';
 
 // Request schema for chat endpoint
 const ChatRequestSchema = z.object({
@@ -35,32 +41,27 @@ declare module 'fastify' {
   }
 }
 
-// JWT verification middleware
-async function verifyJWT(
-  request: FastifyRequest,
-  _reply: FastifyReply
-): Promise<void> {
-  const auth = request.headers.authorization;
+const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
+  // Create auth middleware with validators
+  const validators: JWTValidator[] = [new InternalJWTValidator(fastify)];
 
-  if (!auth?.startsWith('Bearer ')) {
-    throw request.server.httpErrors.unauthorized(
-      'Missing or invalid authorization header'
+  // Add external validator if configured
+  if (
+    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
+    fastify.config?.EXTERNAL_JWT_SECRET
+  ) {
+    validators.push(
+      new ExternalJWTValidator(
+        fastify.config.EXTERNAL_JWT_PUBLIC_KEY ||
+          fastify.config.EXTERNAL_JWT_SECRET ||
+          '',
+        fastify.config.EXTERNAL_JWT_PUBLIC_KEY ? ['RS256'] : ['HS256']
+      )
     );
   }
 
-  try {
-    const token = auth.slice(7);
-    const payload = request.server.jwt.verify(token);
-    const jwtPayload = payload as JWTPayload;
-    request.jwt = jwtPayload;
-    request.user = jwtPayload;
-  } catch (error) {
-    request.log.warn({ error }, 'JWT verification failed');
-    throw request.server.httpErrors.unauthorized('Invalid or expired token');
-  }
-}
+  const verifyJWT = createAuthMiddleware(fastify, validators);
 
-const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post(
     '/chat',
     {
