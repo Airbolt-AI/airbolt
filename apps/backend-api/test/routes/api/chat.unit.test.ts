@@ -109,7 +109,7 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Missing or invalid authorization header',
+          message: 'Missing authorization token',
           statusCode: 401,
         });
       });
@@ -129,7 +129,7 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Missing or invalid authorization header',
+          message: 'Missing authorization token',
           statusCode: 401,
         });
       });
@@ -149,7 +149,7 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Invalid or expired token',
+          message: 'Invalid authorization token',
           statusCode: 401,
         });
       });

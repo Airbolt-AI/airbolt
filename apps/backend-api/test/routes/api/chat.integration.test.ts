@@ -229,7 +229,7 @@ describe('Chat Route Integration Tests', () => {
       const responseBody = JSON.parse(response.payload);
       expect(responseBody).toMatchObject({
         error: 'Unauthorized',
-        message: expect.stringContaining('Invalid or expired token'),
+        message: expect.stringContaining('Invalid authorization token'),
         statusCode: 401,
       });
     });

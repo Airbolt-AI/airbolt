@@ -27,6 +27,12 @@ export interface ChatOptions {
    * Defaults to the provider's default model.
    */
   model?: string;
+  /**
+   * Custom auth token getter function for BYOA (Bring Your Own Auth)
+   * @example
+   * getAuthToken: () => myAuth.getToken()
+   */
+  getAuthToken?: () => Promise<string> | string;
 }
 
 /**

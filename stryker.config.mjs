@@ -21,6 +21,9 @@ const config = {
   timeoutFactor: 1.5,
   concurrency: process.env.CI ? 2 : 12, // Increase for local development
   disableTypeChecks: true, // Skip TypeScript checking on mutants for speed
+  
+  // Coverage analysis to only run relevant tests
+  coverageAnalysis: 'perTest',
 
   ignorePatterns: [
     'node_modules',
@@ -45,6 +48,14 @@ const config = {
       'ArrayDeclaration',
       'BlockStatement',
     ],
+  },
+
+  // Ignore static mutants (they take 94% of time but provide little value)
+  ignoreStatic: true,
+
+  // Disable warnings about slow static mutants since we're ignoring them
+  warnings: {
+    slow: false
   },
 
   thresholds: {

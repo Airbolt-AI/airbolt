@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { chatSync } from '../../src/api/chat';
 import { AirboltClient } from '../../src/core/fern-client';
+import { getClientInstance } from '../../src/api/client-utils';
 import type { Message } from '../../src/api/types';
 
 // Mock the AirboltClient
 vi.mock('../../src/core/fern-client');
+
+// Mock getClientInstance to avoid caching issues in tests
+let mockClient: any;
+vi.mock('../../src/api/client-utils', () => ({
+  getClientInstance: vi.fn(() => mockClient),
+}));
 
 describe('chatSync', () => {
   const mockChat = vi.fn();
@@ -12,6 +19,11 @@ describe('chatSync', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Create fresh mock client for each test
+    mockClient = {
+      chat: mockChat,
+    };
 
     // Setup mock client instance
     mockClientConstructor.mockImplementation(
@@ -40,9 +52,7 @@ describe('chatSync', () => {
     expect(result.content).toBe(expectedResponse);
     expect(result.usage).toBeDefined();
     expect(result.usage?.total_tokens).toBe(15);
-    expect(mockClientConstructor).toHaveBeenCalledWith({
-      baseURL: 'http://localhost:3000',
-    });
+    expect(getClientInstance).toHaveBeenCalledWith(undefined, undefined);
     expect(mockChat).toHaveBeenCalledWith(messages, {
       provider: undefined,
       model: undefined,
@@ -60,7 +70,7 @@ describe('chatSync', () => {
 
     await chatSync(messages, { baseURL });
 
-    expect(mockClientConstructor).toHaveBeenCalledWith({ baseURL });
+    expect(getClientInstance).toHaveBeenCalledWith(baseURL, { baseURL });
   });
 
   it('should pass system prompt when provided', async () => {
@@ -148,9 +158,7 @@ describe('chatSync', () => {
 
     await chatSync(messages, options);
 
-    expect(mockClientConstructor).toHaveBeenCalledWith({
-      baseURL: options.baseURL,
-    });
+    expect(getClientInstance).toHaveBeenCalledWith(options.baseURL, options);
     expect(mockChat).toHaveBeenCalledWith(
       [{ role: 'system', content: options.system }, ...messages],
       {
@@ -196,9 +204,8 @@ describe('chatSync', () => {
 
     await chatSync(messages, options);
 
-    expect(mockClientConstructor).toHaveBeenCalledWith({
-      baseURL: options.baseURL,
-    });
+    // Check that getClientInstance was called with the correct baseURL
+    expect(getClientInstance).toHaveBeenCalledWith(options.baseURL, options);
     expect(mockChat).toHaveBeenCalledWith(
       [{ role: 'system', content: options.system }, ...messages],
       {

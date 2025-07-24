@@ -11,6 +11,7 @@ import { AirboltAPIClient, AirboltAPI } from '../../generated/index.js';
 import { TokenManager } from './token-manager.js';
 import { ColdStartError } from './errors.js';
 import { isTimeoutError } from './timeout-utils.js';
+import type { AuthProvider } from '../auth-providers.js';
 
 export interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -58,6 +59,14 @@ export interface AirboltClientOptions {
    * typically because it's waking up from sleep.
    */
   onColdStartDetected?: () => void;
+  /**
+   * Custom auth token getter function for BYOA
+   */
+  getAuthToken?: () => Promise<string> | string;
+  /**
+   * Auto-detected auth provider
+   */
+  authProvider?: AuthProvider | null;
 }
 
 /**
@@ -93,6 +102,8 @@ export class AirboltClient {
       new TokenManager({
         baseURL: normalizedBaseURL,
         userId: options.userId,
+        getAuthToken: options.getAuthToken,
+        authProvider: options.authProvider,
       });
 
     // Initialize Fern client with async token supplier

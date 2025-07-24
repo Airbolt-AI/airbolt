@@ -93,6 +93,21 @@ export const EnvSchema = z
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
       .optional(),
 
+    // External JWT configuration for BYOA
+    EXTERNAL_JWT_PUBLIC_KEY: z
+      .string({
+        invalid_type_error: 'EXTERNAL_JWT_PUBLIC_KEY must be a string',
+      })
+      .min(1, 'EXTERNAL_JWT_PUBLIC_KEY cannot be empty')
+      .optional(),
+
+    EXTERNAL_JWT_SECRET: z
+      .string({
+        invalid_type_error: 'EXTERNAL_JWT_SECRET must be a string',
+      })
+      .min(1, 'EXTERNAL_JWT_SECRET cannot be empty')
+      .optional(),
+
     // CORS allowed origins (comma-separated list or * for all origins)
     ALLOWED_ORIGIN: z.string().optional(),
 
