@@ -21,6 +21,7 @@ describe('chatStream', () => {
     // Mock SSE response
     const mockResponse = {
       ok: true,
+      headers: new Headers(),
       body: new ReadableStream({
         start(controller) {
           const encoder = new TextEncoder();
