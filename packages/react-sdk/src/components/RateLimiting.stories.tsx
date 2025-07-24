@@ -335,24 +335,24 @@ const RateLimitingDemo = ({
  */
 const SimulatedRateLimitDemo = () => {
   const [simulatedUsage, setSimulatedUsage] = useState<UsageInfo>({
-    total_tokens: 2500,
+    total_tokens: 250,
     tokens: {
-      used: 85000,
-      remaining: 15000,
-      limit: 100000,
-      resetAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      used: 750,
+      remaining: 250,
+      limit: 1000,
+      resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
     },
     requests: {
-      used: 92,
-      remaining: 8,
-      limit: 100,
-      resetAt: new Date(Date.now() + 23 * 60 * 1000).toISOString(),
+      used: 3,
+      remaining: 2,
+      limit: 5,
+      resetAt: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // 2 minutes
     },
   });
 
   const simulateUsage = () => {
     setSimulatedUsage(prev => {
-      const tokenIncrease = Math.floor(Math.random() * 5000) + 1000;
+      const tokenIncrease = Math.floor(Math.random() * 200) + 50; // 50-250 tokens per request
       const newTokenUsed = Math.min(
         prev.tokens!.limit,
         prev.tokens!.used + tokenIncrease
@@ -364,7 +364,7 @@ const SimulatedRateLimitDemo = () => {
 
       return {
         ...prev,
-        total_tokens: Math.floor(Math.random() * 5000) + 1000,
+        total_tokens: tokenIncrease,
         tokens: {
           ...prev.tokens!,
           used: newTokenUsed,
@@ -383,24 +383,57 @@ const SimulatedRateLimitDemo = () => {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       <h3>Simulated Rate Limit Scenarios</h3>
       <p>
-        This example shows how usage display changes as you approach limits.
+        This example uses very low limits (5 requests, 1000 tokens) to make it
+        easy to test rate limiting behavior. Click "Simulate API Call" a few
+        times to see the warnings and eventually hit the limits.
       </p>
 
       <UsageDisplay usage={simulatedUsage} />
 
-      <button
-        onClick={simulateUsage}
-        style={{
-          padding: '8px 16px',
-          borderRadius: '4px',
-          border: 'none',
-          backgroundColor: '#007aff',
-          color: 'white',
-          cursor: 'pointer',
-        }}
-      >
-        Simulate API Call
-      </button>
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button
+          onClick={simulateUsage}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: 'none',
+            backgroundColor: '#007aff',
+            color: 'white',
+            cursor: 'pointer',
+          }}
+        >
+          Simulate API Call
+        </button>
+        <button
+          onClick={() => {
+            setSimulatedUsage({
+              total_tokens: 0,
+              tokens: {
+                used: 0,
+                remaining: 1000,
+                limit: 1000,
+                resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+              },
+              requests: {
+                used: 0,
+                remaining: 5,
+                limit: 5,
+                resetAt: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+              },
+            });
+          }}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: '1px solid #007aff',
+            backgroundColor: 'white',
+            color: '#007aff',
+            cursor: 'pointer',
+          }}
+        >
+          Reset Usage
+        </button>
+      </div>
 
       <div style={{ marginTop: '20px', fontSize: '14px', color: '#6b7280' }}>
         <h4>Usage States:</h4>
@@ -411,6 +444,14 @@ const SimulatedRateLimitDemo = () => {
             🔴 Red (90-100%): Very close to limit, likely to hit rate limits
             soon
           </li>
+        </ul>
+        <h4>Test Scenarios:</h4>
+        <ul>
+          <li>Click "Simulate API Call" 4 times to see orange warnings</li>
+          <li>Click 5 times to hit the request limit</li>
+          <li>Each click uses 50-250 tokens (randomly)</li>
+          <li>Usually hits token limit after 5-8 clicks</li>
+          <li>Use "Reset Usage" to start over</li>
         </ul>
       </div>
     </div>
