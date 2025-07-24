@@ -201,7 +201,7 @@ export function ChatWidget({
         {title}
       </div>
 
-      {usage && usage.tokens && (
+      {usage && usage.tokens && usage.tokens.limit && (
         <div
           style={{
             padding: '0.5rem 1rem',
@@ -211,9 +211,11 @@ export function ChatWidget({
           }}
           aria-label="Usage information"
         >
-          Tokens: {usage.tokens.used.toLocaleString()}/
+          Tokens: {(usage.tokens.used || 0).toLocaleString()}/
           {usage.tokens.limit.toLocaleString()} • Resets{' '}
-          {new Date(usage.tokens.resetAt).toLocaleTimeString()}
+          {usage.tokens.resetAt
+            ? new Date(usage.tokens.resetAt).toLocaleTimeString()
+            : 'N/A'}
         </div>
       )}
 
