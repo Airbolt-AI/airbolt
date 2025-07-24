@@ -42,8 +42,32 @@ jobs:
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
           # model: "claude-opus-4-20250514"
 
-          # Use direct_prompt only for PR open events, not for comment mentions
-          # TODO: Update direct_prompt in a separate PR to focus on changed lines only
+          # Direct prompt for automated review (no @claude mention needed)
+          direct_prompt: |
+            Review this PR with special attention to the airbolt project guidelines (AGENTS.md):
+
+            CRITICAL Requirements:
+            - TypeScript: NO any types allowed, explicit return types required (@tsconfig/strictest)
+            - Validation: ALL inputs MUST use Zod schemas (ESLint enforced)
+            - Error handling: ONLY use Fastify error patterns (fastify.httpErrors)
+            - Testing: Tests must validate business logic, not just coverage
+
+            File-specific review focus:
+            - For TypeScript files: Strict mode compliance, proper typing, no any
+            - For API endpoints (apps/backend-api): Zod validation on ALL inputs, Fastify error patterns
+            - For React components (packages/react-sdk): Hooks best practices, proper state management
+            - For tests: Must test edge cases (null/undefined/empty), property-based testing for business logic
+
+            MUTATION TESTING CRITICAL FILES (require 85% mutation score):
+            - apps/backend-api/src/services/openai.ts - Verify retry logic, error handling
+            - packages/sdk/src/core/token-manager.ts - Check token refresh, race conditions
+            - apps/backend-api/src/plugins/rate-limit.ts - Validate IP extraction, key generation
+
+            Architecture rules:
+            - Apps can depend on packages (NOT other apps)
+            - Packages can depend on packages (NOT apps)
+
+            Run validation with pnpm ai:quick to verify compliance.
 
           # Optional: Different prompts for different authors
           # direct_prompt: |
