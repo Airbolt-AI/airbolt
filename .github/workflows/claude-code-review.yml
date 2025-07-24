@@ -2,23 +2,18 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    paths:
-      - 'apps/**/*.ts'
-      - 'apps/**/*.tsx'
-      - 'apps/**/*.js'
-      - 'apps/**/*.jsx'
-      - 'packages/**/*.ts'
-      - 'packages/**/*.tsx'
-      - 'packages/**/*.js'
-      - 'packages/**/*.jsx'
-      - '!**/generated/**'
-      - '!**/dist/**'
-      - '!examples/**'
+    types: [opened]
+  issue_comment:
+    types: [created]
 
 jobs:
   claude-review:
+    # Run on PR open OR when @claude is mentioned in a PR comment
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@claude'))
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||

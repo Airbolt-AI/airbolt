@@ -27,7 +27,7 @@
     "prepublishOnly": "pnpm run build && echo 'React SDK package ready for publishing'",
     "demo": "cd examples && npx http-server -p 8080 --cors -o standalone-demo.html",
     "docs:build": "typedoc",
-    "ladle": "ladle serve",
+    "dev": "ladle serve",
     "ladle:build": "ladle build"
   },
   "keywords": [
