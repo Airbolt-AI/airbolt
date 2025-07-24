@@ -182,14 +182,38 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
  */
 const RateLimitingDemo = ({
   baseURL = 'http://localhost:3000',
+  simulateLowLimits = false,
 }: {
   baseURL?: string;
+  simulateLowLimits?: boolean;
 }) => {
   const { messages, input, setInput, send, isLoading, error, usage } = useChat({
     baseURL,
     system:
       'You are a helpful assistant. Keep responses concise to demonstrate rate limiting.',
   });
+
+  // Override the usage display with low limits for demonstration
+  const displayUsage =
+    simulateLowLimits && usage
+      ? {
+          ...usage,
+          tokens: usage.tokens
+            ? {
+                ...usage.tokens,
+                limit: 1000,
+                remaining: Math.max(0, 1000 - (usage.tokens.used || 0)),
+              }
+            : undefined,
+          requests: usage.requests
+            ? {
+                ...usage.requests,
+                limit: 5,
+                remaining: Math.max(0, 5 - (usage.requests.used || 0)),
+              }
+            : undefined,
+        }
+      : usage;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,13 +222,13 @@ const RateLimitingDemo = ({
 
   // Show warning when approaching limits
   const showWarning =
-    usage &&
-    ((usage.tokens &&
-      usage.tokens.limit &&
-      (usage.tokens.used || 0) / usage.tokens.limit > 0.8) ||
-      (usage.requests &&
-        usage.requests.limit &&
-        (usage.requests.used || 0) / usage.requests.limit > 0.8));
+    displayUsage &&
+    ((displayUsage.tokens &&
+      displayUsage.tokens.limit &&
+      (displayUsage.tokens.used || 0) / displayUsage.tokens.limit > 0.8) ||
+      (displayUsage.requests &&
+        displayUsage.requests.limit &&
+        (displayUsage.requests.used || 0) / displayUsage.requests.limit > 0.8));
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
@@ -226,7 +250,7 @@ const RateLimitingDemo = ({
         </div>
       )}
 
-      <UsageDisplay usage={usage} />
+      <UsageDisplay usage={displayUsage} />
 
       <div
         style={{
@@ -283,13 +307,15 @@ const RateLimitingDemo = ({
           <br />
           {error.message}
           <br />
-          {usage && (
+          {displayUsage && (
             <div style={{ marginTop: '8px', fontSize: '14px' }}>
-              {usage.tokens &&
-                `Token reset: ${new Date(usage.tokens.resetAt).toLocaleTimeString()}`}
-              {usage.tokens && usage.requests && ' | '}
-              {usage.requests &&
-                `Request reset: ${new Date(usage.requests.resetAt).toLocaleTimeString()}`}
+              {displayUsage.tokens &&
+                displayUsage.tokens.resetAt &&
+                `Token reset: ${new Date(displayUsage.tokens.resetAt).toLocaleTimeString()}`}
+              {displayUsage.tokens && displayUsage.requests && ' | '}
+              {displayUsage.requests &&
+                displayUsage.requests.resetAt &&
+                `Request reset: ${new Date(displayUsage.requests.resetAt).toLocaleTimeString()}`}
             </div>
           )}
         </div>
@@ -644,9 +670,11 @@ export const LiveRateLimitDemo: Story = () => {
           marginBottom: '20px',
         }}
       >
-        <strong>⚠️ Important:</strong> This example requires a backend
-        configured with low rate limits. To test this properly, configure your
-        backend with:
+        <strong>⚠️ Note:</strong> This example simulates low rate limits (5
+        requests, 1000 tokens) for demonstration purposes. The actual limits
+        enforced by your backend may be different. To test with real rate
+        limiting enforcement, configure your backend with these environment
+        variables:
         <ul style={{ marginTop: '8px' }}>
           <li>
             <code>REQUEST_LIMIT_MAX=5</code> (5 requests per window)
@@ -665,11 +693,18 @@ export const LiveRateLimitDemo: Story = () => {
 
       <p style={{ marginBottom: '20px' }}>
         Send multiple messages quickly to see rate limiting in action. With the
-        recommended settings above, you should hit the request limit after 5
-        messages.
+        simulated limits, you should hit the request limit after 5 messages.
+        <br />
+        <br />
+        <strong>Note:</strong> Token usage will show as 0 until you send your
+        first message. Each message typically uses 50-500 tokens depending on
+        the response length.
       </p>
 
-      <RateLimitingDemo baseURL="http://localhost:3000" />
+      <RateLimitingDemo
+        baseURL="http://localhost:3000"
+        simulateLowLimits={true}
+      />
 
       <div
         style={{
