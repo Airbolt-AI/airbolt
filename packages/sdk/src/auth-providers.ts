@@ -62,14 +62,18 @@ class FirebaseAuthProvider implements AuthProvider {
   detect(): boolean {
     return (
       typeof window !== 'undefined' &&
-      (window as any).firebase?.auth?.currentUser?.getIdToken !== undefined
+      (window as any).firebase?.auth !== undefined
     );
   }
 
   getToken(): Promise<string> {
-    const getIdToken = (window as any).firebase.auth().currentUser
-      ?.getIdToken as (() => Promise<string>) | undefined;
-    return getIdToken ? getIdToken() : Promise.resolve('');
+    const currentUser = (window as any).firebase.auth().currentUser as {
+      getIdToken: () => Promise<string>;
+    } | null;
+    if (!currentUser) {
+      return Promise.resolve('');
+    }
+    return currentUser.getIdToken();
   }
 }
 

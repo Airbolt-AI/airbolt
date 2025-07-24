@@ -5,6 +5,7 @@ import { createAuthMiddleware } from './middleware.js';
 import {
   InternalJWTValidator,
   ExternalJWTValidator,
+  type JWTValidator,
 } from './jwt-validators.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
@@ -93,7 +94,7 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
           fc.constantFrom('internal', 'external'),
           async (claims, authType) => {
             // Create validators
-            const validators = [
+            const validators: JWTValidator[] = [
               new InternalJWTValidator(mockFastify as FastifyInstance),
             ];
             if (authType === 'external') {
@@ -232,7 +233,7 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
                     mockRequest as FastifyRequest,
                     mockReply as FastifyReply
                   )
-                ).rejects.toThrow('Unauthorized');
+                ).rejects.toThrow('Unauthorized: Invalid authorization token');
               }
             }
           }
