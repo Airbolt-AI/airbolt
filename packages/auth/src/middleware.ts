@@ -36,10 +36,15 @@ export function createAuthMiddleware(
           const payload = await validator.verify(token);
           // Type assertion needed because Fastify request typing doesn't include custom properties
           const req = request as FastifyRequest & { user: AuthUser };
+
+          // Extract userId separately to prevent JWT payload from overwriting our normalized userId
+          // Some JWTs may contain userId: null which would override our extracted value
+          const { userId: _userId, ...restPayload } = payload;
+
           req.user = {
+            ...restPayload,
             userId: validator.extractUserId(payload),
             authMethod: validator.name,
-            ...payload,
           };
           return;
         } catch (error) {

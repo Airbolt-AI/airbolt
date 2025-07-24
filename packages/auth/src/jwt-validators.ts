@@ -105,31 +105,34 @@ export class ExternalJWTValidator implements JWTValidator {
   }
 
   extractUserId(payload: JWTPayload): string {
-    // Standard claim priority: sub > user_id > userId > email
-    let userId = payload.sub || payload.user_id || payload.userId;
+    // Try standard claims in order of preference
+    const claims = [payload.sub, payload.user_id, payload.userId];
 
-    // Handle arrays by taking the first element
-    if (Array.isArray(userId) && userId.length > 0) {
-      userId = userId[0] as string;
+    // Find first valid claim
+    let userId: unknown = claims.find(claim => {
+      if (Array.isArray(claim) && claim.length > 0) {
+        return typeof claim[0] === 'string' && claim[0].trim();
+      }
+      return typeof claim === 'string' && claim.trim();
+    });
+
+    // Extract from array if needed
+    if (Array.isArray(userId)) {
+      userId = userId[0];
+    }
+
+    // Fall back to email if no valid userId found
+    if (!userId || typeof userId !== 'string' || !userId.trim()) {
+      userId = payload.email;
     }
 
     // Ensure we have a string
-    if (typeof userId !== 'string') {
-      userId = payload.email;
+    if (typeof userId !== 'string' || !userId.trim()) {
+      return 'anonymous';
     }
 
-    // Clean common provider prefixes for consistency
-    if (userId && typeof userId === 'string' && userId.trim()) {
-      userId = userId.replace(/^(auth0\||google-oauth2\||facebook\|)/, '');
-    }
-
-    // Handle empty strings by falling back to email or anonymous
-    if (!userId || (typeof userId === 'string' && userId.trim() === '')) {
-      userId = payload.email;
-    }
-
-    return userId && typeof userId === 'string' && userId.trim()
-      ? userId
-      : 'anonymous';
+    // Clean provider prefixes (Auth0, Google, Facebook)
+    // This ensures consistent user IDs across providers
+    return userId.replace(/^(auth0\||google-oauth2\||facebook\|)/, '');
   }
 }

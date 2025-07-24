@@ -9,7 +9,36 @@ import {
 } from './jwt-validators.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
-describe.skip('Auth Middleware Property Tests', () => {
+describe('Auth Middleware Property Tests', () => {
+  // Helper function to create test tokens
+  const createTestToken = (
+    type: 'internal' | 'external' | 'malformed',
+    issuer: string,
+    valid: boolean = true
+  ): string => {
+    if (type === 'malformed') {
+      return 'not.a.valid.jwt';
+    }
+
+    if (type === 'internal') {
+      return jwt.sign({ userId: 'test-user', iss: issuer }, testSecret, {
+        algorithm: 'HS256',
+      });
+    }
+
+    // External token
+    if (valid) {
+      // Never use airbolt-api issuer for external tokens
+      const externalIssuer =
+        issuer === 'airbolt-api' ? 'https://external.example.com' : issuer;
+      return jwt.sign({ sub: 'user123', iss: externalIssuer }, testPrivateKey, {
+        algorithm: 'RS256',
+      });
+    }
+
+    // Invalid external token
+    return 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaXNzIjoiaW52YWxpZCJ9.invalid-signature';
+  };
   const testSecret = 'test-secret-at-least-32-chars-long';
   const testPublicKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
@@ -179,7 +208,8 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
                 (typeof expectedUserId === 'string' &&
                   expectedUserId.trim() === '')
               ) {
-                expectedUserId = 'anonymous';
+                expectedUserId =
+                  typeof claims.email === 'string' ? claims.email : 'anonymous';
               }
 
               expect(mockRequest.user.userId).toBe(expectedUserId);
@@ -220,37 +250,11 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
 
             // Try each token configuration
             for (const config of tokenConfigs) {
-              let token: string;
-
-              if (config.type === 'malformed') {
-                token = 'not.a.valid.jwt';
-              } else if (config.type === 'internal') {
-                token = jwt.sign(
-                  {
-                    userId: 'test-user',
-                    iss: config.valid ? 'airbolt-api' : config.issuer,
-                  },
-                  testSecret,
-                  { algorithm: 'HS256' }
-                );
-              } else {
-                if (config.valid) {
-                  // Ensure external tokens don't have airbolt-api issuer
-                  const issuer =
-                    config.issuer === 'airbolt-api'
-                      ? 'https://external.example.com'
-                      : config.issuer;
-                  token = jwt.sign(
-                    { sub: 'user123', iss: issuer },
-                    testPrivateKey,
-                    { algorithm: 'RS256' }
-                  );
-                } else {
-                  // Create an invalid token by signing with wrong key or invalid claims
-                  token =
-                    'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaXNzIjoiaW52YWxpZCJ9.invalid-signature';
-                }
-              }
+              const token = createTestToken(
+                config.type,
+                config.issuer,
+                config.valid
+              );
 
               mockRequest.headers.authorization = `Bearer ${token}`;
               mockRequest.user = undefined;
@@ -260,14 +264,28 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
                 validators
               );
 
-              if (config.valid && config.type !== 'malformed') {
+              // Determine if token should be valid
+              const shouldSucceed =
+                config.type === 'malformed'
+                  ? false
+                  : config.type === 'internal'
+                    ? config.issuer === 'airbolt-api'
+                    : config.type === 'external'
+                      ? config.valid
+                      : false;
+
+              if (shouldSucceed) {
                 // Should succeed
                 await middleware(
                   mockRequest as FastifyRequest,
                   mockReply as FastifyReply
                 );
                 expect(mockRequest.user).toBeDefined();
-                expect(mockRequest.user.authMethod).toBe(config.type);
+                expect(mockRequest.user.authMethod).toBe(
+                  config.type === 'internal' && config.issuer === 'airbolt-api'
+                    ? 'internal'
+                    : 'external'
+                );
               } else {
                 // Should fail
                 await expect(
