@@ -242,8 +242,8 @@ After successful creation:
 
 1. **Show ticket URL**: "✅ Created ticket: [MAR-XXX: Title](https://linear.app/markwatson/issue/MAR-XXX)"
 2. **Suggest next steps**:
-   - "Ready to start work? Use `/start-ticket MAR-XXX`"
-   - "Need to analyze further? Use `/analyze-ticket MAR-XXX`"
+   - "Ready to analyze the ticket? Use `/analyze-ticket MAR-XXX`" (recommended)
+   - "Want to jump straight to implementation? Use `/start-ticket MAR-XXX`"
    - "Want to add more context? I can help add comments"
 3. **Confirm project assignment**: "Ticket created in Airbolt MVP project"
 
