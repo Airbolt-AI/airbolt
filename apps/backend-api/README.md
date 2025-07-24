@@ -44,19 +44,23 @@ Provide your AI provider's API key:
 
 ### Optional Variables with Defaults
 
-| Variable                 | Description                                    | Default                 | Valid Values                                       |
-| ------------------------ | ---------------------------------------------- | ----------------------- | -------------------------------------------------- |
-| `NODE_ENV`               | Application environment                        | `development`           | `development`, `production`, `test`                |
-| `PORT`                   | Server port                                    | `3000`                  | 1-65535                                            |
-| `HOST`                   | Server host                                    | `localhost`             | Any valid hostname                                 |
-| `LOG_LEVEL`              | Logging verbosity                              | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
-| `AI_PROVIDER`            | AI provider to use                             | `openai`                | `openai`, `anthropic`                              |
-| `AI_MODEL`               | Specific model to use                          | Provider default        | Any valid model for the selected provider          |
-| `JWT_SECRET`             | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
-| `ALLOWED_ORIGIN`         | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
-| `SYSTEM_PROMPT`          | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
-| `RATE_LIMIT_MAX`         | Max requests per window                        | `100`                   | Positive integer                                   |
-| `RATE_LIMIT_TIME_WINDOW` | Rate limit window (ms)                         | `60000` (1 minute)      | Positive integer (milliseconds)                    |
+| Variable                    | Description                                    | Default                 | Valid Values                                       |
+| --------------------------- | ---------------------------------------------- | ----------------------- | -------------------------------------------------- |
+| `NODE_ENV`                  | Application environment                        | `development`           | `development`, `production`, `test`                |
+| `PORT`                      | Server port                                    | `3000`                  | 1-65535                                            |
+| `HOST`                      | Server host                                    | `localhost`             | Any valid hostname                                 |
+| `LOG_LEVEL`                 | Logging verbosity                              | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
+| `AI_PROVIDER`               | AI provider to use                             | `openai`                | `openai`, `anthropic`                              |
+| `AI_MODEL`                  | Specific model to use                          | Provider default        | Any valid model for the selected provider          |
+| `JWT_SECRET`                | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
+| `ALLOWED_ORIGIN`            | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
+| `SYSTEM_PROMPT`             | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
+| `RATE_LIMIT_MAX`            | Max requests per window (IP-based)             | `60`                    | Positive integer                                   |
+| `RATE_LIMIT_TIME_WINDOW`    | Rate limit window (ms)                         | `60000` (1 minute)      | Positive integer (milliseconds)                    |
+| `TOKEN_LIMIT_MAX`           | Max tokens per window (user-based)             | `100000` (100k)         | Min 1000                                           |
+| `TOKEN_LIMIT_TIME_WINDOW`   | Token limit window (ms)                        | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
+| `REQUEST_LIMIT_MAX`         | Max requests per window (user-based)           | `100`                   | Positive integer                                   |
+| `REQUEST_LIMIT_TIME_WINDOW` | Request limit window (ms)                      | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
 
 ### Security Notes
 
@@ -85,20 +89,35 @@ ALLOWED_ORIGIN=https://example.com,https://app.example.com,http://localhost:3000
 
 **Note**: The wildcard (`*`) is allowed in all environments to support the SDK deployment model where users deploy their own API instances. Security is handled through JWT tokens and rate limiting.
 
-### Rate Limiting Examples
+### Rate Limiting
+
+The API implements dual rate limiting for comprehensive protection:
+
+1. **IP-based rate limiting** (DDoS protection)
+   - Applied to all requests
+   - Default: 60 requests per minute
+   - Prevents abuse from single IP addresses
+
+2. **User-based rate limiting** (authenticated requests only)
+   - **Token limits**: Track actual AI token consumption
+   - **Request limits**: Track number of API calls
+   - Both limits must be satisfied for requests to succeed
+   - Limits are tracked by JWT `userId` (persists across token refreshes)
+
+#### Rate Limiting Examples
 
 ```bash
-# 100 requests per minute (default)
-RATE_LIMIT_MAX=100
-RATE_LIMIT_TIME_WINDOW=60000
+# IP-based rate limiting (all requests)
+RATE_LIMIT_MAX=60              # 60 requests per minute
+RATE_LIMIT_TIME_WINDOW=60000   # 1 minute window
 
-# 200 requests per 5 minutes
-RATE_LIMIT_MAX=200
-RATE_LIMIT_TIME_WINDOW=300000
+# Token-based rate limiting (authenticated users)
+TOKEN_LIMIT_MAX=100000          # 100k tokens per hour
+TOKEN_LIMIT_TIME_WINDOW=3600000 # 1 hour window
 
-# 1000 requests per hour
-RATE_LIMIT_MAX=1000
-RATE_LIMIT_TIME_WINDOW=3600000
+# Request-based rate limiting (authenticated users)
+REQUEST_LIMIT_MAX=100           # 100 requests per hour
+REQUEST_LIMIT_TIME_WINDOW=3600000 # 1 hour window
 ```
 
 ## Deployment

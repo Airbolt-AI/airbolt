@@ -34,7 +34,7 @@ describe('createChatSession', () => {
   it('should send messages and track conversation history', async () => {
     const session = createChatSession();
 
-    mockChat.mockResolvedValueOnce('Hello! How can I help you?');
+    mockChat.mockResolvedValueOnce({ content: 'Hello! How can I help you?' });
 
     const response = await session.send('Hello');
 
@@ -55,11 +55,11 @@ describe('createChatSession', () => {
     const session = createChatSession();
 
     // First exchange
-    mockChat.mockResolvedValueOnce('2+2 equals 4');
+    mockChat.mockResolvedValueOnce({ content: '2+2 equals 4' });
     await session.send('What is 2+2?');
 
     // Second exchange - should include full history
-    mockChat.mockResolvedValueOnce('You asked what 2+2 equals');
+    mockChat.mockResolvedValueOnce({ content: 'You asked what 2+2 equals' });
     const response = await session.send('What did I just ask?');
 
     expect(response).toBe('You asked what 2+2 equals');
@@ -80,7 +80,7 @@ describe('createChatSession', () => {
     const baseURL = 'https://custom.api.com';
     const session = createChatSession({ baseURL });
 
-    mockChat.mockResolvedValueOnce('Response');
+    mockChat.mockResolvedValueOnce({ content: 'Response' });
 
     await session.send('Test');
 
@@ -97,7 +97,7 @@ describe('createChatSession', () => {
     };
     const session = createChatSession(options);
 
-    mockChat.mockResolvedValueOnce('Response from Claude');
+    mockChat.mockResolvedValueOnce({ content: 'Response from Claude' });
 
     await session.send('Test');
 
@@ -121,7 +121,7 @@ describe('createChatSession', () => {
   it('should clear all messages when clear() is called', async () => {
     const session = createChatSession();
 
-    mockChat.mockResolvedValueOnce('First response');
+    mockChat.mockResolvedValueOnce({ content: 'First response' });
     await session.send('First message');
 
     expect(session.getMessages()).toHaveLength(2);
@@ -135,14 +135,14 @@ describe('createChatSession', () => {
     const session = createChatSession();
 
     // First message
-    mockChat.mockResolvedValueOnce('First response');
+    mockChat.mockResolvedValueOnce({ content: 'First response' });
     await session.send('First');
 
     // Clear
     session.clear();
 
     // New message after clear
-    mockChat.mockResolvedValueOnce('New response');
+    mockChat.mockResolvedValueOnce({ content: 'New response' });
     const response = await session.send('New message');
 
     expect(response).toBe('New response');
@@ -169,7 +169,7 @@ describe('createChatSession', () => {
   it('should handle empty messages', async () => {
     const session = createChatSession();
 
-    mockChat.mockResolvedValueOnce('Empty message response');
+    mockChat.mockResolvedValueOnce({ content: 'Empty message response' });
 
     const response = await session.send('');
 
@@ -184,10 +184,10 @@ describe('createChatSession', () => {
     const session1 = createChatSession();
     const session2 = createChatSession();
 
-    mockChat.mockResolvedValueOnce('Response 1');
+    mockChat.mockResolvedValueOnce({ content: 'Response 1' });
     await session1.send('Message 1');
 
-    mockChat.mockResolvedValueOnce('Response 2');
+    mockChat.mockResolvedValueOnce({ content: 'Response 2' });
     await session2.send('Message 2');
 
     expect(session1.getMessages()).toHaveLength(2);

@@ -2,7 +2,7 @@
  * Message format for chat interactions
  */
 export interface Message {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
@@ -50,4 +50,47 @@ export interface ChatSession {
    * Clear all messages from the session
    */
   clear(): void;
+}
+
+/**
+ * Usage information returned by the API
+ */
+export interface UsageInfo {
+  /** Total tokens consumed by this request */
+  total_tokens: number;
+  /** User's current rate limit usage (if rate limiting is enabled) */
+  tokens?: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
+  requests?: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
+}
+
+/**
+ * Response from the chat API including usage information
+ */
+export interface ChatResponse {
+  /** The AI assistant's response content */
+  content: string;
+  /** Usage information for this request */
+  usage?: UsageInfo;
+}
+
+/**
+ * Streaming response chunk
+ */
+export interface StreamChunk {
+  /** Content chunk from the assistant */
+  content: string;
+  /** Type of chunk */
+  type: 'chunk' | 'done' | 'error';
+  /** Usage information (only present in 'done' chunks) */
+  usage?: UsageInfo;
 }

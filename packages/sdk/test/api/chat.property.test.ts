@@ -41,7 +41,9 @@ describe('chatSync - property-based tests', () => {
 
           const result = await chatSync(messages as Message[]);
 
-          expect(result).toBe(expectedResponse);
+          expect(result.content).toBe(expectedResponse);
+          expect(result.usage).toBeDefined();
+          expect(result.usage?.total_tokens).toBe(10);
           expect(mockChat).toHaveBeenCalledWith(messages, {
             provider: undefined,
             model: undefined,
@@ -150,7 +152,9 @@ describe('chatSync - property-based tests', () => {
 
       const result = await chatSync(messages);
 
-      expect(result).toBe('Safe response');
+      expect(result.content).toBe('Safe response');
+      expect(result.usage).toBeDefined();
+      expect(result.usage?.total_tokens).toBe(10);
       expect(mockChat).toHaveBeenCalledWith([{ role: 'user', content }], {
         provider: undefined,
         model: undefined,

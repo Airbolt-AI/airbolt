@@ -124,6 +124,43 @@ export const EnvSchema = z
         invalid_type_error: 'TRUST_PROXY must be a boolean',
       })
       .default(false),
+
+    // Token-based rate limiting
+    TOKEN_LIMIT_MAX: z.coerce
+      .number({
+        invalid_type_error: 'TOKEN_LIMIT_MAX must be a number',
+      })
+      .int('TOKEN_LIMIT_MAX must be an integer')
+      .min(1000, 'TOKEN_LIMIT_MAX must be at least 1000')
+      .default(100000), // 100k tokens default
+
+    TOKEN_LIMIT_TIME_WINDOW: z.coerce
+      .number({
+        invalid_type_error: 'TOKEN_LIMIT_TIME_WINDOW must be a number',
+      })
+      .int('TOKEN_LIMIT_TIME_WINDOW must be an integer')
+      .min(60000, 'TOKEN_LIMIT_TIME_WINDOW must be at least 60000ms (1 minute)')
+      .default(3600000), // 1 hour default
+
+    // Request-based rate limiting for authenticated users
+    REQUEST_LIMIT_MAX: z.coerce
+      .number({
+        invalid_type_error: 'REQUEST_LIMIT_MAX must be a number',
+      })
+      .int('REQUEST_LIMIT_MAX must be an integer')
+      .min(1, 'REQUEST_LIMIT_MAX must be greater than 0')
+      .default(100), // 100 requests default
+
+    REQUEST_LIMIT_TIME_WINDOW: z.coerce
+      .number({
+        invalid_type_error: 'REQUEST_LIMIT_TIME_WINDOW must be a number',
+      })
+      .int('REQUEST_LIMIT_TIME_WINDOW must be an integer')
+      .min(
+        60000,
+        'REQUEST_LIMIT_TIME_WINDOW must be at least 60000ms (1 minute)'
+      )
+      .default(3600000), // 1 hour default
   })
   .transform(data => {
     // Auto-generate JWT_SECRET in non-production environments when not provided

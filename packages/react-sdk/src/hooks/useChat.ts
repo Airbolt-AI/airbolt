@@ -6,6 +6,7 @@ import {
   hasValidToken,
   getTokenInfo,
   type ChatOptions,
+  type UsageInfo,
 } from '@airbolt/sdk';
 import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
 
@@ -24,6 +25,7 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  *     setInput,
  *     send,
  *     isLoading,
+ *     usage,
  *     clearToken,
  *     hasValidToken,
  *     getTokenInfo
@@ -35,6 +37,12 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  *   return (
  *     <div>
  *       <div>Auth Status: {hasValidToken() ? 'Authenticated' : 'Not authenticated'}</div>
+ *       {usage && (
+ *         <div>
+ *           Tokens: {usage.tokens?.used}/{usage.tokens?.limit}
+ *           (resets {new Date(usage.tokens?.resetAt || '').toLocaleTimeString()})
+ *         </div>
+ *       )}
  *       {messages.map((m, i) => (
  *         <div key={i}>
  *           <b>{m.role}:</b> {m.content}
@@ -67,6 +75,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
 
   // Use ref to track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(false);
@@ -164,6 +173,10 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
           } else if (chunk.type === 'done') {
             if (isMountedRef.current) {
               setIsStreaming(false);
+              // Update usage information from the done event
+              if (chunk.usage) {
+                setUsage(chunk.usage);
+              }
             }
             break;
           }
@@ -176,10 +189,14 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         if (isMountedRef.current) {
           const assistantMessage: Message = {
             role: 'assistant',
-            content: response,
+            content: response.content,
           };
           setMessages(prev => [...prev, assistantMessage]);
           setIsLoading(false);
+          // Update usage information from the response
+          if (response.usage) {
+            setUsage(response.usage);
+          }
         }
       }
     } catch (err) {
@@ -206,6 +223,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     setError(null);
     setIsLoading(false);
     setIsStreaming(false);
+    setUsage(null);
     // Cancel any pending requests
     abortControllerRef.current?.abort();
   }, []);
@@ -230,6 +248,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     isLoading,
     isStreaming,
     error,
+    usage,
     send,
     clear,
     clearToken,

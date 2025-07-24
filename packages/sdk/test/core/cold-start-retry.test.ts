@@ -63,6 +63,7 @@ describe('AirboltClient cold start retry', () => {
 
       expect(mockSendChat).toHaveBeenCalledWith(expect.any(Object), {
         timeoutInSeconds: 30,
+        maxRetries: 3,
       });
     });
 
@@ -80,6 +81,7 @@ describe('AirboltClient cold start retry', () => {
 
       expect(mockSendChat).toHaveBeenCalledWith(expect.any(Object), {
         timeoutInSeconds: 60,
+        maxRetries: 3,
       });
     });
   });
@@ -113,11 +115,13 @@ describe('AirboltClient cold start retry', () => {
       // First call with normal timeout
       expect(mockSendChat).toHaveBeenNthCalledWith(1, expect.any(Object), {
         timeoutInSeconds: 45,
+        maxRetries: 3,
       });
 
       // Second call with double timeout
       expect(mockSendChat).toHaveBeenNthCalledWith(2, expect.any(Object), {
         timeoutInSeconds: 90,
+        maxRetries: 3,
       });
 
       // Callback should have been called

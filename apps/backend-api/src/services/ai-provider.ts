@@ -27,6 +27,22 @@ export const ChatResponseSchema = z.object({
   usage: z
     .object({
       total_tokens: z.number(),
+      tokens: z
+        .object({
+          used: z.number(),
+          remaining: z.number(),
+          limit: z.number(),
+          resetAt: z.string(),
+        })
+        .optional(),
+      requests: z
+        .object({
+          used: z.number(),
+          remaining: z.number(),
+          limit: z.number(),
+          resetAt: z.string(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -294,7 +310,10 @@ export class AIProviderService {
     systemPromptOverride?: string,
     providerOverride?: string,
     modelOverride?: string
-  ): Promise<AsyncIterable<string>> {
+  ): Promise<{
+    textStream: AsyncIterable<string>;
+    usage: Promise<{ totalTokens: number }>;
+  }> {
     const messagesWithSystem = this.injectSystemPrompt(
       messages,
       systemPromptOverride
@@ -352,21 +371,15 @@ export class AIProviderService {
       }));
 
       // Use Vercel AI SDK's streamText function
-      const stream = streamText({
+      const result = streamText({
         model: modelToUse,
         messages: formattedMessages,
         temperature: 0.7,
         maxTokens: 1000,
       });
 
-      // Convert the stream to an async iterable of strings
-      async function* stringStream(): AsyncIterable<string> {
-        for await (const part of stream.textStream) {
-          yield part;
-        }
-      }
-
-      return Promise.resolve(stringStream());
+      // Return the entire result object so we can access usage later
+      return Promise.resolve(result);
     } catch (error) {
       this.handleProviderError(error, providerForError);
     }

@@ -6,6 +6,7 @@ import {
   ChatResponseSchema,
   AIProviderError,
 } from '../../services/ai-provider.js';
+import type { UsageInfo } from '../../plugins/user-rate-limit.js';
 
 // Request schema for chat endpoint
 const ChatRequestSchema = z.object({
@@ -23,6 +24,8 @@ interface JWTPayload {
   iat: number;
   exp: number;
   iss: string;
+  userId: string;
+  role: string;
 }
 
 // Extend FastifyRequest with JWT payload
@@ -48,7 +51,9 @@ async function verifyJWT(
   try {
     const token = auth.slice(7);
     const payload = request.server.jwt.verify(token);
-    request.jwt = payload as JWTPayload;
+    const jwtPayload = payload as JWTPayload;
+    request.jwt = jwtPayload;
+    request.user = jwtPayload;
   } catch (error) {
     request.log.warn({ error }, 'JWT verification failed');
     throw request.server.httpErrors.unauthorized('Invalid or expired token');
@@ -59,7 +64,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post(
     '/chat',
     {
-      preHandler: [verifyJWT],
+      preHandler: [verifyJWT, fastify.checkUserRateLimit],
       schema: {
         tags: ['Chat'],
         summary: 'Send chat messages to AI',
@@ -125,6 +130,24 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
                     type: 'number',
                     description: 'Total tokens used in the request',
                   },
+                  tokens: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                  requests: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
                 },
               },
             },
@@ -154,6 +177,29 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               error: { type: 'string' },
               message: { type: 'string' },
               statusCode: { type: 'number' },
+              usage: {
+                type: 'object',
+                properties: {
+                  tokens: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                  requests: {
+                    type: 'object',
+                    properties: {
+                      used: { type: 'number' },
+                      remaining: { type: 'number' },
+                      limit: { type: 'number' },
+                      resetAt: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                },
+              },
             },
           },
           503: {
@@ -199,14 +245,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (isStreaming) {
           // Streaming response
+          const userId = (request.user as JWTPayload).userId;
+
           reply.sse({
             event: 'start',
             data: JSON.stringify({ type: 'start' }),
           });
 
           try {
-            // Get the stream from AI provider
-            const stream = await fastify.aiProvider.createChatCompletionStream(
+            // Get the stream result from AI provider
+            const result = await fastify.aiProvider.createChatCompletionStream(
               messages,
               system,
               provider,
@@ -214,12 +262,10 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             );
 
             let fullContent = '';
-            let tokenCount = 0;
 
             // Stream the response
-            for await (const chunk of stream) {
+            for await (const chunk of result.textStream) {
               fullContent += chunk;
-              tokenCount++;
 
               // Send SSE event with the chunk
               reply.sse({
@@ -228,13 +274,24 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               });
             }
 
+            // Get actual token usage from the AI SDK
+            const usage = await result.usage;
+            const tokensUsed = usage.totalTokens;
+
+            // Track token usage
+            await fastify.consumeTokens(userId, tokensUsed);
+
+            // Get updated usage info after consumption
+            const usageInfo = await fastify.getUserUsage(userId);
+
             // Send completion event with usage data
             const duration = Date.now() - startTime;
             reply.sse({
               event: 'done',
               data: JSON.stringify({
                 usage: {
-                  total_tokens: tokenCount,
+                  total_tokens: tokensUsed,
+                  ...usageInfo,
                 },
                 duration,
               }),
@@ -244,23 +301,39 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               {
                 duration,
                 responseLength: fullContent.length,
-                tokenCount,
+                tokensUsed,
                 streaming: true,
+                userUsage: usageInfo,
               },
               'Streaming chat request completed successfully'
             );
           } catch (error) {
+            // Prepare error data
+            const errorData: {
+              error: string;
+              message: string;
+              usage?: UsageInfo;
+            } = {
+              error:
+                error instanceof AIProviderError
+                  ? error.code || 'STREAM_ERROR'
+                  : 'STREAM_ERROR',
+              message: error instanceof Error ? error.message : 'Stream failed',
+            };
+
+            // Include usage info if it's a rate limit error
+            const errorWithUsage = error as {
+              statusCode?: number;
+              usage?: UsageInfo;
+            };
+            if (errorWithUsage.statusCode === 429 && errorWithUsage.usage) {
+              errorData.usage = errorWithUsage.usage;
+            }
+
             // Send error event before closing
             reply.sse({
               event: 'error',
-              data: JSON.stringify({
-                error:
-                  error instanceof AIProviderError
-                    ? error.code
-                    : 'STREAM_ERROR',
-                message:
-                  error instanceof Error ? error.message : 'Stream failed',
-              }),
+              data: JSON.stringify(errorData),
             });
 
             // Log the error but don't throw - SSE response already started
@@ -284,6 +357,27 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             model
           );
 
+          // Track token usage
+          const userId = (request.user as JWTPayload).userId;
+          const tokensUsed = response.usage?.total_tokens || 0;
+
+          try {
+            await fastify.consumeTokens(userId, tokensUsed);
+          } catch (error) {
+            // Token limit exceeded - get usage info for response
+            const usageInfo = await fastify.getUserUsage(userId);
+            return reply.code(429).send({
+              error: 'TokenLimitExceeded',
+              message:
+                error instanceof Error ? error.message : 'Token limit exceeded',
+              statusCode: 429,
+              usage: usageInfo,
+            });
+          }
+
+          // Get updated usage info after consumption
+          const usageInfo = await fastify.getUserUsage(userId);
+
           // Log successful response
           const duration = Date.now() - startTime;
           request.log.info(
@@ -291,6 +385,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               duration,
               usage: response.usage,
               responseLength: response.content.length,
+              userUsage: usageInfo,
             },
             'Chat request completed successfully'
           );
@@ -300,7 +395,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             ChatResponseSchema.parse(response);
           }
 
-          return reply.code(200).send(response);
+          // Add usage info to response
+          const enhancedResponse = {
+            ...response,
+            usage: {
+              ...response.usage,
+              ...usageInfo,
+            },
+          };
+
+          return reply.code(200).send(enhancedResponse);
         }
       } catch (error) {
         const duration = Date.now() - startTime;

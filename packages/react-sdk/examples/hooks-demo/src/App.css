@@ -44,6 +44,55 @@
   margin-bottom: 16px;
 }
 
+.error.rate-limit {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.usage-info {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.usage-text {
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.usage-progress {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.usage-fill {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+}
+
+.usage-progress .usage-fill[style*="width: 7"],
+.usage-progress .usage-fill[style*="width: 8"],
+.usage-progress .usage-fill[style*="width: 9"] {
+  background: #ffc107;
+}
+
+.usage-progress .usage-fill[style*="width: 100"] {
+  background: #dc3545;
+}
+
+.usage-reset {
+  font-size: 12px;
+  color: #6c757d;
+}
+
 .input-form {
   display: flex;
   gap: 8px;

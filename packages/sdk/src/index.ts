@@ -33,6 +33,9 @@ export type {
   ChatOptions,
   ChatSession,
   TokenInfo,
+  UsageInfo,
+  ChatResponse,
+  StreamChunk,
 } from './api/index.js';
 
 // Default export for convenience

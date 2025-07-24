@@ -47,12 +47,12 @@ export function createChatSession(options?: ChatOptions): ChatSession {
 
       // Get response with full conversation history
       // Pass a copy to prevent mutation issues
-      const reply = await chatSync([...messages], options);
+      const response = await chatSync([...messages], options);
 
       // Add assistant response to history
-      messages.push({ role: 'assistant', content: reply });
+      messages.push({ role: 'assistant', content: response.content });
 
-      return reply;
+      return response.content;
     },
 
     getMessages(): readonly Message[] {

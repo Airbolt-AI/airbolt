@@ -123,8 +123,16 @@ export function ChatWidget({
     chatOptions.streaming = streaming;
   }
 
-  const { messages, input, setInput, send, isLoading, isStreaming, error } =
-    useChat(chatOptions);
+  const {
+    messages,
+    input,
+    setInput,
+    send,
+    isLoading,
+    isStreaming,
+    error,
+    usage,
+  } = useChat(chatOptions);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +200,22 @@ export function ChatWidget({
       <div style={styles['header']} role="heading" aria-level={2}>
         {title}
       </div>
+
+      {usage && usage.tokens && (
+        <div
+          style={{
+            padding: '0.5rem 1rem',
+            fontSize: '0.875rem',
+            opacity: 0.8,
+            borderBottom: '1px solid var(--airbolt-border)',
+          }}
+          aria-label="Usage information"
+        >
+          Tokens: {usage.tokens.used.toLocaleString()}/
+          {usage.tokens.limit.toLocaleString()} • Resets{' '}
+          {new Date(usage.tokens.resetAt).toLocaleTimeString()}
+        </div>
+      )}
 
       <div
         style={styles['messages']}
