@@ -160,6 +160,23 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
               mockFastify as FastifyInstance,
               validators
             );
+
+            // Check if JWT has any user identification claims
+            const hasUserClaims =
+              authType === 'external' &&
+              (claims.sub || claims.user_id || claims.userId || claims.email);
+
+            if (!hasUserClaims && authType === 'external') {
+              // External JWTs without user claims should be rejected
+              await expect(
+                middleware(
+                  mockRequest as FastifyRequest,
+                  mockReply as FastifyReply
+                )
+              ).rejects.toThrow('Invalid authorization token');
+              return;
+            }
+
             await middleware(
               mockRequest as FastifyRequest,
               mockReply as FastifyReply
@@ -172,44 +189,47 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
 
             // Verify correct priority and handle provider prefixes
             if (authType === 'external') {
-              let expectedUserId =
-                claims.sub ||
-                claims.user_id ||
-                claims.userId ||
-                claims.email ||
-                'anonymous';
+              // Match the actual implementation's find() logic with trim validation
+              const claimValues = [claims.sub, claims.user_id, claims.userId];
+              let expectedUserId: unknown = claimValues.find(claim => {
+                if (Array.isArray(claim) && claim.length > 0) {
+                  return typeof claim[0] === 'string' && claim[0].trim();
+                }
+                return typeof claim === 'string' && claim.trim();
+              });
 
-              // Handle arrays by taking the first element (matching validator logic)
+              // Handle arrays by taking the first element
               if (Array.isArray(expectedUserId) && expectedUserId.length > 0) {
                 expectedUserId = expectedUserId[0];
               }
 
-              // Ensure we have a string
-              if (typeof expectedUserId !== 'string') {
-                expectedUserId = claims.email || 'anonymous';
+              // Fall back to email if no valid userId found
+              if (
+                !expectedUserId ||
+                typeof expectedUserId !== 'string' ||
+                !expectedUserId.trim()
+              ) {
+                expectedUserId = claims.email;
+              }
+
+              // Final fallback to anonymous
+              if (
+                !expectedUserId ||
+                typeof expectedUserId !== 'string' ||
+                !expectedUserId.trim()
+              ) {
+                expectedUserId = 'anonymous';
               }
 
               // Clean provider prefixes for comparison (matching the validator logic)
               if (
-                expectedUserId &&
                 typeof expectedUserId === 'string' &&
-                expectedUserId !== 'anonymous' &&
-                expectedUserId.trim()
+                expectedUserId !== 'anonymous'
               ) {
                 expectedUserId = expectedUserId.replace(
                   /^(auth0\||google-oauth2\||facebook\|)/,
                   ''
                 );
-              }
-
-              // Handle empty string edge case
-              if (
-                !expectedUserId ||
-                (typeof expectedUserId === 'string' &&
-                  expectedUserId.trim() === '')
-              ) {
-                expectedUserId =
-                  typeof claims.email === 'string' ? claims.email : 'anonymous';
               }
 
               expect(mockRequest.user.userId).toBe(expectedUserId);
