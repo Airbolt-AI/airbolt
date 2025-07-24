@@ -472,10 +472,43 @@ RateLimitScenarios.storyName = 'Rate Limit Scenarios';
 export const WidgetWithRateLimiting: Story = () => (
   <div>
     <h3>ChatWidget with Rate Limiting</h3>
-    <p>
-      The ChatWidget automatically displays usage information when available.
+    <div
+      style={{
+        backgroundColor: '#e8f4f8',
+        border: '1px solid #3b82f6',
+        borderRadius: '6px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}
+    >
+      <strong>💡 Testing Tip:</strong> For the best experience testing rate
+      limits:
+      <ol style={{ marginTop: '8px', marginBottom: '0' }}>
+        <li>
+          Configure your backend with low limits (see Live Testing example)
+        </li>
+        <li>Open the chat widget below</li>
+        <li>Send 4-5 quick messages like "Hi", "Test", "Hello"</li>
+        <li>Watch the usage display update in the widget header</li>
+        <li>See the error message when you hit the limit</li>
+      </ol>
+    </div>
+
+    <p style={{ marginBottom: '20px' }}>
+      The ChatWidget automatically displays usage information in its header when
+      rate limiting is active. Usage info appears below the title as a compact
+      display.
     </p>
-    <div style={{ height: '600px' }}>
+
+    <div
+      style={{
+        height: '600px',
+        border: '2px dashed #e5e7eb',
+        borderRadius: '8px',
+        position: 'relative',
+        backgroundColor: '#f9fafb',
+      }}
+    >
       <ChatWidget
         baseURL="http://localhost:3000"
         position="bottom-right"
@@ -483,7 +516,21 @@ export const WidgetWithRateLimiting: Story = () => (
           primaryColor: '#007aff',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
+        system="You are a helpful assistant. Keep responses brief to conserve tokens."
       />
+
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center',
+          color: '#6b7280',
+        }}
+      >
+        <p>Click the chat button in the bottom right →</p>
+      </div>
     </div>
   </div>
 );
@@ -583,6 +630,69 @@ export const StreamingUsageUpdates: Story = () => {
 StreamingUsageUpdates.storyName = 'Streaming Usage Updates';
 
 // Documentation
+// Live rate limiting demo with configurable limits
+export const LiveRateLimitDemo: Story = () => {
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+      <h3>Live Rate Limit Testing</h3>
+      <div
+        style={{
+          backgroundColor: '#fef3c7',
+          border: '1px solid #f59e0b',
+          borderRadius: '6px',
+          padding: '16px',
+          marginBottom: '20px',
+        }}
+      >
+        <strong>⚠️ Important:</strong> This example requires a backend
+        configured with low rate limits. To test this properly, configure your
+        backend with:
+        <ul style={{ marginTop: '8px' }}>
+          <li>
+            <code>REQUEST_LIMIT_MAX=5</code> (5 requests per window)
+          </li>
+          <li>
+            <code>TOKEN_LIMIT_MAX=1000</code> (1000 tokens per window)
+          </li>
+          <li>
+            <code>REQUEST_LIMIT_TIME_WINDOW=300000</code> (5 minute window)
+          </li>
+          <li>
+            <code>TOKEN_LIMIT_TIME_WINDOW=300000</code> (5 minute window)
+          </li>
+        </ul>
+      </div>
+
+      <p style={{ marginBottom: '20px' }}>
+        Send multiple messages quickly to see rate limiting in action. With the
+        recommended settings above, you should hit the request limit after 5
+        messages.
+      </p>
+
+      <RateLimitingDemo baseURL="http://localhost:3000" />
+
+      <div
+        style={{
+          marginTop: '20px',
+          backgroundColor: '#f3f4f6',
+          padding: '16px',
+          borderRadius: '8px',
+        }}
+      >
+        <h4>What to expect:</h4>
+        <ol>
+          <li>First 3-4 messages: Green progress bars, everything works</li>
+          <li>4th message: Orange warning appears (80%+ usage)</li>
+          <li>5th message: Should hit request limit, see 429 error</li>
+          <li>Error message shows when limits will reset</li>
+          <li>After reset time, you can send messages again</li>
+        </ol>
+      </div>
+    </div>
+  );
+};
+LiveRateLimitDemo.storyName = 'Live Testing';
+
 export const RateLimitingGuide: Story = () => (
   <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
     <h2>Rate Limiting Guide</h2>
