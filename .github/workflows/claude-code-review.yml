@@ -3,19 +3,6 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened]
-    # Optional: Only run on specific file changes
-    paths:
-      - 'apps/**/*.ts'
-      - 'apps/**/*.tsx'
-      - 'apps/**/*.js'
-      - 'apps/**/*.jsx'
-      - 'packages/**/*.ts'
-      - 'packages/**/*.tsx'
-      - 'packages/**/*.js'
-      - 'packages/**/*.jsx'
-      - '!**/generated/**'
-      - '!**/dist/**'
-      - '!examples/**'
 
 jobs:
   claude-review:
