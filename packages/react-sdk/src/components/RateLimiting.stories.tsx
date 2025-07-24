@@ -10,20 +10,29 @@ import type { UsageInfo } from '@airbolt/sdk';
 const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
   if (!usage) return null;
 
-  const formatResetTime = (resetAt: string) => {
-    const resetDate = new Date(resetAt);
-    const now = new Date();
-    const diffMs = resetDate.getTime() - now.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
+  const formatResetTime = (resetAt: string | undefined) => {
+    if (!resetAt) return 'N/A';
+    try {
+      const resetDate = new Date(resetAt);
+      const now = new Date();
+      const diffMs = resetDate.getTime() - now.getTime();
 
-    if (diffHours > 0) {
-      return `${diffHours}h ${diffMins % 60}m`;
+      if (isNaN(diffMs) || diffMs < 0) return 'N/A';
+
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+
+      if (diffHours > 0) {
+        return `${diffHours}h ${diffMins % 60}m`;
+      }
+      return `${diffMins}m`;
+    } catch (e) {
+      return 'N/A';
     }
-    return `${diffMins}m`;
   };
 
   const getProgressColor = (percentage: number) => {
+    if (isNaN(percentage)) return '#6b7280'; // gray for invalid
     if (percentage >= 90) return '#dc2626'; // red
     if (percentage >= 70) return '#f59e0b'; // orange
     return '#10b981'; // green
@@ -41,14 +50,14 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
     >
       <h4 style={{ margin: '0 0 12px 0' }}>Usage Information</h4>
 
-      {usage.total_tokens > 0 && (
+      {usage.total_tokens && usage.total_tokens > 0 && (
         <div style={{ marginBottom: '8px' }}>
           <strong>This request:</strong> {usage.total_tokens.toLocaleString()}{' '}
           tokens
         </div>
       )}
 
-      {usage.tokens && (
+      {usage.tokens && usage.tokens.limit && (
         <div style={{ marginBottom: '12px' }}>
           <div
             style={{
@@ -61,7 +70,7 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
               <strong>Tokens:</strong>
             </span>
             <span>
-              {usage.tokens.used.toLocaleString()} /{' '}
+              {(usage.tokens.used || 0).toLocaleString()} /{' '}
               {usage.tokens.limit.toLocaleString()}
             </span>
           </div>
@@ -77,10 +86,10 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
             <div
               style={{
                 backgroundColor: getProgressColor(
-                  (usage.tokens.used / usage.tokens.limit) * 100
+                  ((usage.tokens.used || 0) / usage.tokens.limit) * 100
                 ),
                 height: '100%',
-                width: `${Math.min(100, (usage.tokens.used / usage.tokens.limit) * 100)}%`,
+                width: `${Math.min(100, ((usage.tokens.used || 0) / usage.tokens.limit) * 100)}%`,
                 transition: 'width 0.3s ease',
               }}
             />
@@ -95,7 +104,9 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
                 color: '#374151',
               }}
             >
-              {Math.round((usage.tokens.remaining / usage.tokens.limit) * 100)}%
+              {usage.tokens.remaining !== undefined
+                ? `${Math.round((usage.tokens.remaining / usage.tokens.limit) * 100)}%`
+                : '0%'}{' '}
               remaining
             </div>
           </div>
@@ -105,7 +116,7 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
         </div>
       )}
 
-      {usage.requests && (
+      {usage.requests && usage.requests.limit && (
         <div>
           <div
             style={{
@@ -118,7 +129,7 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
               <strong>Requests:</strong>
             </span>
             <span>
-              {usage.requests.used} / {usage.requests.limit}
+              {usage.requests.used || 0} / {usage.requests.limit}
             </span>
           </div>
           <div
@@ -133,10 +144,10 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
             <div
               style={{
                 backgroundColor: getProgressColor(
-                  (usage.requests.used / usage.requests.limit) * 100
+                  ((usage.requests.used || 0) / usage.requests.limit) * 100
                 ),
                 height: '100%',
-                width: `${Math.min(100, (usage.requests.used / usage.requests.limit) * 100)}%`,
+                width: `${Math.min(100, ((usage.requests.used || 0) / usage.requests.limit) * 100)}%`,
                 transition: 'width 0.3s ease',
               }}
             />
@@ -151,7 +162,10 @@ const UsageDisplay = ({ usage }: { usage: UsageInfo | null }) => {
                 color: '#374151',
               }}
             >
-              {usage.requests.remaining} remaining
+              {usage.requests.remaining !== undefined
+                ? usage.requests.remaining
+                : 0}{' '}
+              remaining
             </div>
           </div>
           <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
@@ -185,8 +199,12 @@ const RateLimitingDemo = ({
   // Show warning when approaching limits
   const showWarning =
     usage &&
-    ((usage.tokens && usage.tokens.used / usage.tokens.limit > 0.8) ||
-      (usage.requests && usage.requests.used / usage.requests.limit > 0.8));
+    ((usage.tokens &&
+      usage.tokens.limit &&
+      (usage.tokens.used || 0) / usage.tokens.limit > 0.8) ||
+      (usage.requests &&
+        usage.requests.limit &&
+        (usage.requests.used || 0) / usage.requests.limit > 0.8));
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
@@ -333,30 +351,32 @@ const SimulatedRateLimitDemo = () => {
   });
 
   const simulateUsage = () => {
-    setSimulatedUsage(prev => ({
-      ...prev,
-      total_tokens: Math.floor(Math.random() * 5000) + 1000,
-      tokens: {
-        ...prev.tokens!,
-        used: Math.min(
-          prev.tokens!.limit,
-          prev.tokens!.used + Math.floor(Math.random() * 5000) + 1000
-        ),
-        remaining: Math.max(
-          0,
-          prev.tokens!.limit -
-            Math.min(
-              prev.tokens!.limit,
-              prev.tokens!.used + Math.floor(Math.random() * 5000) + 1000
-            )
-        ),
-      },
-      requests: {
-        ...prev.requests!,
-        used: Math.min(prev.requests!.limit, prev.requests!.used + 1),
-        remaining: Math.max(0, prev.requests!.remaining - 1),
-      },
-    }));
+    setSimulatedUsage(prev => {
+      const tokenIncrease = Math.floor(Math.random() * 5000) + 1000;
+      const newTokenUsed = Math.min(
+        prev.tokens!.limit,
+        prev.tokens!.used + tokenIncrease
+      );
+      const newRequestUsed = Math.min(
+        prev.requests!.limit,
+        prev.requests!.used + 1
+      );
+
+      return {
+        ...prev,
+        total_tokens: Math.floor(Math.random() * 5000) + 1000,
+        tokens: {
+          ...prev.tokens!,
+          used: newTokenUsed,
+          remaining: Math.max(0, prev.tokens!.limit - newTokenUsed),
+        },
+        requests: {
+          ...prev.requests!,
+          used: newRequestUsed,
+          remaining: Math.max(0, prev.requests!.limit - newRequestUsed),
+        },
+      };
+    });
   };
 
   return (
