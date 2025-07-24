@@ -33,6 +33,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Read core review prompt
+        id: read-prompt
+        run: |
+          echo "prompt<<EOF" >> $GITHUB_OUTPUT
+          cat .claude/prompts/pr-review-core.md >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
@@ -44,9 +52,12 @@ jobs:
 
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Review this PR with special attention to the airbolt project guidelines (AGENTS.md):
+            ${{ steps.read-prompt.outputs.prompt }}
 
-            CRITICAL Requirements:
+            ## Project-Specific Requirements (airbolt)
+
+            Review the changes against these CRITICAL requirements from AGENTS.md:
+
             - TypeScript: NO any types allowed, explicit return types required (@tsconfig/strictest)
             - Validation: ALL inputs MUST use Zod schemas (ESLint enforced)
             - Error handling: ONLY use Fastify error patterns (fastify.httpErrors)
@@ -67,7 +78,7 @@ jobs:
             - Apps can depend on packages (NOT other apps)
             - Packages can depend on packages (NOT apps)
 
-            Run validation with pnpm ai:quick to verify compliance.
+            Note: You can run validation with pnpm ai:quick to verify compliance.
 
           # Optional: Different prompts for different authors
           # direct_prompt: |
