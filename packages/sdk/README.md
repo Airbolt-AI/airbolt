@@ -98,7 +98,10 @@ async function* chat(
 Get the complete AI response at once (traditional behavior).
 
 ```typescript
-function chatSync(messages: Message[], options?: ChatOptions): Promise<string>;
+function chatSync(
+  messages: Message[],
+  options?: ChatOptions
+): Promise<ChatResponse>;
 ```
 
 **Parameters:**
