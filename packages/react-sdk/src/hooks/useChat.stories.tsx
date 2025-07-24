@@ -11,6 +11,7 @@ const ChatDemo = ({ options }: { options?: UseChatOptions }) => {
     send,
     isLoading,
     error,
+    usage,
     clear,
     hasValidToken,
     clearToken,
@@ -44,6 +45,37 @@ const ChatDemo = ({ options }: { options?: UseChatOptions }) => {
           <button onClick={clearToken}>Clear Token</button>
         </div>
       </div>
+
+      {usage && (
+        <div
+          style={{
+            backgroundColor: '#e8f4f8',
+            padding: '12px',
+            borderRadius: '6px',
+            marginBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '20px' }}>
+            {usage.tokens && (
+              <div>
+                <strong>Tokens:</strong> {usage.tokens.used.toLocaleString()} /{' '}
+                {usage.tokens.limit.toLocaleString()} (
+                {Math.round(
+                  (usage.tokens.remaining / usage.tokens.limit) * 100
+                )}
+                % remaining)
+              </div>
+            )}
+            {usage.requests && (
+              <div>
+                <strong>Requests:</strong> {usage.requests.used} /{' '}
+                {usage.requests.limit} ({usage.requests.remaining} remaining)
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -212,12 +244,20 @@ export const BasicUsage: Story = () => (
         <code>{`import { useChat } from '@airbolt/react-sdk';
 
 function ChatComponent() {
-  const { messages, input, setInput, send, isLoading } = useChat({
+  const { messages, input, setInput, send, isLoading, usage } = useChat({
     baseURL: 'http://localhost:3000'
   });
 
   return (
     <div>
+      {/* Display usage info when available */}
+      {usage && usage.tokens && (
+        <div>
+          Tokens: {usage.tokens.used}/{usage.tokens.limit}
+          (resets {new Date(usage.tokens.resetAt).toLocaleTimeString()})
+        </div>
+      )}
+      
       {messages.filter(msg => msg.content !== '').map((msg, i) => (
         <div key={i}>
           <b>{msg.role}:</b> {msg.content}
