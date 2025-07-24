@@ -32,7 +32,7 @@ function App() {
 import { useChat } from '@airbolt/react-sdk';
 
 function ChatComponent() {
-  const { messages, input, setInput, send, isLoading } = useChat({
+  const { messages, input, setInput, send, isLoading, usage } = useChat({
     baseURL: 'https://your-deployment.onrender.com',
     system: 'You are a helpful assistant',
   });
@@ -155,16 +155,20 @@ function useChat(options?: UseChatOptions): UseChatReturn;
 
 #### Return Value
 
-| Property      | Type                      | Description                                    |
-| ------------- | ------------------------- | ---------------------------------------------- |
-| `messages`    | `Message[]`               | Array of all messages in the conversation.     |
-| `input`       | `string`                  | Current input value.                           |
-| `setInput`    | `(value: string) => void` | Function to update the input value.            |
-| `isLoading`   | `boolean`                 | Whether a message is currently being sent.     |
-| `isStreaming` | `boolean`                 | Whether a response is currently streaming.     |
-| `error`       | `Error \| null`           | Error from the last send attempt, if any.      |
-| `send`        | `() => Promise<void>`     | Send the current input as a message.           |
-| `clear`       | `() => void`              | Clear all messages and reset the conversation. |
+| Property        | Type                      | Description                                    |
+| --------------- | ------------------------- | ---------------------------------------------- |
+| `messages`      | `Message[]`               | Array of all messages in the conversation.     |
+| `input`         | `string`                  | Current input value.                           |
+| `setInput`      | `(value: string) => void` | Function to update the input value.            |
+| `isLoading`     | `boolean`                 | Whether a message is currently being sent.     |
+| `isStreaming`   | `boolean`                 | Whether a response is currently streaming.     |
+| `error`         | `Error \| null`           | Error from the last send attempt, if any.      |
+| `usage`         | `UsageInfo \| null`       | Usage information from the last response.      |
+| `send`          | `() => Promise<void>`     | Send the current input as a message.           |
+| `clear`         | `() => void`              | Clear all messages and reset the conversation. |
+| `clearToken`    | `() => void`              | Clear the authentication token (logout).       |
+| `hasValidToken` | `() => boolean`           | Check if there's a valid authentication token. |
+| `getTokenInfo`  | `() => TokenInfo`         | Get token information for debugging.           |
 
 ### Types
 
@@ -180,6 +184,24 @@ interface UseChatOptions {
   provider?: 'openai' | 'anthropic';
   model?: string;
   initialMessages?: Message[];
+  streaming?: boolean;
+  onChunk?: (chunk: string) => void;
+}
+
+interface UsageInfo {
+  total_tokens: number;
+  tokens?: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
+  requests?: {
+    used: number;
+    remaining: number;
+    limit: number;
+    resetAt: string;
+  };
 }
 ```
 
@@ -213,12 +235,20 @@ Visit http://localhost:61000 after running the command to start exploring!
 import { useChat } from '@airbolt/react-sdk';
 
 function SimpleChatApp() {
-  const { messages, input, setInput, send, isLoading, error } = useChat({
+  const { messages, input, setInput, send, isLoading, error, usage } = useChat({
     baseURL: 'https://your-deployment.onrender.com',
   });
 
   return (
     <div className="chat-container">
+      {/* Display usage info */}
+      {usage && usage.tokens && (
+        <div className="usage-info">
+          Tokens: {usage.tokens.used}/{usage.tokens.limit}
+          (resets {new Date(usage.tokens.resetAt).toLocaleTimeString()})
+        </div>
+      )}
+
       <div className="messages">
         {messages.map((msg, i) => (
           <div key={i} className={`message ${msg.role}`}>
@@ -277,10 +307,11 @@ const { messages, input, setInput, send, isLoading } = useChat({
 import { useChat } from '@airbolt/react-sdk';
 
 function AdvancedChat() {
-  const { messages, input, setInput, send, clear, isLoading, error } = useChat({
-    baseURL: 'https://your-deployment.onrender.com',
-    system: 'You are a helpful coding assistant.',
-  });
+  const { messages, input, setInput, send, clear, isLoading, error, usage } =
+    useChat({
+      baseURL: 'https://your-deployment.onrender.com',
+      system: 'You are a helpful coding assistant.',
+    });
 
   return (
     <div>
@@ -446,6 +477,74 @@ if (isLoading) {
   return <div>Sending message... (may take longer if server is waking up)</div>;
 }
 ```
+
+## Rate Limiting & Usage Tracking
+
+The SDK automatically handles rate limiting and provides real-time usage information:
+
+### Display Usage Information
+
+```tsx
+const { messages, input, setInput, send, usage } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
+});
+
+// Display token usage
+{
+  usage && usage.tokens && (
+    <div className="usage-bar">
+      <div className="usage-text">
+        {usage.tokens.used.toLocaleString()} /{' '}
+        {usage.tokens.limit.toLocaleString()} tokens used
+      </div>
+      <div className="usage-progress">
+        <div
+          className="usage-fill"
+          style={{
+            width: `${(usage.tokens.used / usage.tokens.limit) * 100}%`,
+          }}
+        />
+      </div>
+      <div className="usage-reset">
+        Resets {new Date(usage.tokens.resetAt).toLocaleTimeString()}
+      </div>
+    </div>
+  );
+}
+```
+
+### Handle Rate Limit Errors
+
+When rate limits are exceeded, the error will contain a 429 status:
+
+```tsx
+const { error, isLoading, usage } = useChat({
+  baseURL: 'https://your-deployment.onrender.com',
+});
+
+// Check for rate limit error
+if (error?.message.includes('429')) {
+  return (
+    <div className="rate-limit-error">
+      <h3>Rate limit exceeded</h3>
+      {usage?.tokens && (
+        <p>
+          You've used {usage.tokens.used} of {usage.tokens.limit} tokens. Try
+          again after {new Date(usage.tokens.resetAt).toLocaleTimeString()}.
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### Rate Limit Configuration
+
+The backend enforces these default limits (configurable via environment variables):
+
+- **Token limit**: 1,000 tokens per hour per user
+- **Request limit**: 10 requests per minute per user
+- **Automatic retry**: The SDK automatically retries rate-limited requests with exponential backoff
 
 ## Best Practices
 

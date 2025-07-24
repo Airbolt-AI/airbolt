@@ -81,8 +81,7 @@ describe('Chat Route Unit Tests', () => {
         resetAt: new Date(Date.now() + 3600000).toISOString(),
       },
     }));
-    app.decorate('reserveTokens', async () => {});
-    app.decorate('refundTokens', async () => {});
+    (app as any).decorate('userRateLimiters', { request: {}, token: {} });
 
     // Register chat routes
     await app.register(chatRoutes, { prefix: '/api' });

@@ -80,7 +80,12 @@ That's it! Your app now has secure AI chat that can't be abused by random users.
 4. Backend verifies the JWT signature on every request
 5. Invalid/expired tokens are rejected with 401 Unauthorized
 
-**Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Rate limiting (100 requests/minute) prevents runaway usage.
+**Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Token-based rate limiting prevents runaway usage:
+
+- **Token limits**: 1,000 tokens per hour per user (configurable)
+- **Request limits**: 10 requests per minute per user (configurable)
+- **Real-time usage tracking**: Know exactly how much each user consumes
+- **Automatic 429 responses**: When limits are exceeded, clients get clear rate limit errors
 
 **Pre-built backend** - We provide the backend, you just deploy it. One-click to Render or any Node.js hosting platform. No custom server code to write or maintain.
 
@@ -132,7 +137,7 @@ The roadmap is driven by feedback from developers using Airbolt.
 import { useChat } from '@airbolt/react-sdk';
 
 function CustomChat() {
-  const { messages, input, setInput, send, isLoading } = useChat({
+  const { messages, input, setInput, send, isLoading, usage } = useChat({
     baseURL: 'https://my-ai-backend.onrender.com',
     system:
       'You are a coding assistant. Help users debug their code and suggest improvements.',
@@ -140,6 +145,14 @@ function CustomChat() {
 
   return (
     <div className="chat-container">
+      {/* Display usage info when available */}
+      {usage && usage.tokens && (
+        <div className="usage-info">
+          Tokens: {usage.tokens.used}/{usage.tokens.limit}
+          (resets {new Date(usage.tokens.resetAt).toLocaleTimeString()})
+        </div>
+      )}
+
       <div className="messages">
         {messages.map((msg, i) => (
           <div key={i} className={`message ${msg.role}`}>

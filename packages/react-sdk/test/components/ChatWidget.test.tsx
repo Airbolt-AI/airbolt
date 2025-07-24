@@ -37,6 +37,7 @@ describe('ChatWidget XSS Protection', () => {
     isLoading: false,
     isStreaming: false,
     error: null,
+    usage: null,
     clearToken: vi.fn(),
     hasValidToken: vi.fn(() => true),
     getTokenInfo: vi.fn(() => ({ hasToken: true })),

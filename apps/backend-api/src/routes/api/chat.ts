@@ -245,21 +245,6 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           // Streaming response
           const userId = (request.user as { userId: string }).userId;
 
-          // Reserve tokens for streaming (estimate)
-          const estimatedTokens = 2000; // Conservative estimate
-          try {
-            await fastify.reserveTokens(userId, estimatedTokens);
-          } catch (error) {
-            // Token limit would be exceeded
-            const usageInfo = await fastify.getUserUsage(userId);
-            return reply.code(429).send({
-              error: 'TokenLimitExceeded',
-              message: 'Insufficient tokens for streaming request',
-              statusCode: 429,
-              usage: usageInfo,
-            });
-          }
-
           reply.sse({
             event: 'start',
             data: JSON.stringify({ type: 'start' }),
@@ -291,13 +276,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
             // Calculate actual tokens used (approximate)
             // In real implementation, we'd need to get this from the AI SDK
-            const actualTokens = Math.min(tokenCount * 4, estimatedTokens); // Rough approximation
+            const actualTokens = tokenCount * 4; // Rough approximation
 
-            // Refund unused tokens
-            if (actualTokens < estimatedTokens) {
-              await fastify.refundTokens(
-                userId,
-                estimatedTokens - actualTokens
+            // Consume the actual tokens used
+            try {
+              await fastify.consumeTokens(userId, actualTokens);
+            } catch (error) {
+              // Log but don't fail the request since content was already streamed
+              request.log.warn(
+                { error, actualTokens },
+                'Failed to record token usage'
               );
             }
 
@@ -329,9 +317,6 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               'Streaming chat request completed successfully'
             );
           } catch (error) {
-            // Refund reserved tokens on error
-            await fastify.refundTokens(userId, estimatedTokens);
-
             // Send error event before closing
             reply.sse({
               event: 'error',

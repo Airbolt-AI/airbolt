@@ -120,8 +120,10 @@ describe('AirboltClient (Fern-based)', () => {
       expect(mockSendChatMessagesToAi).toHaveBeenCalledWith(
         {
           messages: [{ role: 'user', content: 'Hello' }],
+          provider: undefined,
+          model: undefined,
         },
-        { timeoutInSeconds: 60 }
+        { timeoutInSeconds: 60, maxRetries: 3 }
       );
 
       expect(response).toEqual({
@@ -143,8 +145,10 @@ describe('AirboltClient (Fern-based)', () => {
       expect(mockSendChatMessagesToAi).toHaveBeenCalledWith(
         {
           messages: messages.map(m => ({ role: m.role, content: m.content })),
+          provider: undefined,
+          model: undefined,
         },
-        { timeoutInSeconds: 60 }
+        { timeoutInSeconds: 60, maxRetries: 3 }
       );
     });
 

@@ -1,4 +1,4 @@
-import type { Message, TokenInfo } from '@airbolt/sdk';
+import type { Message, TokenInfo, UsageInfo } from '@airbolt/sdk';
 
 /**
  * Options for the useChat hook
@@ -64,6 +64,10 @@ export interface UseChatReturn {
    */
   error: Error | null;
   /**
+   * Usage information from the last response
+   */
+  usage: UsageInfo | null;
+  /**
    * Send the current input as a message
    */
   send: () => Promise<void>;
@@ -88,4 +92,4 @@ export interface UseChatReturn {
 /**
  * Re-export types from SDK for convenience
  */
-export type { Message, TokenInfo } from '@airbolt/sdk';
+export type { Message, TokenInfo, UsageInfo } from '@airbolt/sdk';

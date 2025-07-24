@@ -37,7 +37,9 @@ describe('chatSync', () => {
 
     const result = await chatSync(messages);
 
-    expect(result).toBe(expectedResponse);
+    expect(result.content).toBe(expectedResponse);
+    expect(result.usage).toBeDefined();
+    expect(result.usage?.total_tokens).toBe(15);
     expect(mockClientConstructor).toHaveBeenCalledWith({
       baseURL: 'http://localhost:3000',
     });
@@ -95,7 +97,9 @@ describe('chatSync', () => {
 
     const result = await chatSync(messages);
 
-    expect(result).toBe('3+3 equals 6');
+    expect(result.content).toBe('3+3 equals 6');
+    expect(result.usage).toBeDefined();
+    expect(result.usage?.total_tokens).toBe(30);
     expect(mockChat).toHaveBeenCalledWith(messages, {
       provider: undefined,
       model: undefined,
@@ -121,7 +125,9 @@ describe('chatSync', () => {
 
     const result = await chatSync(messages);
 
-    expect(result).toBe('No messages provided');
+    expect(result.content).toBe('No messages provided');
+    expect(result.usage).toBeDefined();
+    expect(result.usage?.total_tokens).toBe(5);
     expect(mockChat).toHaveBeenCalledWith([], {
       provider: undefined,
       model: undefined,

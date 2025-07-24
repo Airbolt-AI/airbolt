@@ -184,7 +184,9 @@ declare module 'fastify' {
     ) => Promise<void>;
     consumeTokens: (userId: string, tokens: number) => Promise<void>;
     getUserUsage: (userId: string) => Promise<UsageInfo>;
-    reserveTokens: (userId: string, tokens: number) => Promise<void>;
-    refundTokens: (userId: string, tokens: number) => Promise<void>;
+    userRateLimiters: {
+      requestLimiter: RateLimiterMemory;
+      tokenLimiter: RateLimiterMemory;
+    };
   }
 }

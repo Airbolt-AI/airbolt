@@ -25,7 +25,7 @@ for await (const chunk of chat([
 }
 // Output streams in real-time: "Why don't scientists trust atoms? Because they make up everything!"
 
-// Non-streaming example
+// Non-streaming example with usage info
 import { chatSync } from '@airbolt/sdk';
 
 const response = await chatSync(
@@ -35,7 +35,10 @@ const response = await chatSync(
     system: 'You are a helpful assistant. Keep responses concise.',
   }
 );
-console.log(response); // Complete response at once
+console.log(response.content); // The AI response
+console.log(
+  `Tokens used: ${response.usage?.tokens?.used}/${response.usage?.tokens?.limit}`
+);
 ```
 
 ## Features
@@ -57,6 +60,12 @@ console.log(response); // Complete response at once
 - No environment variables needed
 - Pass `baseURL` when you need a custom backend
 - Handles authentication automatically
+
+### 📊 Rate Limiting & Usage Tracking
+
+- Built-in rate limit handling with automatic retries
+- Real-time usage information in responses
+- Clear 429 error messages when limits exceeded
 
 ## API Reference
 
@@ -96,7 +105,10 @@ function chatSync(messages: Message[], options?: ChatOptions): Promise<string>;
 
 - Same as `chat()` function
 
-**Returns:** The complete AI assistant's response as a string
+**Returns:** A `ChatResponse` object containing:
+
+- `content` - The complete AI assistant's response
+- `usage` - Optional usage information (tokens used, remaining, limits)
 
 **Example:**
 
@@ -141,9 +153,35 @@ try {
     console.error('Backend is not running. Start it with: pnpm dev');
   } else if (error.message.includes('401')) {
     console.error('Authentication failed. Token may be expired.');
+  } else if (error.message.includes('429')) {
+    console.error('Rate limit exceeded. Try again later.');
   } else {
     console.error('Error:', error.message);
   }
+}
+```
+
+### Rate Limit Handling
+
+When rate limits are exceeded, you'll receive a 429 error with usage information:
+
+```typescript
+try {
+  const response = await chatSync([{ role: 'user', content: 'Hello' }]);
+  console.log(response.content);
+} catch (error) {
+  if (error.statusCode === 429) {
+    console.log('Rate limit exceeded. Try again later.');
+  }
+}
+
+// Monitor usage proactively
+const response = await chatSync([{ role: 'user', content: 'Hello' }]);
+if (response.usage?.tokens) {
+  const { used, limit, resetAt } = response.usage.tokens;
+  console.log(
+    `Used ${used}/${limit} tokens. Resets at ${new Date(resetAt).toLocaleTimeString()}`
+  );
 }
 ```
 
@@ -274,7 +312,33 @@ for await (const chunk of chat(
     model: 'gpt-4',
   }
 )) {
-  process.stdout.write(chunk.content);
+  if (chunk.type === 'chunk') {
+    process.stdout.write(chunk.content);
+  } else if (chunk.type === 'done' && chunk.usage) {
+    console.log(`\nUsed ${chunk.usage.total_tokens} tokens`);
+  }
+}
+```
+
+### Monitoring Usage
+
+```javascript
+import { chatSync } from '@airbolt/sdk';
+
+// Track token usage
+const response = await chatSync([
+  { role: 'user', content: 'Explain the theory of relativity' },
+]);
+
+if (response.usage) {
+  console.log(`Request used ${response.usage.total_tokens} tokens`);
+
+  if (response.usage.tokens) {
+    const { used, remaining, limit, resetAt } = response.usage.tokens;
+    console.log(`Daily usage: ${used}/${limit} tokens`);
+    console.log(`Remaining: ${remaining} tokens`);
+    console.log(`Resets: ${new Date(resetAt).toLocaleString()}`);
+  }
 }
 ```
 

@@ -21,6 +21,21 @@ export interface ChatResponse {
   content: string;
   usage?: {
     total_tokens: number;
+    /** User's current usage information (included when rate limiting is active) */
+    user_usage?: {
+      tokens: {
+        used: number;
+        remaining: number;
+        limit: number;
+        resetAt: string;
+      };
+      requests: {
+        used: number;
+        remaining: number;
+        limit: number;
+        resetAt: string;
+      };
+    };
   };
 }
 
@@ -32,6 +47,11 @@ export interface AirboltClientOptions {
    * Request timeout in seconds. Defaults to 60.
    */
   timeoutSeconds?: number;
+  /**
+   * Number of retries for rate limit errors (429). Defaults to 3.
+   * The SDK uses exponential backoff with jitter.
+   */
+  maxRetries?: number;
   /**
    * Callback invoked when a cold start is detected.
    * This happens when the server takes longer than expected to respond,
@@ -102,9 +122,10 @@ export class AirboltClient {
     };
 
     try {
-      // First attempt with configured timeout
+      // First attempt with configured timeout and retry options
       const response = await this.client.chat.sendChatMessagesToAi(request, {
         timeoutInSeconds: this.options.timeoutSeconds,
+        maxRetries: this.options.maxRetries ?? 3,
       });
       return this.mapChatResponse(response);
     } catch (error) {
@@ -113,6 +134,7 @@ export class AirboltClient {
         this.tokenManager.clearToken();
         const response = await this.client.chat.sendChatMessagesToAi(request, {
           timeoutInSeconds: this.options.timeoutSeconds,
+          maxRetries: this.options.maxRetries ?? 3,
         });
         return this.mapChatResponse(response);
       }
@@ -135,6 +157,7 @@ export class AirboltClient {
             request,
             {
               timeoutInSeconds: (this.options.timeoutSeconds ?? 60) * 2,
+              maxRetries: this.options.maxRetries ?? 3,
             }
           );
           return this.mapChatResponse(response);
@@ -193,6 +216,9 @@ export class AirboltClient {
       usage: response.usage
         ? {
             total_tokens: response.usage.total_tokens ?? 0,
+            // Pass through any additional usage data from the server
+            // The server includes user_usage when rate limiting is active
+            ...response.usage,
           }
         : undefined,
     };

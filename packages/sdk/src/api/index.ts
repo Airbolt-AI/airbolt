@@ -7,5 +7,12 @@ export { createChatSession } from './session.js';
 export { clearAuthToken, hasValidToken, getTokenInfo } from './client-utils.js';
 
 // Type exports
-export type { Message, ChatOptions, ChatSession } from './types.js';
+export type {
+  Message,
+  ChatOptions,
+  ChatSession,
+  UsageInfo,
+  ChatResponse,
+  StreamChunk,
+} from './types.js';
 export type { TokenInfo } from './client-utils.js';
