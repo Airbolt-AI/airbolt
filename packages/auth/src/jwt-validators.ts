@@ -78,7 +78,26 @@ export class ExternalJWTValidator implements JWTValidator {
           if (err) {
             reject(err);
           } else {
-            resolve(decoded as JWTPayload);
+            const payload = decoded as JWTPayload;
+
+            // Validate essential claims exist
+            if (
+              !payload.sub &&
+              !payload.user_id &&
+              !payload.userId &&
+              !payload.email
+            ) {
+              reject(new Error('JWT missing user identification claims'));
+              return;
+            }
+
+            // Validate token is not expired (additional safety check)
+            if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+              reject(new Error('JWT expired'));
+              return;
+            }
+
+            resolve(payload);
           }
         }
       );
@@ -87,12 +106,30 @@ export class ExternalJWTValidator implements JWTValidator {
 
   extractUserId(payload: JWTPayload): string {
     // Standard claim priority: sub > user_id > userId > email
-    return (
-      payload.sub ||
-      payload.user_id ||
-      payload.userId ||
-      payload.email ||
-      'anonymous'
-    );
+    let userId = payload.sub || payload.user_id || payload.userId;
+
+    // Handle arrays by taking the first element
+    if (Array.isArray(userId) && userId.length > 0) {
+      userId = userId[0] as string;
+    }
+
+    // Ensure we have a string
+    if (typeof userId !== 'string') {
+      userId = payload.email;
+    }
+
+    // Clean common provider prefixes for consistency
+    if (userId && typeof userId === 'string' && userId.trim()) {
+      userId = userId.replace(/^(auth0\||google-oauth2\||facebook\|)/, '');
+    }
+
+    // Handle empty strings by falling back to email or anonymous
+    if (!userId || (typeof userId === 'string' && userId.trim() === '')) {
+      userId = payload.email;
+    }
+
+    return userId && typeof userId === 'string' && userId.trim()
+      ? userId
+      : 'anonymous';
   }
 }

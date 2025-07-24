@@ -69,7 +69,11 @@ describe('Auth Provider Detection', () => {
         supabase: {
           auth: {
             getSession: vi.fn().mockResolvedValue({
-              access_token: mockToken,
+              data: {
+                session: {
+                  access_token: mockToken,
+                },
+              },
             }),
           },
         },
@@ -80,7 +84,7 @@ describe('Auth Provider Detection', () => {
       expect(token).toBe(mockToken);
     });
 
-    it('returns empty string if no session', async () => {
+    it('throws error if no session', async () => {
       (global as any).window = {
         supabase: {
           auth: {
@@ -90,8 +94,9 @@ describe('Auth Provider Detection', () => {
       };
 
       const provider = detectAuthProvider();
-      const token = await provider!.getToken();
-      expect(token).toBe('');
+      await expect(provider!.getToken()).rejects.toThrow(
+        'Supabase returned empty token or no active session'
+      );
     });
   });
 
@@ -161,7 +166,7 @@ describe('Auth Provider Detection', () => {
       expect(mockGetIdToken).toHaveBeenCalled();
     });
 
-    it('returns empty string if no current user', async () => {
+    it('throws error if no current user', async () => {
       (global as any).window = {
         firebase: {
           auth: vi.fn().mockReturnValue({
@@ -171,8 +176,9 @@ describe('Auth Provider Detection', () => {
       };
 
       const provider = detectAuthProvider();
-      const token = await provider!.getToken();
-      expect(token).toBe('');
+      await expect(provider!.getToken()).rejects.toThrow(
+        'Firebase user not authenticated'
+      );
     });
   });
 
