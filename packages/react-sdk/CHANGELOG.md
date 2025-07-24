@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- feat(sdk): add token-based rate limiting with usage tracking
+  - **BREAKING**: `chatSync()` now returns `ChatResponse` object with `content` and `usage` properties instead of plain string
+  - Add automatic retry with exponential backoff for 429 rate limit errors
+  - Parse rate limit headers (X-RateLimit-\*) from API responses
+  - Include token and request usage information in all responses
+
+  feat(react-sdk): add usage tracking to useChat hook
+  - Expose usage information via `usage` property in useChat hook
+  - Update ChatWidget to display real-time token usage with progress bars
+  - Handle rate limit errors gracefully with user-friendly messages
+  - Add visual indicators for usage limits and reset times
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @airbolt/sdk@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes
