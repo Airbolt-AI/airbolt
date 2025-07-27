@@ -25,7 +25,7 @@ describe('ProviderDetector', () => {
     // Handle expiresIn more carefully for TypeScript
     const signOptions: jwt.SignOptions = {
       algorithm: 'HS256' as const,
-      expiresIn: options.expiresIn ?? '1h',
+      expiresIn: (options.expiresIn ?? '1h') as jwt.SignOptions['expiresIn'],
     };
 
     return jwt.sign(payload, 'test-secret', signOptions);
