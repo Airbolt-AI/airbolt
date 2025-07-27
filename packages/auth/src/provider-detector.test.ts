@@ -28,7 +28,7 @@ describe('ProviderDetector', () => {
     };
 
     if (options.expiresIn !== undefined) {
-      signOptions.expiresIn = options.expiresIn;
+      signOptions.expiresIn = options.expiresIn as jwt.SignOptions['expiresIn'];
     } else {
       signOptions.expiresIn = '1h';
     }
