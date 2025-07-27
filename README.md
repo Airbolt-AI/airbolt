@@ -167,8 +167,8 @@ EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
 
 3. **Optional Security**: For production, you can restrict to specific auth providers:
    ```bash
-   # Only accept your Auth0 tenant
-   BYOA_MODE=strict
+   # Production: Only accept your Auth0 tenant
+   NODE_ENV=production
    EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/
    ```
 
