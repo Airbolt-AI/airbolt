@@ -270,10 +270,6 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
     async (request, reply) => {
       const startTime = Date.now();
 
-      // Add security header for transparency
-      const byoaMode = fastify.config?.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
-      reply.header('X-BYOA-Mode', byoaMode);
-
       try {
         // Validate request body
         const { messages, system, provider, model } = ChatRequestSchema.parse(

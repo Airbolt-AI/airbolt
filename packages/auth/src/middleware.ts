@@ -22,8 +22,16 @@ export function createAuthMiddleware(
 ): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   return async function verifyJWT(
     request: FastifyRequest,
-    _reply: FastifyReply
+    reply: FastifyReply
   ): Promise<void> {
+    // Set BYOA mode header for transparency about auth configuration (if header method exists)
+    if (typeof reply.header === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const config = (fastify as any).config;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const byoaMode = config?.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
+      reply.header('X-BYOA-Mode', byoaMode);
+    }
     const token = extractBearerToken(request);
     if (!token) {
       throw fastify.httpErrors.unauthorized('Missing authorization token');

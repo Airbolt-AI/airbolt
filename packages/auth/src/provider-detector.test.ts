@@ -23,12 +23,17 @@ describe('ProviderDetector', () => {
     }
 
     // Handle expiresIn more carefully for TypeScript
-    return jwt.sign(payload, 'test-secret', {
+    const signOptions: jwt.SignOptions = {
       algorithm: 'HS256' as const,
-      ...(options.expiresIn !== undefined
-        ? { expiresIn: options.expiresIn }
-        : { expiresIn: '1h' }),
-    });
+    };
+
+    if (options.expiresIn !== undefined) {
+      signOptions.expiresIn = options.expiresIn;
+    } else {
+      signOptions.expiresIn = '1h';
+    }
+
+    return jwt.sign(payload, 'test-secret', signOptions);
   }
 
   describe('Provider Detection', () => {

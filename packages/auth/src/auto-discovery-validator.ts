@@ -150,7 +150,12 @@ export class AutoDiscoveryValidator implements JWTValidator {
     // Find the right key
     const key = this.findKey(jwks, kid);
     if (!key) {
-      throw new Error('No matching key found in JWKS');
+      const errorMessage = ProviderDetector.getErrorMessage(
+        'No matching key found in JWKS',
+        issuer,
+        token
+      );
+      throw new Error(errorMessage);
     }
 
     // Get the actual key material
@@ -163,9 +168,9 @@ export class AutoDiscoveryValidator implements JWTValidator {
         { algorithms: ['RS256', 'RS384', 'RS512', 'HS256'] },
         (err, decoded) => {
           if (err) {
-            // Enhance error messages
+            // Enhance error messages with provider-specific details
             const enhancedError = new Error(
-              ProviderDetector.getErrorMessage(err.message, issuer)
+              ProviderDetector.getErrorMessage(err.message, issuer, token)
             );
             reject(enhancedError);
           } else {

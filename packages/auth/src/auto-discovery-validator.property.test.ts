@@ -45,41 +45,6 @@ describe('AutoDiscoveryValidator Property Tests', () => {
     return `${encodedHeader}.${encodedPayload}.${signature}`;
   }
 
-  // Helper to determine if token should pass validation
-
-  function shouldPass(scenario: {
-    issuer: string;
-    hasAudience: boolean;
-    tokenAge: number;
-    isProduction: boolean;
-    configuredIssuer: string | null;
-  }): boolean {
-    // Not HTTPS
-    if (!scenario.issuer.startsWith('https://')) return false;
-
-    // Token expired (older than 1 hour)
-    if (scenario.tokenAge > 3600) return false;
-
-    // Auth0 token without audience (opaque token)
-    if (scenario.issuer.includes('auth0.com') && !scenario.hasAudience)
-      return false;
-
-    // Production mode checks
-    if (scenario.isProduction) {
-      // No issuer configured in production
-      if (!scenario.configuredIssuer) return false;
-      // Issuer mismatch in production
-      if (
-        scenario.configuredIssuer &&
-        scenario.issuer !== scenario.configuredIssuer
-      )
-        return false;
-    }
-
-    // In dev mode or with matching issuer, should pass
-    return true;
-  }
-
   it('validates tokens correctly across all provider scenarios', async () => {
     await fc.assert(
       fc.asyncProperty(
