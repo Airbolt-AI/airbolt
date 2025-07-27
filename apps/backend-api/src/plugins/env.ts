@@ -146,7 +146,7 @@ export const EnvSchema = z
         invalid_type_error: 'TOKEN_LIMIT_MAX must be a number',
       })
       .int('TOKEN_LIMIT_MAX must be an integer')
-      .min(1000, 'TOKEN_LIMIT_MAX must be at least 1000')
+      .min(0, 'TOKEN_LIMIT_MAX must be non-negative')
       .default(100000), // 100k tokens default
 
     TOKEN_LIMIT_TIME_WINDOW: z.coerce

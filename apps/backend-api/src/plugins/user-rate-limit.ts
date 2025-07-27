@@ -12,7 +12,7 @@ declare module 'fastify' {
 }
 
 export interface UsageInfo {
-  tokens: {
+  tokens?: {
     used: number;
     remaining: number;
     limit: number;
@@ -39,7 +39,7 @@ export default fp(
 
     const tokenLimiter = new RateLimiterMemory({
       keyPrefix: 'token',
-      points: config.TOKEN_LIMIT_MAX,
+      points: config.TOKEN_LIMIT_MAX || 1, // Use 1 if disabled to avoid errors
       duration: Math.floor(config.TOKEN_LIMIT_TIME_WINDOW / 1000), // Convert to seconds
     });
 
@@ -99,6 +99,11 @@ export default fp(
     fastify.decorate(
       'consumeTokens',
       async (userId: string, tokens: number): Promise<void> => {
+        // Skip token consumption if TOKEN_LIMIT_MAX is 0 (disabled)
+        if (config.TOKEN_LIMIT_MAX === 0) {
+          return;
+        }
+
         // Check if request would exceed limit (atomic check-and-reject pattern)
         const limiterRes = await tokenLimiter.get(userId);
         const currentUsed = limiterRes ? limiterRes.consumedPoints : 0;
@@ -149,7 +154,7 @@ export default fp(
 
       const now = Date.now();
 
-      return {
+      const result: UsageInfo = {
         requests: {
           used: requestRes ? requestRes.consumedPoints : 0,
           remaining: requestRes
@@ -171,6 +176,13 @@ export default fp(
             : new Date(now + config.TOKEN_LIMIT_TIME_WINDOW).toISOString(),
         },
       };
+
+      // If token rate limiting is disabled, omit the tokens field
+      if (config.TOKEN_LIMIT_MAX === 0) {
+        delete result.tokens;
+      }
+
+      return result;
     }
 
     // Add rate limit headers to responses for authenticated users
@@ -206,19 +218,21 @@ export default fp(
         reply.header('X-RateLimit-Requests-Remaining', requestsRemaining);
         reply.header('X-RateLimit-Requests-Reset', requestsReset);
 
-        // Add token rate limit headers
-        const tokensUsed = tokenRes ? tokenRes.consumedPoints : 0;
-        const tokensRemaining = Math.max(
-          0,
-          config.TOKEN_LIMIT_MAX - tokensUsed
-        );
-        const tokensReset = tokenRes
-          ? Math.floor((now + tokenRes.msBeforeNext) / 1000)
-          : Math.floor((now + config.TOKEN_LIMIT_TIME_WINDOW) / 1000);
+        // Add token rate limit headers only if token rate limiting is enabled
+        if (config.TOKEN_LIMIT_MAX > 0) {
+          const tokensUsed = tokenRes ? tokenRes.consumedPoints : 0;
+          const tokensRemaining = Math.max(
+            0,
+            config.TOKEN_LIMIT_MAX - tokensUsed
+          );
+          const tokensReset = tokenRes
+            ? Math.floor((now + tokenRes.msBeforeNext) / 1000)
+            : Math.floor((now + config.TOKEN_LIMIT_TIME_WINDOW) / 1000);
 
-        reply.header('X-RateLimit-Tokens-Limit', config.TOKEN_LIMIT_MAX);
-        reply.header('X-RateLimit-Tokens-Remaining', tokensRemaining);
-        reply.header('X-RateLimit-Tokens-Reset', tokensReset);
+          reply.header('X-RateLimit-Tokens-Limit', config.TOKEN_LIMIT_MAX);
+          reply.header('X-RateLimit-Tokens-Remaining', tokensRemaining);
+          reply.header('X-RateLimit-Tokens-Reset', tokensReset);
+        }
 
         return payload;
       }

@@ -39,8 +39,8 @@ import type { UseChatOptions, UseChatReturn, Message } from '../types/index.js';
  *       <div>Auth Status: {hasValidToken() ? 'Authenticated' : 'Not authenticated'}</div>
  *       {usage && (
  *         <div>
- *           Tokens: {usage.tokens?.used}/{usage.tokens?.limit}
- *           (resets {new Date(usage.tokens?.resetAt || '').toLocaleTimeString()})
+ *           Tokens: {usage.tokens?.used ?? 0}/{usage.tokens?.limit ?? 'N/A'}
+ *           (resets {usage.tokens?.resetAt ? new Date(usage.tokens.resetAt).toLocaleTimeString() : 'N/A'})
  *         </div>
  *       )}
  *       {messages.map((m, i) => (
