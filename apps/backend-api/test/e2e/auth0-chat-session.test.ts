@@ -17,7 +17,7 @@ describe('Auth0 E2E Chat Session', () => {
     app = await build({
       NODE_ENV: 'development',
       EXTERNAL_JWT_ISSUER: 'https://test.auth0.com/',
-      JWT_SECRET: 'test-secret',
+      JWT_SECRET: 'test-secret-key-for-integration-tests-32characters',
     });
 
     // Try to get internal token
@@ -35,6 +35,7 @@ describe('Auth0 E2E Chat Session', () => {
     app = await build({
       NODE_ENV: 'development',
       EXTERNAL_JWT_ISSUER: 'https://test.auth0.com/',
+      JWT_SECRET: 'test-secret-key-for-integration-tests-32characters',
     });
 
     // No auth header
@@ -57,7 +58,7 @@ describe('Auth0 E2E Chat Session', () => {
     app = await build({
       NODE_ENV: 'production',
       EXTERNAL_JWT_ISSUER: 'https://production.auth0.com/',
-      JWT_SECRET: 'test-secret',
+      JWT_SECRET: 'test-secret-key-for-integration-tests-32characters',
     });
 
     const res = await app.inject({

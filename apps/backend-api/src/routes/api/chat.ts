@@ -4,10 +4,10 @@ import { isDevelopment } from '@airbolt/config';
 import {
   MessageSchema,
   ChatResponseSchema,
-  AIProviderError,
 } from '../../services/ai-provider.js';
 import type { UsageInfo } from '../../plugins/user-rate-limit.js';
 import { AuthValidatorFactory, createAuthMiddleware } from '@airbolt/auth';
+import { ChatService } from '../../services/chat-service.js';
 
 // Request schema for chat endpoint
 const ChatRequestSchema = z.object({
@@ -40,6 +40,13 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Create auth validators using factory pattern
   const validators = AuthValidatorFactory.create(fastify.config || {}, fastify);
   const verifyJWT = createAuthMiddleware(fastify, validators);
+
+  // Add onSend hook to ensure X-BYOA-Mode header is always set
+  fastify.addHook('onSend', async (_request, reply) => {
+    const config = (fastify.config as { EXTERNAL_JWT_ISSUER?: string }) || {};
+    const byoaMode = config.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
+    void reply.header('X-BYOA-Mode', byoaMode);
+  });
 
   fastify.post(
     '/chat',
@@ -199,21 +206,24 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
       try {
         // Validate request body
-        const { messages, system, provider, model } = ChatRequestSchema.parse(
-          request.body
-        );
+        const chatRequest = ChatRequestSchema.parse(request.body);
+        const userId = (request.user as JWTPayload).userId;
+
+        // Create service instance
+        const chatService = new ChatService({ fastify, userId });
 
         // Check if streaming is requested
-        const acceptHeader = request.headers.accept || '';
-        const isStreaming = acceptHeader.includes('text/event-stream');
+        const isStreaming = ChatService.isStreamingRequest(
+          request.headers.accept
+        );
 
         // Log request (without sensitive content)
         request.log.info(
           {
-            messageCount: messages.length,
-            hasSystemPrompt: !!system,
-            provider: provider,
-            model: model,
+            messageCount: chatRequest.messages.length,
+            hasSystemPrompt: !!chatRequest.system,
+            provider: chatRequest.provider,
+            model: chatRequest.model,
             streaming: isStreaming,
             jwt: {
               iat: request.jwt?.iat,
@@ -225,83 +235,61 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (isStreaming) {
           // Streaming response
-          const userId = (request.user as JWTPayload).userId;
-
           reply.sse({
             event: 'start',
             data: JSON.stringify({ type: 'start' }),
           });
 
           try {
-            // Get the stream result from AI provider
-            const result = await fastify.aiProvider.createChatCompletionStream(
-              messages,
-              system,
-              provider,
-              model
-            );
+            // Process streaming chat
+            for await (const chunk of chatService.processStreamingChat(
+              chatRequest
+            )) {
+              if ('content' in chunk) {
+                // Stream chunk
+                reply.sse({
+                  event: 'chunk',
+                  data: JSON.stringify({ content: chunk.content }),
+                });
+              } else {
+                // Completion info
+                const usageInfo = await chatService.getUserUsage();
+                reply.sse({
+                  event: 'done',
+                  data: JSON.stringify({
+                    usage: {
+                      total_tokens: chunk.usage.total_tokens,
+                      ...usageInfo,
+                    },
+                    duration: chunk.duration,
+                  }),
+                });
 
-            let fullContent = '';
-
-            // Stream the response
-            for await (const chunk of result.textStream) {
-              fullContent += chunk;
-
-              // Send SSE event with the chunk
-              reply.sse({
-                event: 'chunk',
-                data: JSON.stringify({ content: chunk }),
-              });
+                request.log.info(
+                  {
+                    duration: chunk.duration,
+                    tokensUsed: chunk.usage.total_tokens,
+                    streaming: true,
+                    userUsage: usageInfo,
+                  },
+                  'Streaming chat request completed successfully'
+                );
+              }
             }
-
-            // Get actual token usage from the AI SDK
-            const usage = await result.usage;
-            const tokensUsed = usage.totalTokens;
-
-            // Track token usage
-            await fastify.consumeTokens(userId, tokensUsed);
-
-            // Get updated usage info after consumption
-            const usageInfo = await fastify.getUserUsage(userId);
-
-            // Send completion event with usage data
-            const duration = Date.now() - startTime;
-            reply.sse({
-              event: 'done',
-              data: JSON.stringify({
-                usage: {
-                  total_tokens: tokensUsed,
-                  ...usageInfo,
-                },
-                duration,
-              }),
-            });
-
-            request.log.info(
-              {
-                duration,
-                responseLength: fullContent.length,
-                tokensUsed,
-                streaming: true,
-                userUsage: usageInfo,
-              },
-              'Streaming chat request completed successfully'
-            );
           } catch (error) {
-            // Prepare error data
-            const errorData: {
+            // Handle streaming errors
+            const errorResponse = ChatService.formatError(error);
+
+            // Include usage info if it's a rate limit error
+            interface ErrorData {
               error: string;
               message: string;
               usage?: UsageInfo;
-            } = {
-              error:
-                error instanceof AIProviderError
-                  ? error.code || 'STREAM_ERROR'
-                  : 'STREAM_ERROR',
-              message: error instanceof Error ? error.message : 'Stream failed',
+            }
+            const errorData: ErrorData = {
+              error: errorResponse.error,
+              message: errorResponse.message,
             };
-
-            // Include usage info if it's a rate limit error
             const errorWithUsage = error as {
               statusCode?: number;
               usage?: UsageInfo;
@@ -310,81 +298,67 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
               errorData.usage = errorWithUsage.usage;
             }
 
-            // Send error event before closing
+            // Send error event
             reply.sse({
               event: 'error',
               data: JSON.stringify(errorData),
             });
 
-            // Log the error but don't throw - SSE response already started
             request.log.error(
-              {
-                error,
-                streaming: true,
-              },
+              { error, streaming: true },
               'Error during streaming response'
             );
-
-            // Return to end the SSE stream gracefully
             return;
           }
         } else {
-          // Non-streaming response (existing logic)
-          const response = await fastify.aiProvider.createChatCompletion(
-            messages,
-            system,
-            provider,
-            model
-          );
-
-          // Track token usage
-          const userId = (request.user as JWTPayload).userId;
-          const tokensUsed = response.usage?.total_tokens || 0;
-
+          // Non-streaming response
           try {
-            await fastify.consumeTokens(userId, tokensUsed);
+            const response = await chatService.processChat(chatRequest);
+            const usageInfo = await chatService.getUserUsage();
+
+            // Log successful response
+            const duration = Date.now() - startTime;
+            request.log.info(
+              {
+                duration,
+                usage: response.usage,
+                responseLength: response.content.length,
+                userUsage: usageInfo,
+              },
+              'Chat request completed successfully'
+            );
+
+            // Validate response in development
+            if (isDevelopment()) {
+              ChatResponseSchema.parse(response);
+            }
+
+            // Add usage info to response
+            const enhancedResponse = {
+              ...response,
+              usage: {
+                ...response.usage,
+                ...usageInfo,
+              },
+            };
+
+            return reply.code(200).send(enhancedResponse);
           } catch (error) {
-            // Token limit exceeded - get usage info for response
-            const usageInfo = await fastify.getUserUsage(userId);
-            return reply.code(429).send({
-              error: 'TokenLimitExceeded',
-              message:
-                error instanceof Error ? error.message : 'Token limit exceeded',
-              statusCode: 429,
-              usage: usageInfo,
-            });
+            // Handle token limit errors
+            if (
+              error instanceof Error &&
+              error.message.includes('Token limit exceeded')
+            ) {
+              const usageInfo = await chatService.getUserUsage();
+              return reply.code(429).send({
+                error: 'TokenLimitExceeded',
+                message: error.message,
+                statusCode: 429,
+                usage: usageInfo,
+              });
+            }
+            throw error;
           }
-
-          // Get updated usage info after consumption
-          const usageInfo = await fastify.getUserUsage(userId);
-
-          // Log successful response
-          const duration = Date.now() - startTime;
-          request.log.info(
-            {
-              duration,
-              usage: response.usage,
-              responseLength: response.content.length,
-              userUsage: usageInfo,
-            },
-            'Chat request completed successfully'
-          );
-
-          // Validate response in development
-          if (isDevelopment()) {
-            ChatResponseSchema.parse(response);
-          }
-
-          // Add usage info to response
-          const enhancedResponse = {
-            ...response,
-            usage: {
-              ...response.usage,
-              ...usageInfo,
-            },
-          };
-
-          return reply.code(200).send(enhancedResponse);
         }
       } catch (error) {
         const duration = Date.now() - startTime;
@@ -408,38 +382,16 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           });
         }
 
-        // Handle AI provider errors
-        if (error instanceof AIProviderError) {
-          request.log.warn(
-            {
-              error: {
-                message: error.message,
-                statusCode: error.statusCode,
-                code: error.code,
-              },
-              duration,
-            },
-            'AI provider service error'
-          );
-
-          return reply.code(error.statusCode).send({
-            error: error.code || 'AIProviderError',
-            message: error.message,
-            statusCode: error.statusCode,
-          });
-        }
-
-        // Handle unexpected errors
+        // Handle all other errors
+        const errorResponse = ChatService.formatError(error);
         request.log.error(
           { error, duration },
-          'Unexpected error in chat endpoint'
+          errorResponse.statusCode === 500
+            ? 'Unexpected error in chat endpoint'
+            : 'AI provider service error'
         );
 
-        return reply.code(500).send({
-          error: 'InternalServerError',
-          message: 'An unexpected error occurred while processing your request',
-          statusCode: 500,
-        });
+        return reply.code(errorResponse.statusCode).send(errorResponse);
       }
     }
   );

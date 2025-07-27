@@ -13,6 +13,7 @@ export interface TestAppOptions extends AppOptions {
   JWT_SECRET?: string;
   DATABASE_URL?: string;
   OPENAI_API_KEY?: string;
+  ALLOWED_ORIGIN?: string;
 }
 
 // Default test configuration
@@ -36,6 +37,7 @@ export async function build(
     JWT_SECRET,
     DATABASE_URL,
     OPENAI_API_KEY,
+    ALLOWED_ORIGIN,
     ...appConfig
   } = config;
 
@@ -51,6 +53,7 @@ export async function build(
     JWT_SECRET,
     DATABASE_URL,
     OPENAI_API_KEY,
+    ALLOWED_ORIGIN,
   };
 
   Object.entries(envVars).forEach(([key, value]) => {
