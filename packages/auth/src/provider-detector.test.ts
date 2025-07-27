@@ -8,7 +8,7 @@ describe('ProviderDetector', () => {
     issuer?: string;
     audience?: string | string[] | null;
     subject?: string;
-    expiresIn?: string | number;
+    expiresIn?: string;
   }) {
     const payload: any = {
       sub: options.subject || 'user123',
@@ -22,17 +22,11 @@ describe('ProviderDetector', () => {
       payload.aud = options.audience;
     }
 
-    // Handle expiresIn more carefully for TypeScript
+    // Handle expiresIn using nullish coalescing for TypeScript exactOptionalPropertyTypes
     const signOptions: jwt.SignOptions = {
       algorithm: 'HS256' as const,
+      expiresIn: (options.expiresIn ?? '1h') as any,
     };
-
-    // Add expiresIn only if provided to avoid undefined assignment
-    if (options.expiresIn !== undefined) {
-      signOptions.expiresIn = options.expiresIn;
-    } else {
-      signOptions.expiresIn = '1h';
-    }
 
     return jwt.sign(payload, 'test-secret', signOptions);
   }
@@ -115,7 +109,7 @@ describe('ProviderDetector', () => {
     test('generates helpful expired token error', () => {
       const expiredToken = createToken({
         issuer: 'https://clerk.dev',
-        expiresIn: -3600, // Expired 1 hour ago
+        expiresIn: '-1h', // Expired 1 hour ago
       });
 
       const error = ProviderDetector.getErrorMessage(
