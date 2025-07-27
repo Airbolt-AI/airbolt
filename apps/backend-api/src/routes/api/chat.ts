@@ -10,6 +10,8 @@ import type { UsageInfo } from '../../plugins/user-rate-limit.js';
 import {
   InternalJWTValidator,
   ExternalJWTValidator,
+  JWKSValidator,
+  AutoDiscoveryValidator,
   createAuthMiddleware,
   type JWTValidator,
 } from '@airbolt/auth';
@@ -43,13 +45,36 @@ declare module 'fastify' {
 
 const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Create auth middleware with validators
-  const validators: JWTValidator[] = [new InternalJWTValidator(fastify)];
+  const validators: JWTValidator[] = [];
+  const isProduction = fastify.config?.NODE_ENV === 'production';
 
-  // Add external validator if configured
-  if (
+  // Determine if external auth is configured
+  const hasExternalAuth = !!(
+    fastify.config?.EXTERNAL_JWT_ISSUER ||
+    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
+    fastify.config?.EXTERNAL_JWT_SECRET
+  );
+
+  // Add internal JWT validator if no external auth is configured
+  // This allows anonymous users even in production
+  if (!hasExternalAuth) {
+    validators.push(new InternalJWTValidator(fastify));
+  }
+
+  // If explicit configuration provided, use it (works in all environments)
+  if (fastify.config?.EXTERNAL_JWT_ISSUER) {
+    // Use JWKS validator for automatic key discovery
+    validators.push(
+      new JWKSValidator(
+        fastify.config.EXTERNAL_JWT_ISSUER,
+        fastify.config.EXTERNAL_JWT_PUBLIC_KEY // Use as fallback if provided
+      )
+    );
+  } else if (
     fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
     fastify.config?.EXTERNAL_JWT_SECRET
   ) {
+    // Legacy: Use traditional validator with provided key
     validators.push(
       new ExternalJWTValidator(
         fastify.config.EXTERNAL_JWT_PUBLIC_KEY ||
@@ -57,6 +82,33 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
           '',
         fastify.config.EXTERNAL_JWT_PUBLIC_KEY ? ['RS256'] : ['HS256']
       )
+    );
+  }
+
+  // Add auto-discovery validator (handles production checks internally)
+  validators.push(
+    new AutoDiscoveryValidator({
+      issuer: fastify.config?.EXTERNAL_JWT_ISSUER ?? undefined,
+      audience: fastify.config?.EXTERNAL_JWT_AUDIENCE ?? undefined,
+      isProduction,
+    })
+  );
+
+  // Log auth configuration on startup
+  if (hasExternalAuth) {
+    fastify.log.info(
+      { issuer: fastify.config?.EXTERNAL_JWT_ISSUER },
+      '🔐 External auth configured - internal tokens disabled'
+    );
+  } else if (isProduction) {
+    fastify.log.info(
+      '🔓 Anonymous mode in production - using internal JWT tokens. ' +
+        'To restrict access, configure EXTERNAL_JWT_ISSUER.'
+    );
+  } else {
+    fastify.log.info(
+      '🔧 Development mode - accepting internal tokens and auto-discovering external JWTs. ' +
+        'For production with external auth, configure EXTERNAL_JWT_ISSUER.'
     );
   }
 
@@ -217,6 +269,10 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
     },
     async (request, reply) => {
       const startTime = Date.now();
+
+      // Add security header for transparency
+      const byoaMode = fastify.config?.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
+      reply.header('X-BYOA-Mode', byoaMode);
 
       try {
         // Validate request body

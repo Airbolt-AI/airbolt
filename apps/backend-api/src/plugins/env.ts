@@ -94,6 +94,13 @@ export const EnvSchema = z
       .optional(),
 
     // External JWT configuration for BYOA
+    EXTERNAL_JWT_ISSUER: z
+      .string({
+        invalid_type_error: 'EXTERNAL_JWT_ISSUER must be a string',
+      })
+      .url('EXTERNAL_JWT_ISSUER must be a valid URL')
+      .optional(),
+
     EXTERNAL_JWT_PUBLIC_KEY: z
       .string({
         invalid_type_error: 'EXTERNAL_JWT_PUBLIC_KEY must be a string',
@@ -106,6 +113,13 @@ export const EnvSchema = z
         invalid_type_error: 'EXTERNAL_JWT_SECRET must be a string',
       })
       .min(1, 'EXTERNAL_JWT_SECRET cannot be empty')
+      .optional(),
+
+    EXTERNAL_JWT_AUDIENCE: z
+      .string({
+        invalid_type_error: 'EXTERNAL_JWT_AUDIENCE must be a string',
+      })
+      .min(1, 'EXTERNAL_JWT_AUDIENCE cannot be empty')
       .optional(),
 
     // CORS allowed origins (comma-separated list or * for all origins)

@@ -1,48 +1,37 @@
-# Airbolt Anonymous Chat Example
+# Anonymous Chat Example
 
-This example demonstrates Airbolt's built-in JWT authentication for anonymous users. No external auth provider setup required!
-
-## Features
-
-- 🚀 Zero-config authentication
-- 💬 Real-time chat with AI
-- 📊 Usage tracking and rate limiting
-- 🌊 Streaming responses
-- 🎨 Customizable UI
+The simplest way to add AI chat to your app - no authentication setup required!
 
 ## Quick Start
 
-1. **Start the Airbolt backend** (from project root):
+1. **Start the backend** (from project root):
 
    ```bash
    cd apps/backend-api
    pnpm dev
    ```
 
-2. **Install dependencies** (from this directory):
+2. **Run this example**:
 
    ```bash
    pnpm install
-   ```
-
-3. **Start the example app**:
-
-   ```bash
    pnpm dev
    ```
 
-4. **Open your browser** to http://localhost:5173
+3. **Open** http://localhost:5173
 
-## How It Works
+That's it! Start chatting immediately.
 
-This example uses Airbolt's built-in authentication system:
+## What This Demonstrates
 
-1. The SDK automatically requests a JWT token from the backend
-2. The backend generates a token for anonymous users
-3. Rate limiting is applied per anonymous session
-4. No external auth provider configuration needed!
+- **Zero-config auth**: JWT tokens handled automatically
+- **Instant chat**: No login or setup required
+- **Rate limiting**: Built-in protection per session
+- **Clean UI**: Minimal, focused on the chat experience
 
-## Code Overview
+## The Code
+
+It's just one component:
 
 ```tsx
 import { ChatWidget } from '@airbolt/react-sdk';
@@ -52,42 +41,35 @@ function App() {
     <ChatWidget
       baseURL="http://localhost:3000"
       position="relative"
-      theme={{
-        primaryColor: '#007bff',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-      placeholder="Type a message..."
-      welcomeMessage="Welcome to Airbolt!"
+      welcomeMessage="Welcome! I'm ready to help."
     />
   );
 }
 ```
 
-## Customization
+## Customization Options
 
-You can customize the chat widget with:
+- **`baseURL`**: Your backend URL (required)
+- **`theme`**: Colors, fonts, spacing
+- **`position`**: `relative`, `fixed-bottom-right`, `fixed-bottom-left`
+- **`placeholder`**: Input field hint text
+- **`welcomeMessage`**: Initial bot greeting
 
-- **Theme**: Colors, fonts, and spacing
-- **Position**: `relative`, `fixed-bottom-right`, or `fixed-bottom-left`
-- **Messages**: Welcome message and placeholder text
-- **Backend URL**: Point to your deployed Airbolt instance
+## Common Issues
+
+**Backend not reachable?**
+
+- Ensure backend is running: `cd apps/backend-api && pnpm dev`
+- Check your AI provider API keys are set in `.env`
+
+**Want authentication?**
+
+- See the [auth0-authenticated](../auth0-authenticated) example
 
 ## Next Steps
 
-- Deploy your own Airbolt backend
-- Add persistent user sessions
-- Integrate with your existing auth system
-- See the `auth0-authenticated` example for external auth integration
+This example shows the simplest integration. For production apps, consider:
 
-## Troubleshooting
-
-**"Backend is not running" error**
-
-- Make sure the Airbolt backend is running at `http://localhost:3000`
-- Check that you've set up your AI provider API keys in the backend `.env` file
-
-**Rate limit errors**
-
-- Anonymous users have default rate limits
-- Wait a moment and try again
-- Or implement user authentication for higher limits
+- Adding user authentication for persistent sessions
+- Customizing the theme to match your brand
+- Deploying the backend to a cloud provider

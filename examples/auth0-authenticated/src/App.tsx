@@ -60,14 +60,19 @@ function App() {
             </div>
 
             <div className="info-section">
-              <h3>How BYOA Works</h3>
+              <h3>How It Works</h3>
               <ol>
-                <li>User signs in with Auth0</li>
-                <li>Auth0 provides a JWT access token</li>
+                <li>You sign in with Auth0</li>
+                <li>Auth0 provides a JWT token</li>
                 <li>Airbolt SDK automatically detects Auth0</li>
                 <li>SDK includes the token in API requests</li>
-                <li>Backend validates the token using your public key</li>
+                <li>Backend validates the token automatically!</li>
               </ol>
+              <p className="note">
+                <strong>Zero Config:</strong> In development, the backend
+                accepts Auth0 tokens automatically. In production, configure
+                EXTERNAL_JWT_ISSUER for security.
+              </p>
             </div>
           </>
         ) : (
@@ -100,59 +105,57 @@ function App() {
                     primaryColor: '#635BFF',
                     fontFamily: 'Inter, system-ui, sans-serif',
                   }}
-                  placeholder="Type a message... (authenticated as ${user?.email})"
+                  placeholder={`Type a message... (authenticated as ${user?.email})`}
                   welcomeMessage={`Welcome ${user?.name || user?.email}! Your messages are authenticated with Auth0.`}
                 />
               </div>
             </div>
 
             <div className="backend-config">
-              <h3>Backend Configuration Required</h3>
-              <p>
-                Make sure your Airbolt backend has the Auth0 public key
-                configured:
-              </p>
-              <pre>
-                <code>
-                  EXTERNAL_JWT_PUBLIC_KEY="-----BEGIN PUBLIC
-                  KEY-----\n...\n-----END PUBLIC KEY-----"
-                </code>
-              </pre>
-              <p>
-                Get your public key from Auth0 Dashboard → Applications → Your
-                App → Settings → Show Advanced Settings → Certificates →
-                Download Certificate (PEM format)
-              </p>
+              <h3>Backend Configuration</h3>
+              <div className="config-mode">
+                <h4>🚀 Development Mode (Current)</h4>
+                <p>
+                  No configuration needed! The backend automatically validates
+                  Auth0 tokens.
+                </p>
+                <p className="note">
+                  You'll see warnings in the backend console - this is normal
+                  for dev.
+                </p>
+              </div>
+              <div className="config-mode">
+                <h4>🔒 Production Mode</h4>
+                <p>
+                  For production, add to your backend <code>.env</code>:
+                </p>
+                <pre>
+                  <code>
+                    NODE_ENV=production
+                    EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/
+                    EXTERNAL_JWT_AUDIENCE=https://airbolt-api
+                  </code>
+                </pre>
+              </div>
             </div>
           </>
         )}
 
         <div className="code-section">
-          <h2>Integration Code</h2>
+          <h2>How Simple Is It?</h2>
           <pre>
-            <code>{`// main.tsx - Auth0 Provider Setup
-import { Auth0Provider } from '@auth0/auth0-react';
-
-<Auth0Provider
-  domain={domain}
-  clientId={clientId}
-  authorizationParams={{
-    redirect_uri: window.location.origin,
-    audience: audience,
-    scope: 'openid profile email',
-  }}
->
-  <App />
-</Auth0Provider>
-
-// App.tsx - Using ChatWidget (no auth code needed!)
+            <code>{`// That's it! Just add the ChatWidget
 import { ChatWidget } from '@airbolt/react-sdk';
 
 <ChatWidget
   baseURL="http://localhost:3000"
-  // SDK automatically detects and uses Auth0 token
+  // SDK automatically detects and uses Auth0 token!
 />`}</code>
           </pre>
+          <p className="note">
+            The SDK automatically detects Auth0 and includes your token in every
+            request. No auth code needed in your components!
+          </p>
         </div>
       </main>
     </div>

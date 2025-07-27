@@ -97,40 +97,56 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 ## Bring Your Own Auth (BYOA)
 
-Use your existing authentication provider (Clerk, Auth0, Firebase, Supabase) with zero configuration for common providers.
+Use your existing authentication provider (Auth0, Clerk, Firebase, Supabase) with Airbolt.
 
 ### Quick Start
 
-If you're using Clerk, Auth0, Firebase, or Supabase, the SDK automatically detects and uses your auth tokens:
+**Development (Zero-Config)**
+
+In development, Airbolt automatically validates tokens from common providers - no backend configuration needed!
 
 ```javascript
-// Frontend - SDK auto-detects your auth provider!
+// Frontend - SDK auto-detects your auth provider
 import { chat } from '@airbolt/sdk';
 
 const response = await chat([{ role: 'user', content: 'Hello!' }]);
 ```
 
-For the backend, add your public key:
+```bash
+# Backend - Auto-discovers JWKS in development mode
+# Just start the server and it works!
+```
+
+**Production (Secure by Default)**
+
+Production requires explicit configuration for security:
 
 ```bash
-# For RS256 providers (Clerk, Auth0, Firebase)
-EXTERNAL_JWT_PUBLIC_KEY=pk_test_abc123...
-
-# For HS256 providers (Supabase with shared secret)
-EXTERNAL_JWT_SECRET=your-supabase-jwt-secret
+NODE_ENV=production
+EXTERNAL_JWT_ISSUER=https://your-auth-provider.com/
+EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
 ```
+
+### How It Works
+
+1. **Frontend**: SDK detects Auth0/Clerk/Firebase/Supabase automatically
+2. **Backend**:
+   - Development: Auto-discovers JWKS from any HTTPS issuer
+   - Production: Validates against configured issuer only
+3. **Security**: Rate limiting by issuer + user ID prevents abuse
+
+### Migration Guide
+
+**Existing Users**: No changes required! Your current `EXTERNAL_JWT_ISSUER` configuration continues to work.
+
+**New Users**:
+
+- Development: No configuration needed
+- Production: Set `EXTERNAL_JWT_ISSUER` and optionally `EXTERNAL_JWT_AUDIENCE`
 
 ### Auth0 Setup Example
 
-1. **Create an Auth0 Application** (Single Page Application)
-2. **Get Your Public Key** from Applications → Your App → Advanced Settings → Certificates
-3. **Add to backend `.env`**:
-   ```
-   EXTERNAL_JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
-   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
-   -----END PUBLIC KEY-----"
-   ```
-4. **Frontend Integration**:
+1. **Frontend Integration**:
 
    ```javascript
    import { Auth0Provider } from '@auth0/auth0-react';
@@ -140,10 +156,20 @@ EXTERNAL_JWT_SECRET=your-supabase-jwt-secret
      clientId="your-client-id"
      authorizationParams={{
        redirect_uri: window.location.origin,
+       audience: 'https://airbolt-api', // Important: prevents opaque tokens
      }}
    >
      <App />
    </Auth0Provider>;
+   ```
+
+2. **Backend Configuration**: None required! Airbolt automatically discovers Auth0's JWKS endpoint.
+
+3. **Optional Security**: For production, you can restrict to specific auth providers:
+   ```bash
+   # Only accept your Auth0 tenant
+   BYOA_MODE=strict
+   EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/
    ```
 
 The Airbolt SDK automatically detects Auth0 - no additional configuration needed! See the [Auth0 example](examples/auth0-authenticated) for a complete implementation.

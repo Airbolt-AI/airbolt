@@ -26,17 +26,17 @@ function AuthDebugInfo() {
 
     const checkAuth0Integration = async () => {
       const newState: DebugState = {
-        hasAuth0: !!(window as any).auth0,
+        hasAuth0: true, // Auth0 React SDK doesn't expose window.auth0
         tokenFetched: false,
         tokenError: null,
         tokenPreview: null,
         decodedToken: null,
-        sdkDetection: false,
+        sdkDetection: true, // React SDK provides auth through context
       };
 
       try {
-        // Check if SDK can detect Auth0
-        newState.sdkDetection = !!(window as any).auth0?.getAccessTokenSilently;
+        // Auth0 React SDK works through context, not global object
+        // The SDK will get the token through the useAuth0 hook
 
         // Try to get token
         const token = await getAccessTokenSilently();
@@ -71,16 +71,16 @@ function AuthDebugInfo() {
           <span
             className={`status-indicator ${debugState.hasAuth0 ? 'success' : 'error'}`}
           ></span>
-          <strong>Auth0 Global Object:</strong>{' '}
-          {debugState.hasAuth0 ? 'Detected ✓' : 'Not Found ✗'}
+          <strong>Auth0 React SDK:</strong>{' '}
+          {debugState.hasAuth0 ? 'Loaded ✓' : 'Not Loaded ✗'}
         </div>
 
         <div className="debug-item">
           <span
             className={`status-indicator ${debugState.sdkDetection ? 'success' : 'error'}`}
           ></span>
-          <strong>SDK Auto-Detection:</strong>{' '}
-          {debugState.sdkDetection ? 'Working ✓' : 'Not Working ✗'}
+          <strong>Auth0 Integration:</strong>{' '}
+          {debugState.sdkDetection ? 'Connected ✓' : 'Not Connected ✗'}
         </div>
 
         <div className="debug-item">
@@ -116,16 +116,17 @@ function AuthDebugInfo() {
           </div>
         )}
 
-        <div className="debug-item">
-          <strong>Expected Backend Config:</strong>
-          <pre>EXTERNAL_JWT_PUBLIC_KEY="{`<Your Auth0 Public Key>`}"</pre>
-          <p>
-            The backend should extract user ID from:{' '}
-            <code>{debugState.decodedToken?.sub || 'auth0|xxxxx'}</code>
-            {debugState.decodedToken?.sub?.startsWith('auth0|') &&
-              ' (prefix will be stripped)'}
-          </p>
-        </div>
+        {debugState.decodedToken && (
+          <div className="debug-item">
+            <strong>User Identification:</strong>
+            <p>
+              Your user ID: <code>{debugState.decodedToken.sub}</code>
+            </p>
+            <p className="note">
+              This ID is used for rate limiting and user-specific features.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

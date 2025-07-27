@@ -16,6 +16,19 @@ const TokenResponseSchema = z.object({
 });
 
 const tokens: FastifyPluginAsync = async (fastify): Promise<void> => {
+  // Check if external auth is configured
+  const hasExternalAuth = !!(
+    fastify.config?.EXTERNAL_JWT_ISSUER ||
+    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
+    fastify.config?.EXTERNAL_JWT_SECRET
+  );
+
+  // Disable tokens endpoint if external auth is configured
+  if (hasExternalAuth) {
+    fastify.log.info('Tokens endpoint disabled - external auth is configured');
+    return;
+  }
+
   fastify.post(
     '/tokens',
     {

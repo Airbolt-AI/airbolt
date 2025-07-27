@@ -1,24 +1,24 @@
-# Airbolt Auth0 Authenticated Example
+# Airbolt Auth0 Authentication Example
 
-This example demonstrates Airbolt's Bring Your Own Auth (BYOA) integration with Auth0. It shows how to use your existing Auth0 authentication with Airbolt's chat API.
+See how Airbolt integrates with Auth0 for secure, authenticated AI chat.
 
-## Features
+## What This Example Shows
 
-- 🔐 Auth0 authentication flow
-- 🔍 Automatic Auth0 token detection
-- 💬 Authenticated chat with AI
-- 🐛 Debug information for troubleshooting
-- 📊 Per-user rate limiting based on Auth0 user ID
+- Auth0 login flow with Airbolt
+- Automatic token validation (zero backend config in dev!)
+- How to configure for production security
+- Per-user rate limiting with Auth0 user IDs
+- Debug panel to understand the integration
 
 ## Prerequisites
 
-1. An Auth0 account (free tier is fine)
-2. An Auth0 Single Page Application (SPA)
-3. Airbolt backend running locally
+- Node.js 18+
+- An Auth0 account ([sign up free](https://auth0.com/signup))
+- 5 minutes to set it up
 
-## Auth0 Setup
+## Setup Guide
 
-### 1. Create an Auth0 Application
+### Step 1: Create Your Auth0 Application
 
 1. Log in to your [Auth0 Dashboard](https://auth0.com/)
 2. Navigate to **Applications** → **Create Application**
@@ -27,7 +27,7 @@ This example demonstrates Airbolt's Bring Your Own Auth (BYOA) integration with 
    - Type: **Single Page Application**
 4. Click **Create**
 
-### 2. Configure Application Settings
+### Step 2: Configure Auth0 Settings
 
 In your Auth0 application settings:
 
@@ -36,14 +36,16 @@ In your Auth0 application settings:
 3. **Allowed Web Origins**: `http://localhost:5174`
 4. **Save Changes**
 
-### 3. Get Your Configuration
+### Step 3: Copy Your Auth0 Credentials
 
 From the **Settings** tab, copy:
 
 - **Domain** (e.g., `dev-xxxxx.auth0.com`)
 - **Client ID**
 
-### 4. Create an API (Optional but Recommended)
+### Step 4: Create an Auth0 API (Required!)
+
+**Why this step?** Without an API/audience, Auth0 returns opaque tokens that cannot be validated locally, requiring a network call to Auth0 for every request.
 
 1. Navigate to **APIs** → **Create API**
 2. Set:
@@ -52,16 +54,7 @@ From the **Settings** tab, copy:
    - Signing Algorithm: **RS256**
 3. Click **Create**
 
-### 5. Get Your Public Key
-
-1. Go to **Applications** → Your App → **Settings**
-2. Scroll to **Advanced Settings** → **Certificates**
-3. Click **Download Certificate** and choose **PEM** format
-4. This is your `EXTERNAL_JWT_PUBLIC_KEY` for the backend
-
-## Quick Start
-
-### 1. Configure the Example App
+### Step 5: Configure This Example
 
 ```bash
 cd examples/auth0-authenticated
@@ -73,28 +66,18 @@ Edit `.env` with your Auth0 details:
 ```
 VITE_AUTH0_DOMAIN=your-tenant.auth0.com
 VITE_AUTH0_CLIENT_ID=your-client-id
-VITE_AUTH0_AUDIENCE=https://airbolt-api  # Optional but recommended
+VITE_AUTH0_AUDIENCE=https://airbolt-api  # Required (from step 4)
 VITE_AIRBOLT_API_URL=http://localhost:3000
 ```
 
-### 2. Configure the Airbolt Backend
-
-In your backend `.env` file, add:
-
-```
-EXTERNAL_JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
------END PUBLIC KEY-----"
-```
-
-### 3. Start the Backend
+### Step 6: Start the Airbolt Backend
 
 ```bash
 cd apps/backend-api
 pnpm dev
 ```
 
-### 4. Install Dependencies and Run
+### Step 7: Run This Example
 
 ```bash
 cd examples/auth0-authenticated
@@ -102,34 +85,85 @@ pnpm install
 pnpm dev
 ```
 
-### 5. Test the Integration
+### Step 8: Try It Out!
 
 1. Open http://localhost:5174
 2. Click "Sign In with Auth0"
 3. Complete the Auth0 login flow
-4. Check the debug information panel
-5. Try sending a chat message
+4. Check the debug panel (it shows what's happening)
+5. Send a chat message
 
-## How It Works
+✨ **That's it!** You're now using Auth0 authentication with Airbolt.
+
+## Testing Development vs Production Modes
+
+### Development Mode (What You Just Ran)
+
+The backend automatically validates any Auth0 token - zero configuration needed! You'll see a warning in the backend console:
+
+```
+⚠️  Accepting JWT from https://your-tenant.auth0.com/. For production, configure EXTERNAL_JWT_ISSUER.
+```
+
+This is perfect for development and trying things out.
+
+### Production Mode (Secure Configuration)
+
+To see how production security works:
+
+1. **Stop the backend** (Ctrl+C)
+
+2. **Create a `.env` file** in `apps/backend-api/`:
+
+   ```bash
+   cd apps/backend-api
+   cp .env.example .env
+   ```
+
+3. **Edit the `.env`** file and add:
+
+   ```
+   NODE_ENV=production
+   EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/
+   EXTERNAL_JWT_AUDIENCE=https://airbolt-api
+   ```
+
+4. **Restart the backend**:
+
+   ```bash
+   pnpm dev
+   ```
+
+5. **Try the example again** - it still works, but now ONLY accepts tokens from YOUR Auth0 tenant!
+
+### What's the Difference?
+
+- **Development**: Accepts any valid Auth0 token (with warnings)
+- **Production**: Only accepts tokens from the configured issuer
+- **Security**: Production mode prevents token substitution attacks
+
+## Understanding the Integration
 
 1. **User Authentication**: Auth0 handles user login and provides a JWT
 2. **Automatic Detection**: Airbolt SDK detects `window.auth0` object
 3. **Token Retrieval**: SDK calls `getAccessTokenSilently()` automatically
 4. **API Requests**: Token is included in the Authorization header
-5. **Backend Validation**: Server validates token using your public key
+5. **Backend Validation**:
+   - Development: Auto-discovers Auth0's JWKS (zero config)
+   - Production: Validates against configured issuer
 6. **User Identification**: Rate limiting applied per Auth0 user ID
 
-## Debugging
+## The Debug Panel
 
-The example includes a debug panel that shows:
+This example includes a debug panel that helps you understand what's happening:
 
-- ✓ Auth0 global object detection
-- ✓ SDK auto-detection status
-- ✓ Token retrieval success/failure
-- ✓ Decoded token claims
-- ✓ Expected backend configuration
+- **Auth0 Detection**: Is the Auth0 SDK loaded?
+- **SDK Status**: Did Airbolt detect Auth0 automatically?
+- **Token Status**: Was a token retrieved successfully?
+- **Token Claims**: What's in your JWT token?
+- **Backend Config**: What configuration is expected?
 
-## Common Issues
+## Troubleshooting
 
 ### "No token returned from auth provider"
 
@@ -137,11 +171,18 @@ The example includes a debug panel that shows:
 - Check that Auth0 SDK is properly initialized
 - Verify audience parameter matches your API
 
+### "Auth0 token is opaque (no audience)" Error
+
+- This means you skipped step 4 (Create an API)
+- Auth0 returns opaque tokens without an audience
+- Solution: Create an API in Auth0 dashboard and set the audience in your frontend config
+- The error message will include a direct link to fix this
+
 ### "Invalid authorization token" (401)
 
-- Verify `EXTERNAL_JWT_PUBLIC_KEY` in backend matches your Auth0 certificate
 - Ensure token hasn't expired
-- Check that audience claim matches expectations
+- Check that audience claim matches your API identifier
+- In production, verify `EXTERNAL_JWT_ISSUER` is set correctly
 
 ### SDK not detecting Auth0
 
@@ -154,22 +195,18 @@ The example includes a debug panel that shows:
 - Add your frontend URL to Auth0 allowed origins
 - Ensure backend CORS allows your frontend URL
 
-## Security Notes
+## Building Your Own App?
 
-- Never commit `.env` files
-- Keep your Auth0 credentials secure
-- Use HTTPS in production
-- Rotate your certificates periodically
+Now that you've seen how it works:
 
-## Next Steps
+1. **Development**: Just add the Airbolt SDK to your Auth0 app - no backend config needed!
+2. **Production**: Set those two environment variables (EXTERNAL_JWT_ISSUER and optionally EXTERNAL_JWT_AUDIENCE)
+3. **Other Providers**: Clerk, Firebase, and Supabase work the same way
 
-- Deploy to production with proper domains
-- Implement role-based access control (RBAC)
-- Add user metadata to customize experience
-- Set up Auth0 Actions for custom claims
+See the [main README](../../README.md#bring-your-own-auth-byoa) for more details.
 
 ## Resources
 
-- [Auth0 SPA Quickstart](https://auth0.com/docs/quickstart/spa/react)
-- [Auth0 JWT Validation](https://auth0.com/docs/tokens/json-web-tokens/validate-json-web-tokens)
-- [Airbolt BYOA Documentation](../../docs/BYOA.md)
+- [Auth0 Quickstart Guide](https://auth0.com/docs/quickstart/spa/react)
+- [Understanding JWT Tokens](https://auth0.com/docs/tokens/json-web-tokens)
+- [Airbolt Documentation](../../README.md)
