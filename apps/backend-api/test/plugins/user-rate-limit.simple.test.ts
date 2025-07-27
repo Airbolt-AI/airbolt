@@ -38,7 +38,7 @@ describe('Rate Limiter Behavior Test', () => {
     await app.consumeTokens(userId, 1000);
     let usage = await app.getUserUsage(userId);
     console.log(
-      `Result: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+      `Result: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
     );
 
     // Try one more
@@ -47,7 +47,7 @@ describe('Rate Limiter Behavior Test', () => {
       console.log('SUCCESS: Consumed 1 more token after reaching limit');
       usage = await app.getUserUsage(userId);
       console.log(
-        `Result: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+        `Result: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
       );
     } catch (error) {
       console.log(
@@ -66,7 +66,7 @@ describe('Rate Limiter Behavior Test', () => {
     await app.consumeTokens(userId, 999);
     let usage = await app.getUserUsage(userId);
     console.log(
-      `After 999: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+      `After 999: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
     );
 
     try {
@@ -74,7 +74,7 @@ describe('Rate Limiter Behavior Test', () => {
       console.log('SUCCESS: Consumed 2 more tokens (now at 1001)');
       usage = await app.getUserUsage(userId);
       console.log(
-        `Result: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+        `Result: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
       );
     } catch (error) {
       console.log('FAILED: Could not consume 2 more tokens');
@@ -91,7 +91,7 @@ describe('Rate Limiter Behavior Test', () => {
     await app.consumeTokens(userId, 800);
     let usage = await app.getUserUsage(userId);
     console.log(
-      `After 800: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+      `After 800: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
     );
 
     try {
@@ -99,13 +99,13 @@ describe('Rate Limiter Behavior Test', () => {
       console.log('SUCCESS: Consumed 300 more tokens (now at 1100)');
       usage = await app.getUserUsage(userId);
       console.log(
-        `Result: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+        `Result: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
       );
     } catch (error) {
       console.log('FAILED: Could not consume 300 more tokens');
       usage = await app.getUserUsage(userId);
       console.log(
-        `Still at: used=${usage.tokens.used}, remaining=${usage.tokens.remaining}`
+        `Still at: used=${usage.tokens?.used}, remaining=${usage.tokens?.remaining}`
       );
     }
   });

@@ -50,6 +50,46 @@ const response = await chat(messages, {
 - Uses RS256 tokens
 - Set `EXTERNAL_JWT_PUBLIC_KEY` on backend
 
+#### Auth0 Setup Steps
+
+1. **Create an Auth0 Application**
+   - Type: Single Page Application
+   - Allowed Callback URLs: Your frontend URL
+   - Allowed Web Origins: Your frontend URL
+
+2. **Get Your Public Key**
+   - Go to Applications → Your App → Advanced Settings → Certificates
+   - Download Certificate (PEM format)
+   - Add to backend `.env`:
+     ```
+     EXTERNAL_JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
+     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+     -----END PUBLIC KEY-----"
+     ```
+
+3. **Frontend Integration**
+
+   ```javascript
+   import { Auth0Provider } from '@auth0/auth0-react';
+
+   <Auth0Provider
+     domain="your-tenant.auth0.com"
+     clientId="your-client-id"
+     authorizationParams={{
+       redirect_uri: window.location.origin,
+       audience: 'your-api-identifier', // Optional
+     }}
+   >
+     <App />
+   </Auth0Provider>;
+   ```
+
+4. **SDK Auto-Detection**
+   - The Airbolt SDK will automatically detect Auth0
+   - No additional configuration needed in your chat code!
+
+See the [Auth0 example app](../examples/auth0-authenticated) for a complete working implementation.
+
 ### Firebase Auth
 
 - Auto-detected via `window.firebase`
