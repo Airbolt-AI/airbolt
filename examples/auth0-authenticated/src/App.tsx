@@ -100,13 +100,9 @@ function App() {
               <div className="chat-container">
                 <ChatWidget
                   baseURL={baseURL}
-                  position="relative"
-                  theme={{
-                    primaryColor: '#635BFF',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                  }}
+                  position="inline"
+                  theme="light"
                   placeholder={`Type a message... (authenticated as ${user?.email})`}
-                  welcomeMessage={`Welcome ${user?.name || user?.email}! Your messages are authenticated with Auth0.`}
                 />
               </div>
             </div>

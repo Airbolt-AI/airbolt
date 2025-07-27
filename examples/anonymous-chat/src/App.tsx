@@ -17,13 +17,9 @@ function App() {
       <main>
         <ChatWidget
           baseURL="http://localhost:3000"
-          position="relative"
-          theme={{
-            primaryColor: '#007bff',
-            fontFamily: 'Inter, system-ui, sans-serif',
-          }}
+          position="inline"
+          theme="light"
           placeholder="Type a message..."
-          welcomeMessage="Welcome! I'm ready to help. Ask me anything."
         />
       </main>
 
