@@ -50,8 +50,10 @@ export class AuthModeDetector {
         return '🔑 Legacy external auth with manual key configuration';
       case AuthMode.AUTO_DISCOVERY:
         return '🔧 Development mode - auto-discovering external JWTs';
-      default:
-        return `Unknown auth mode: ${mode}`;
+      default: {
+        const exhaustiveCheck: never = mode;
+        return `Unknown auth mode: ${exhaustiveCheck as string}`;
+      }
     }
   }
 }
@@ -59,7 +61,8 @@ export class AuthModeDetector {
 export class AuthValidatorFactory {
   static create(config: AuthConfig, fastify: FastifyInstance): JWTValidator[] {
     const mode = AuthModeDetector.detect(config);
-    const isProd = config.NODE_ENV === 'production';
+    const isProd =
+      config.NODE_ENV === 'production' || config.NODE_ENV === 'prod';
 
     fastify.log.info(
       { mode, issuer: config.EXTERNAL_JWT_ISSUER },

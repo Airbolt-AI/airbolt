@@ -14,3 +14,9 @@ export {
   AuthModeDetector,
   type AuthConfig,
 } from './validator-factory.js';
+export {
+  ValidationPolicy,
+  type ValidationConfig,
+} from './validation-policy.js';
+export { JWKSManager, type JWKS, type JWKSKey } from './jwks-manager.js';
+export { TokenValidator } from './token-validator.js';
