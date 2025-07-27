@@ -95,11 +95,72 @@ That's it! Your app now has secure AI chat that can't be abused by random users.
 
 This is an MVP to validate the core concept. We're learning what the "Stripe for LLMs" should actually look like based on real developer feedback.
 
+## Bring Your Own Auth (BYOA)
+
+Use your existing authentication provider (Clerk, Auth0, Firebase, Supabase) with zero configuration for common providers.
+
+### Quick Start
+
+If you're using Clerk, Auth0, Firebase, or Supabase, the SDK automatically detects and uses your auth tokens:
+
+```javascript
+// Frontend - SDK auto-detects your auth provider!
+import { chat } from '@airbolt/sdk';
+
+const response = await chat([{ role: 'user', content: 'Hello!' }]);
+```
+
+For the backend, add your public key:
+
+```bash
+# For RS256 providers (Clerk, Auth0, Firebase)
+EXTERNAL_JWT_PUBLIC_KEY=pk_test_abc123...
+
+# For HS256 providers (Supabase with shared secret)
+EXTERNAL_JWT_SECRET=your-supabase-jwt-secret
+```
+
+### Auth0 Setup Example
+
+1. **Create an Auth0 Application** (Single Page Application)
+2. **Get Your Public Key** from Applications → Your App → Advanced Settings → Certificates
+3. **Add to backend `.env`**:
+   ```
+   EXTERNAL_JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
+   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+   -----END PUBLIC KEY-----"
+   ```
+4. **Frontend Integration**:
+
+   ```javascript
+   import { Auth0Provider } from '@auth0/auth0-react';
+
+   <Auth0Provider
+     domain="your-tenant.auth0.com"
+     clientId="your-client-id"
+     authorizationParams={{
+       redirect_uri: window.location.origin,
+     }}
+   >
+     <App />
+   </Auth0Provider>;
+   ```
+
+The Airbolt SDK automatically detects Auth0 - no additional configuration needed! See the [Auth0 example](examples/auth0-authenticated) for a complete implementation.
+
+### Custom Auth Providers
+
+For other auth providers or server-side rendering:
+
+```javascript
+const response = await chat(messages, {
+  getAuthToken: () => myAuth.getToken(),
+});
+```
+
 ## What's coming soon
 
 **Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. [Currently in private beta](https://forms.gle/2yWKszvJBZReN6kf7).
-
-**Auth provider integrations** - Connect your existing Auth0, Clerk, or Firebase Auth. Users automatically get secure AI access based on your app's authentication.
 
 **Streaming responses (Available Now!)** - Real-time message streaming for better user experience.
 
@@ -214,6 +275,8 @@ await askAI('Explain how React hooks work');
 
 **See more examples**:
 
+- [Anonymous Chat Example](examples/anonymous-chat/) - Zero-config authentication with built-in JWT
+- [Auth0 Example](examples/auth0-authenticated/) - Complete BYOA integration with debug panel
 - [React SDK Interactive Examples](packages/react-sdk#interactive-demo) - Live Ladle demos with ChatWidget and useChat hook
 - [Node.js CLI Example](packages/sdk/examples/node-cli/) - Command-line chat
 
@@ -249,7 +312,7 @@ npm start
 **Phase 2: Developer Experience**
 
 - 🚧 Hosted solution ([private beta](https://forms.gle/2yWKszvJBZReN6kf7))
-- 🚧 Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
+- ✅ Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
 - ✅ Response streaming for real-time chat
 - 🚧 Function calling and tool use
 - 🚧 Enhanced multi-provider support (Google, local models, etc.)
@@ -287,6 +350,7 @@ The monorepo structure makes it easy to contribute and understand how everything
 - **[SDK Documentation](https://airbolt-ai.github.io/airbolt/)** - Complete API reference for both Core and React SDKs
 - **[React SDK Guide](packages/react-sdk/README.md)** - Getting started with React components and hooks
 - **[Core SDK Guide](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
+- **[Example Apps](examples/)** - Working examples including anonymous chat and Auth0 integration
 - **[Development Guide](https://github.com/Airbolt-AI/airbolt/blob/main/docs/CONTRIBUTING.md)** - Set up the project locally and contribute
 
 ## Community
