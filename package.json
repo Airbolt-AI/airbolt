@@ -56,17 +56,10 @@
     "fern:check": "npx fern-api check",
     "prepare": "husky",
     "docs:generate": "cd packages/sdk && pnpm docs:build && cd ../react-sdk && pnpm docs:build",
-    "changeset": "changeset",
-    "changeset:add": "changeset add",
-    "changeset:status": "changeset status",
-    "changeset:validate": "node scripts/validate-changeset-safety.js",
-    "lockfile:check": "node scripts/check-lockfile-sync.js",
-    "version-packages": "pnpm changeset:validate && changeset version && pnpm install",
-    "release:prepare": "pnpm changeset:validate && changeset version && pnpm install && git add . && echo '✅ Ready to commit and tag'",
-    "release:beta": "pnpm release:prepare && echo 'Run: git commit && git tag v0.x.y-beta.z && git push origin v0.x.y-beta.z'",
-    "changeset:manual": "changeset version && pnpm install",
-    "release:publish": "pnpm build && changeset publish --tag beta",
-    "release:stable": "echo 'Stable releases require manual approval - see RELEASES.md'",
+    "release:patch": "pnpm version:bump patch && git push --follow-tags",
+    "release:minor": "pnpm version:bump minor && git push --follow-tags",
+    "release:major": "pnpm version:bump major && git push --follow-tags",
+    "version:bump": "pnpm -r --filter './packages/*' version",
     "docs:check-links": "node scripts/check-links.js",
     "docs:check-links:verbose": "node scripts/check-links.js --verbose"
   },
@@ -142,8 +135,5 @@
       "prettier --write"
     ]
   },
-  "dependencies": {
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.5"
-  }
+  "dependencies": {}
 }

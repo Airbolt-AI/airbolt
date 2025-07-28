@@ -98,6 +98,17 @@ pnpm install
 pnpm dev
 ```
 
+## Releasing (Maintainers Only)
+
+To release a new version:
+
+```bash
+pnpm release:minor    # or patch/major
+# This automatically handles everything
+```
+
+Releases are validated and published from CI after all quality gates pass.
+
 ## Questions?
 
 - Check existing [issues](https://github.com/Airbolt-AI/airbolt/issues)

@@ -19,7 +19,3 @@ if git diff --cached --name-only | grep -E "package\.json$" > /dev/null; then
   fi
 fi
 
-# Validate changeset safety if changesets modified
-if git diff --cached --name-only | grep -q "\.changeset/.*\.md$"; then
-  pnpm changeset:validate
-fi

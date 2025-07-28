@@ -1,96 +1,96 @@
-# Release Management
+# Release Process
 
-## Beta Releases (Current)
+## How to Release
 
-### Daily Development
+Choose the appropriate version bump based on your changes:
 
-```bash
-# After making changes
-pnpm changeset add              # Add changeset after changes
-git commit -m "feat: your change + changeset"
-```
+1. **Bug fixes**: `pnpm release:patch` (0.7.0 → 0.7.1)
+2. **New features**: `pnpm release:minor` (0.7.0 → 0.8.0)
+3. **Breaking changes**: `pnpm release:major` (0.7.0 → 1.0.0)
 
-### Publishing Beta (Automated)
+This will automatically:
 
-```bash
-# Prepare release (handles everything automatically)
-pnpm release:prepare            # Version + lockfile + stage (foolproof)
-git commit -m "chore: version packages"
-git tag v0.x.y-beta.z && git push origin v0.x.y-beta.z
+- Update all package versions
+- Create a git commit with message "chore: release vX.Y.Z"
+- Create a git tag "vX.Y.Z"
+- Push the commit and tag to GitHub
+- Trigger CI workflow to validate and publish to npm
 
-# Alternative: Full automation
-pnpm release:beta               # Guides you through entire process
-```
+## What Happens in CI
 
-### Manual Override (Debugging)
+When you push a tag, GitHub Actions will:
 
-```bash
-pnpm changeset:manual           # Version + lockfile sync only
-pnpm changeset:validate         # Check for premature major bumps
-pnpm lockfile:check            # Verify lockfile sync
-```
+1. Validate the tag format (must be vX.Y.Z)
+2. Verify all package.json versions match the tag
+3. Run quality gates:
+   - Beta releases (0.x.x): Standard validation (`pnpm ai:check`)
+   - Stable releases (1.x.x+): Full compliance (`pnpm ai:compliance`)
+4. Publish packages to npm with provenance
+5. Create a GitHub release
 
-### Version Strategy
+## Version Tags
 
-- Format: `0.x.y-beta.z`
-- **patch**: Bug fixes, small improvements
-- **minor**: New features, breaking changes (OK in beta)
-- **major**: BLOCKED (validation script prevents)
-
-## Stable Release (Future 1.0+)
-
-### Prerequisites
-
-- Team approval for API stability
-- Documentation complete
-- Test coverage targets met
-- Breaking change review
-
-### Process
-
-1. **Manual changeset creation** (overrides safety):
-
-   ```bash
-   echo '---
-   "@airbolt/sdk": major
-   "@airbolt/react-sdk": major
-   ---
-
-   Stable 1.0.0 release - API locked' > .changeset/stable-release.md
-   ```
-
-2. **Version and release**:
-
-   ```bash
-   pnpm changeset version  # Creates 1.0.0
-   git commit -m "chore: stable 1.0.0 release"
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
-
-3. **Publishes to `@latest` tag** (default npm install)
+- **Beta versions** (0.x.x): Published to npm with `@beta` tag
+- **Stable versions** (1.x.x+): Published to npm with `@latest` tag
 
 ## Installation
 
-### Beta Users
+### Beta Packages
 
 ```bash
-npm install @airbolt/sdk@beta @airbolt/react-sdk@beta
+npm install @airbolt/sdk@beta
+npm install @airbolt/react-sdk@beta
 ```
 
-### Stable Users (post-1.0)
+### Stable Packages (after 1.0.0)
 
 ```bash
-npm install @airbolt/sdk @airbolt/react-sdk
+npm install @airbolt/sdk
+npm install @airbolt/react-sdk
 ```
 
-## Safety Features
+## Troubleshooting
 
-- ✅ Validation blocks accidental major bumps
-- ✅ Linked versioning (SDKs stay in sync)
-- ✅ Beta releases tagged separately
-- ✅ Workspace dependencies resolved automatically
-- ✅ Separate workflows for beta vs stable
-- ✅ Pre-commit hooks prevent lockfile drift
-- ✅ CI auto-fixes lockfile issues
-- ✅ Automated release preparation (foolproof)
+### Version Mismatch Error
+
+If the release workflow fails with a version mismatch error:
+
+1. Ensure all package.json files have the same version
+2. The tag version must match exactly (e.g., tag v0.7.0 requires version "0.7.0" in package.json)
+
+### Failed Quality Gates
+
+If validation fails:
+
+1. Check the CI logs for specific errors
+2. Fix issues locally and push changes
+3. Delete the tag: `git tag -d vX.Y.Z && git push origin :vX.Y.Z`
+4. Re-run the release command after fixes
+
+### Manual Release (Emergency Only)
+
+If automation fails, you can manually publish:
+
+```bash
+# Ensure you're on the correct commit
+git checkout vX.Y.Z
+
+# Build and publish
+pnpm build
+pnpm -r publish --tag beta --no-git-checks  # for 0.x versions
+pnpm -r publish --no-git-checks             # for 1.x+ versions
+```
+
+## Release Checklist
+
+Before releasing:
+
+- [ ] All tests passing locally (`pnpm test`)
+- [ ] Quality checks pass (`pnpm ai:compliance`)
+- [ ] Documentation is up to date
+- [ ] Breaking changes are documented (if major version)
+- [ ] You have npm publish permissions
+
+## Version History
+
+See [GitHub Releases](https://github.com/Airbolt-AI/airbolt/releases) for full version history.
