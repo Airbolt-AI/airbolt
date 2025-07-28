@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "nx run-many -t build",
-    "dev": "nx run-many -t dev --parallel=6",
+    "dev": "nx run-many -t dev --parallel=8",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix && prettier --write .",
     "format": "prettier --write .",
