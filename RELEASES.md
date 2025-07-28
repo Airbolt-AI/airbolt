@@ -2,19 +2,56 @@
 
 ## How to Release
 
+### Step 1: Update Package Versions
+
 Choose the appropriate version bump based on your changes:
 
-1. **Bug fixes**: `pnpm release:patch` (0.7.0 → 0.7.1)
-2. **New features**: `pnpm release:minor` (0.7.0 → 0.8.0)
-3. **Breaking changes**: `pnpm release:major` (0.7.0 → 1.0.0)
+1. **Bug fixes**: Patch version (0.7.0 → 0.7.1)
+2. **New features**: Minor version (0.7.0 → 0.8.0)
+3. **Breaking changes**: Major version (0.7.0 → 1.0.0)
 
-This will automatically:
+Update the SDK package versions manually:
 
-- Update all package versions
-- Create a git commit with message "chore: release vX.Y.Z"
-- Create a git tag "vX.Y.Z"
-- Push the commit and tag to GitHub
-- Trigger CI workflow to validate and publish to npm
+```bash
+# Navigate to each package and bump version
+cd packages/sdk && npm version minor --no-git-tag-version
+cd ../react-sdk && npm version minor --no-git-tag-version
+
+# Update lockfile
+cd ../.. && pnpm install
+```
+
+### Step 2: Commit and Tag
+
+```bash
+# Commit the version changes
+git add -A
+git commit -m "chore(release): bump SDK versions to X.Y.Z"
+
+# Create the release tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+
+# Push the tag (this triggers the release workflow)
+git push origin vX.Y.Z
+```
+
+### Step 3: Create PR for Version Updates
+
+Since the main branch is protected, create a PR to merge the version updates:
+
+```bash
+# Create a new branch from your local changes
+git checkout -b chore/release-vX.Y.Z
+
+# Push the branch
+git push origin chore/release-vX.Y.Z
+
+# Create a PR using GitHub CLI
+gh pr create --title "chore(release): bump SDK versions to X.Y.Z" \
+  --body "Updates package versions after vX.Y.Z release"
+```
+
+**Note**: The release will still work even if the version bump PR hasn't been merged yet, because the tag contains the commit with the updated versions.
 
 ## What Happens in CI
 

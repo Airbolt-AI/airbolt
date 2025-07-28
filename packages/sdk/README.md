@@ -5,7 +5,11 @@
 **🚀 Streaming by default** - Responses stream in real-time for better UX. Use `chatSync()` for non-streaming.
 
 ```bash
+# Latest stable version
 npm install @airbolt/sdk
+
+# Beta version (latest features)
+npm install @airbolt/sdk@beta
 ```
 
 **Looking for React components?** Use [@airbolt/react-sdk](../react-sdk/) instead for the easiest integration.

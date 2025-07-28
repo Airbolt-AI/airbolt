@@ -100,14 +100,16 @@ pnpm dev
 
 ## Releasing (Maintainers Only)
 
-To release a new version:
+To release a new version, see [RELEASES.md](../RELEASES.md) for the detailed process.
 
-```bash
-pnpm release:minor    # or patch/major
-# This automatically handles everything
-```
+Quick summary:
 
-Releases are validated and published from CI after all quality gates pass.
+1. Update package versions manually
+2. Commit and create a git tag
+3. Push the tag to trigger automated release
+4. Create a PR to merge version updates to main
+
+The GitHub Actions workflow handles validation, npm publishing, and GitHub release creation.
 
 ## Questions?
 

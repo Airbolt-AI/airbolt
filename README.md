@@ -48,7 +48,11 @@ After deployment, Render will show your API URL (e.g., `https://my-ai-backend.on
 Then add to your app:
 
 ```bash
+# Latest stable version
 npm install @airbolt/react-sdk
+
+# Beta version (latest features)
+npm install @airbolt/react-sdk@beta
 ```
 
 ```tsx
