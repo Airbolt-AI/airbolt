@@ -7,7 +7,11 @@ Part of **[Airbolt](https://github.com/Airbolt-AI/airbolt)** - A production-read
 **🚀 Streaming by default** - Responses stream in real-time for better UX. Set `streaming={false}` for complete responses.
 
 ```bash
+# Latest stable version
 npm install @airbolt/react-sdk
+
+# Beta version (latest features)
+npm install @airbolt/react-sdk@beta
 ```
 
 **Just want to get started?** See the [main README](../../README.md) for the 3-step quickstart guide.
