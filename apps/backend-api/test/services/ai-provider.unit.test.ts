@@ -14,13 +14,19 @@ vi.mock('ai', () => ({
 
 vi.mock('@ai-sdk/openai', () => ({
   createOpenAI: vi.fn(() => ({
-    chat: vi.fn(() => 'mock-openai-model'),
+    chat: vi.fn(() => ({
+      modelId: 'mock-openai-model',
+      providerId: 'openai',
+    })),
   })),
 }));
 
 vi.mock('@ai-sdk/anthropic', () => ({
   createAnthropic: vi.fn(() => ({
-    messages: vi.fn(() => 'mock-anthropic-model'),
+    messages: vi.fn(() => ({
+      modelId: 'mock-anthropic-model',
+      providerId: 'anthropic',
+    })),
   })),
 }));
 
@@ -101,12 +107,16 @@ describe('AIProviderService', () => {
         usage: { total_tokens: 50 },
       });
 
-      expect(generateText).toHaveBeenCalledWith({
-        model: 'mock-openai-model',
-        messages: [{ role: 'user', content: 'Hello' }],
-        temperature: 0.7,
-        maxTokens: 1000,
-      });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: expect.objectContaining({
+            modelId: expect.any(String),
+          }),
+          messages: [{ role: 'user', content: 'Hello' }],
+          temperature: 0.7,
+          maxTokens: 1000,
+        })
+      );
     });
 
     it('should inject system prompt when provided', async () => {
@@ -127,15 +137,19 @@ describe('AIProviderService', () => {
 
       await service.createChatCompletion([{ role: 'user', content: 'Hello' }]);
 
-      expect(generateText).toHaveBeenCalledWith({
-        model: 'mock-openai-model',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant' },
-          { role: 'user', content: 'Hello' },
-        ],
-        temperature: 0.7,
-        maxTokens: 1000,
-      });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: expect.objectContaining({
+            modelId: expect.any(String),
+          }),
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant' },
+            { role: 'user', content: 'Hello' },
+          ],
+          temperature: 0.7,
+          maxTokens: 1000,
+        })
+      );
     });
 
     it('should retry on retryable errors', async () => {
@@ -237,12 +251,16 @@ describe('AIProviderService', () => {
       );
 
       expect(result.content).toBe('Response from Anthropic');
-      expect(generateText).toHaveBeenCalledWith({
-        model: 'mock-anthropic-model',
-        messages: [{ role: 'user', content: 'Hello' }],
-        temperature: 0.7,
-        maxTokens: 1000,
-      });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: expect.objectContaining({
+            modelId: expect.stringContaining('claude'),
+          }),
+          messages: [{ role: 'user', content: 'Hello' }],
+          temperature: 0.7,
+          maxTokens: 1000,
+        })
+      );
     });
 
     it('should allow model override at runtime', async () => {

@@ -52,7 +52,7 @@ describe('Provider Config Property Tests', () => {
       );
     });
 
-    it('should return undefined for invalid providers', () => {
+    it('should throw error for invalid providers', () => {
       fc.assert(
         fc.property(
           fc
@@ -62,8 +62,9 @@ describe('Provider Config Property Tests', () => {
                 s !== 'openai' && s !== 'anthropic' && !(s in PROVIDER_CONFIG)
             ),
           provider => {
-            const config = getProviderConfig(provider);
-            expect(config).toBeUndefined();
+            expect(() => getProviderConfig(provider)).toThrow(
+              `Unsupported AI provider: ${provider}`
+            );
           }
         )
       );
@@ -72,9 +73,16 @@ describe('Provider Config Property Tests', () => {
     it('should always return the same result for the same input', () => {
       fc.assert(
         fc.property(fc.string(), provider => {
-          const result1 = getProviderConfig(provider);
-          const result2 = getProviderConfig(provider);
-          expect(result1).toBe(result2);
+          // For valid providers, should return the same config
+          if (provider === 'openai' || provider === 'anthropic') {
+            const result1 = getProviderConfig(provider);
+            const result2 = getProviderConfig(provider);
+            expect(result1).toBe(result2);
+          } else {
+            // For invalid providers, should consistently throw
+            expect(() => getProviderConfig(provider)).toThrow();
+            expect(() => getProviderConfig(provider)).toThrow();
+          }
         })
       );
     });
