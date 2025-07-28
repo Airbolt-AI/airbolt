@@ -37,7 +37,7 @@ jobs:
         id: read-prompt
         run: |
           echo "prompt<<EOF" >> $GITHUB_OUTPUT
-          cat .claude/prompts/pr-review-core.md >> $GITHUB_OUTPUT
+          sed -n '/<!-- SHARED:START -->/,/<!-- SHARED:END -->/p' .claude/commands/review-pr.md | sed '1d;$d' >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
