@@ -2,28 +2,28 @@
   "name": "@airbolt/core",
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     },
     "./services/*": {
-      "types": "./dist/services/*.d.ts",
-      "import": "./dist/services/*.js"
+      "types": "./dist/src/services/*.d.ts",
+      "import": "./dist/src/services/*.js"
     },
     "./plugins/*": {
-      "types": "./dist/plugins/*.d.ts",
-      "import": "./dist/plugins/*.js"
+      "types": "./dist/src/plugins/*.d.ts",
+      "import": "./dist/src/plugins/*.js"
     },
     "./routes/*": {
-      "types": "./dist/routes/*.d.ts",
-      "import": "./dist/routes/*.js"
+      "types": "./dist/src/routes/*.d.ts",
+      "import": "./dist/src/routes/*.js"
     },
     "./routes/api/*": {
-      "types": "./dist/routes/api/*.d.ts",
-      "import": "./dist/routes/api/*.js"
+      "types": "./dist/src/routes/api/*.d.ts",
+      "import": "./dist/src/routes/api/*.js"
     }
   },
   "files": [
