@@ -6,6 +6,29 @@ Ultrathink about what makes an exceptional code review—one that elevates both 
 
 **Review Philosophy**: Champion simplicity over cleverness. The best suggestions reduce code while increasing clarity. Today's elegant abstraction is tomorrow's technical debt.
 
+## Review Focus: Changed Lines First
+
+**IMPORTANT**: While this is a comprehensive review, always start by focusing on what has actually changed. Review the diff first, then consider its broader impact.
+
+1. **Examine the Actual Changes**:
+
+   ```bash
+   git fetch origin
+   git diff origin/main...HEAD
+   ```
+
+   - Focus on added/modified/removed lines
+   - Note which functions/classes/interfaces were changed
+   - Identify what files import the changed code
+
+2. **Think About Impact**:
+   - For each changed line, ask "What depends on this?"
+   - Search for usages of modified functions/classes
+   - Check if changed interfaces affect other files
+   - Verify removed exports aren't used elsewhere
+
+Remember: Don't comment on style issues in unchanged code. Focus on the delta, but think deeply about its ripple effects.
+
 ## 0. Gather Context (You're a Fresh Agent!)
 
 Since you're starting fresh, gather comprehensive context:
@@ -96,10 +119,13 @@ Then Ultrathink about the specific context of the open PR:
 Provide that level of thoughtful, constructive review:
 
 1. **Summary**: Brief overview of what the PR accomplishes
-2. **Positive Observations**: What's done well (be specific)
-3. **Required Changes**: Must-fix issues blocking merge
-4. **Suggestions**: Optional improvements for consideration
-5. **Questions**: Clarifications needed for understanding
+2. **Changed Files Analysis**: Start with what actually changed
+   - `path/to/file.ts`: Lines X-Y - [what changed and potential impact]
+   - Focus on the diff, not the entire file
+3. **Positive Observations**: What's done well (be specific about the changes)
+4. **Required Changes**: Must-fix issues blocking merge (in the changed code)
+5. **Suggestions**: Optional improvements for consideration
+6. **Questions**: Clarifications needed for understanding
 
 Format your review to be:
 
