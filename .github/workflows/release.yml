@@ -1,19 +1,8 @@
 name: Release
 
 on:
-  # Trigger when version changes land in main
   push:
-    branches: [main]
-    paths:
-      - 'packages/*/package.json'
-
-  # Manual backup option
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., 0.5.0)'
-        required: false
-        type: string
+    tags: ['v*']
 
 jobs:
   release:
@@ -24,115 +13,115 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Detect version changes
+      - name: Validate tag format
+        run: |
+          if ! [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid tag format. Must be vX.Y.Z"
+            exit 1
+          fi
+
+      - name: Extract version from tag
         id: version
         run: |
-          # For manual trigger, use provided version
-          if [ -n "${{ inputs.version }}" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-            echo "is_beta=$([[ "${{ inputs.version }}" =~ ^0\. ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          echo "is_beta=$([[ "$TAG_VERSION" =~ ^0\. ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+          echo "📦 Preparing to release version $TAG_VERSION"
 
-          # Check if package versions changed
-          VERSION_CHANGED=false
-          CURRENT_VERSION=""
-
-          # Get current SDK version
-          if [ -f "packages/sdk/package.json" ]; then
-            CURRENT_VERSION=$(grep '"version"' packages/sdk/package.json | head -1 | cut -d'"' -f4)
-            PREV_VERSION=$(git show HEAD~1:packages/sdk/package.json 2>/dev/null | grep '"version"' | head -1 | cut -d'"' -f4 || echo "")
-            
-            if [ "$CURRENT_VERSION" != "$PREV_VERSION" ] && [ -n "$CURRENT_VERSION" ]; then
-              VERSION_CHANGED=true
-            fi
-          fi
-
-          echo "changed=$VERSION_CHANGED" >> $GITHUB_OUTPUT
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "is_beta=$([[ "$CURRENT_VERSION" =~ ^0\. ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-
-      - name: Exit if no version change
-        if: steps.version.outputs.changed != 'true'
+      - name: Validate tag matches package versions
         run: |
-          echo "No version changes detected, skipping release"
-          exit 0
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          SDK_VERSION=$(grep '"version"' packages/sdk/package.json | head -1 | cut -d'"' -f4)
+          REACT_VERSION=$(grep '"version"' packages/react-sdk/package.json | head -1 | cut -d'"' -f4)
+
+          if [[ "$SDK_VERSION" != "$TAG_VERSION" ]] || [[ "$REACT_VERSION" != "$TAG_VERSION" ]]; then
+            echo "❌ Version mismatch!"
+            echo "Tag version: $TAG_VERSION"
+            echo "SDK version: $SDK_VERSION"
+            echo "React SDK version: $REACT_VERSION"
+            echo ""
+            echo "Please ensure all package.json files have version $TAG_VERSION before tagging."
+            exit 1
+          fi
+
+          echo "✅ All package versions match tag version $TAG_VERSION"
 
       - uses: ./.github/actions/setup-project
-        if: steps.version.outputs.changed == 'true'
 
       # Generate SDK from latest OpenAPI
       - run: pnpm generate
-        if: steps.version.outputs.changed == 'true'
 
       # Build all packages
       - run: pnpm build
-        if: steps.version.outputs.changed == 'true'
 
-      # Run validation
-      - name: Validate release
-        if: steps.version.outputs.changed == 'true'
+      # Run validation based on version type
+      - name: Run quality gates
         run: |
           if [ "${{ steps.version.outputs.is_beta }}" = "true" ]; then
-            echo "🔵 Beta release - running changeset validation"
-            pnpm changeset:validate
+            echo "🔵 Beta release - running standard validation"
+            pnpm ai:check
           else
             echo "🟢 Stable release - running full compliance"
             pnpm ai:compliance
           fi
 
-      # Create and push tag
-      - name: Create release tag
-        if: steps.version.outputs.changed == 'true'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          TAG="v${VERSION}"
-
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create tag if it doesn't exist
-          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "📌 Creating tag $TAG"
-            git tag -a "$TAG" -m "Release $TAG"
-            git push origin "$TAG"
-          else
-            echo "✅ Tag $TAG already exists"
-          fi
-
-      # Configure npm
+      # Configure npm for publishing
       - uses: actions/setup-node@v4
-        if: steps.version.outputs.changed == 'true'
         with:
           registry-url: 'https://registry.npmjs.org'
 
       # Publish to npm
       - name: Publish packages
-        if: steps.version.outputs.changed == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
         run: |
           if [ "${{ steps.version.outputs.is_beta }}" = "true" ]; then
             echo "📦 Publishing beta release to npm"
-            pnpm changeset publish --tag beta
+            pnpm -r publish --tag beta --no-git-checks
           else
             echo "📦 Publishing stable release to npm"
-            pnpm changeset publish
+            pnpm -r publish --no-git-checks
           fi
 
+      # Create GitHub release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## 🚀 Release ${{ steps.version.outputs.version }}
+
+            This release includes all changes since the previous version.
+
+            ### 📥 Installation
+
+            ```bash
+            npm install @airbolt/sdk@${{ steps.version.outputs.is_beta == 'true' && 'beta' || 'latest' }}
+            npm install @airbolt/react-sdk@${{ steps.version.outputs.is_beta == 'true' && 'beta' || 'latest' }}
+            ```
+
+            ### 📝 What's Changed
+
+            See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.prev_version }}...v${{ steps.version.outputs.version }}) for details.
+          draft: false
+          prerelease: ${{ steps.version.outputs.is_beta == 'true' }}
+
+      - name: Summary
+        run: |
+          echo "✅ Release ${{ steps.version.outputs.version }} complete!"
           echo ""
-          echo "✅ Release complete!"
+          echo "📦 Packages published to npm:"
+          echo "  - @airbolt/sdk@${{ steps.version.outputs.version }}"
+          echo "  - @airbolt/react-sdk@${{ steps.version.outputs.version }}"
           echo ""
-          echo "📥 Install with:"
-          if [ "${{ steps.version.outputs.is_beta }}" = "true" ]; then
-            echo "  npm install @airbolt/sdk@beta"
-            echo "  npm install @airbolt/react-sdk@beta"
-          else
-            echo "  npm install @airbolt/sdk@latest"
-            echo "  npm install @airbolt/react-sdk@latest"
-          fi
+          echo "🏷️ Tagged as: ${{ steps.version.outputs.is_beta == 'true' && 'beta' || 'latest' }}"
+          echo ""
+          echo "🔗 View on npm:"
+          echo "  - https://www.npmjs.com/package/@airbolt/sdk"
+          echo "  - https://www.npmjs.com/package/@airbolt/react-sdk"

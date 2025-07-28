@@ -39,10 +39,10 @@ pnpm affected:test     # Test only changed packages
 pnpm affected:build    # Build only changed packages
 pnpm affected:all      # Run all tasks on changed packages
 
-# Release management commands (automated)
-pnpm release:prepare   # Version + lockfile sync + stage (foolproof)
-pnpm release:beta      # Full beta release preparation
-pnpm changeset:manual  # Manual version + lockfile sync (debugging)
+# Release commands
+pnpm release:patch     # Bug fixes (0.7.0 → 0.7.1)
+pnpm release:minor     # Features (0.7.0 → 0.8.0)
+pnpm release:major     # Breaking (0.7.0 → 1.0.0)
 ```
 
 **Fix issues immediately:**
