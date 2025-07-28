@@ -24,7 +24,11 @@ export class AuthValidatorFactory {
         return [new ExternalJWTValidator(config)];
 
       case AuthMode.AUTO_DISCOVERY:
-        return [new AutoDiscoveryValidator(config)];
+        // In auto-discovery mode, support both external and internal tokens
+        return [
+          new AutoDiscoveryValidator(config),
+          new InternalJWTValidator(fastify),
+        ];
 
       case AuthMode.ANONYMOUS:
         // Always provide internal JWT validator for anonymous mode
