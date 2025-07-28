@@ -1,5 +1,4 @@
 import type { JWTPayload } from './jwt-validators.js';
-import { ProviderDetector } from './provider-detector.js';
 
 export interface ValidationConfig {
   issuer?: string | undefined;
