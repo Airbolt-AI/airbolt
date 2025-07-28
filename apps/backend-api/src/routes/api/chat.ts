@@ -6,7 +6,12 @@ import {
   ChatResponseSchema,
 } from '../../services/ai-provider.js';
 import type { UsageInfo } from '../../plugins/user-rate-limit.js';
-import { AuthValidatorFactory, createAuthMiddleware } from '@airbolt/auth';
+import {
+  AuthValidatorFactory,
+  createAuthMiddleware,
+  type AuthUser,
+  type AuthConfig,
+} from '@airbolt/auth';
 import { ChatService } from '../../services/chat-service.js';
 
 // Request schema for chat endpoint
@@ -20,33 +25,11 @@ const ChatRequestSchema = z.object({
   model: z.string().optional(),
 });
 
-// JWT payload interface
-interface JWTPayload {
-  iat: number;
-  exp: number;
-  iss: string;
-  userId: string;
-  role: string;
-}
-
-// Extend FastifyRequest with JWT payload
-declare module 'fastify' {
-  interface FastifyRequest {
-    jwt?: JWTPayload;
-  }
-}
-
 const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Create auth validators using factory pattern
-  const validators = AuthValidatorFactory.create(fastify.config || {}, fastify);
-  const verifyJWT = createAuthMiddleware(fastify, validators);
-
-  // Add onSend hook to ensure X-BYOA-Mode header is always set
-  fastify.addHook('onSend', async (_request, reply) => {
-    const config = (fastify.config as { EXTERNAL_JWT_ISSUER?: string }) || {};
-    const byoaMode = config.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
-    void reply.header('X-BYOA-Mode', byoaMode);
-  });
+  const config = fastify.config as AuthConfig | undefined;
+  const validators = AuthValidatorFactory.create(config || {}, fastify);
+  const verifyJWT = createAuthMiddleware(fastify, validators, config);
 
   fastify.post(
     '/chat',
@@ -207,7 +190,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
       try {
         // Validate request body
         const chatRequest = ChatRequestSchema.parse(request.body);
-        const userId = (request.user as JWTPayload).userId;
+        const userId = (request.user as AuthUser).userId;
 
         // Create service instance
         const chatService = new ChatService({ fastify, userId });
@@ -225,10 +208,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             provider: chatRequest.provider,
             model: chatRequest.model,
             streaming: isStreaming,
-            jwt: {
-              iat: request.jwt?.iat,
-              exp: request.jwt?.exp,
-            },
+            userId: userId.substring(0, 8) + '...',
           },
           'Processing chat request'
         );
