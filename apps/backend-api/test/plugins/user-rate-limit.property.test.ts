@@ -62,14 +62,14 @@ describe('User Rate Limiter Property Tests', () => {
 
                 // Verify tokens were NOT consumed
                 const afterUsage = await app.getUserUsage(userId);
-                expect(afterUsage.tokens.used).toBe(totalConsumed);
+                expect(afterUsage.tokens?.used).toBe(totalConsumed);
               }
             }
 
             // Verify final usage matches what we tracked
             const usage = await app.getUserUsage(userId);
-            expect(usage.tokens.used).toBe(totalConsumed);
-            expect(usage.tokens.used).toBeLessThanOrEqual(limit);
+            expect(usage.tokens?.used).toBe(totalConsumed);
+            expect(usage.tokens?.used).toBeLessThanOrEqual(limit);
           }
         ),
         { numRuns: 50 }
@@ -139,7 +139,7 @@ describe('User Rate Limiter Property Tests', () => {
             await expect(app.consumeTokens(userId, 0)).resolves.not.toThrow();
 
             const after = await app.getUserUsage(userId);
-            expect(after.tokens.used).toBe(before.tokens.used);
+            expect(after.tokens?.used).toBe(before.tokens?.used);
           }
         ),
         { numRuns: 20 }
@@ -169,7 +169,7 @@ describe('User Rate Limiter Property Tests', () => {
               expect(wouldExceedLimit).toBe(false);
 
               const afterUsage = await app.getUserUsage(userId);
-              expect(afterUsage.tokens.used).toBe(
+              expect(afterUsage.tokens?.used).toBe(
                 initialConsumption + attemptAmount
               );
             } catch (error) {
@@ -178,8 +178,8 @@ describe('User Rate Limiter Property Tests', () => {
 
               // Tokens are NOT consumed on error (atomic check-and-reject)
               const afterUsage = await app.getUserUsage(userId);
-              expect(afterUsage.tokens.used).toBe(initialConsumption);
-              expect(afterUsage.tokens.used).toBeLessThanOrEqual(1000);
+              expect(afterUsage.tokens?.used).toBe(initialConsumption);
+              expect(afterUsage.tokens?.used).toBeLessThanOrEqual(1000);
             }
           }
         ),
@@ -198,7 +198,7 @@ describe('User Rate Limiter Property Tests', () => {
             await app.consumeTokens(userId, initialConsumption);
 
             const usage = await app.getUserUsage(userId);
-            const remaining = 1000 - usage.tokens.used;
+            const remaining = 1000 - (usage.tokens?.used ?? 0);
 
             // Should be able to consume exactly the remaining
             await expect(
@@ -207,8 +207,8 @@ describe('User Rate Limiter Property Tests', () => {
 
             // Should now be at exactly the limit
             const finalUsage = await app.getUserUsage(userId);
-            expect(finalUsage.tokens.used).toBe(1000);
-            expect(finalUsage.tokens.remaining).toBe(0);
+            expect(finalUsage.tokens?.used).toBe(1000);
+            expect(finalUsage.tokens?.remaining).toBe(0);
 
             // Next request should fail
             await expect(app.consumeTokens(userId, 1)).rejects.toThrow(
@@ -233,8 +233,8 @@ describe('User Rate Limiter Property Tests', () => {
 
       // Verify the state after limit exceeded attempt
       const usage = await app.getUserUsage(userId);
-      expect(usage.tokens.used).toBe(900); // Tokens NOT consumed on rejection
-      expect(usage.tokens.remaining).toBe(100);
+      expect(usage.tokens?.used).toBe(900); // Tokens NOT consumed on rejection
+      expect(usage.tokens?.remaining).toBe(100);
     });
   });
 });

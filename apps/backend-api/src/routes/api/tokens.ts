@@ -16,6 +16,13 @@ const TokenResponseSchema = z.object({
 });
 
 const tokens: FastifyPluginAsync = async (fastify): Promise<void> => {
+  // Check if external auth is configured
+  const hasExternalAuth = !!(
+    fastify.config?.EXTERNAL_JWT_ISSUER ||
+    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
+    fastify.config?.EXTERNAL_JWT_SECRET
+  );
+
   fastify.post(
     '/tokens',
     {
@@ -67,6 +74,24 @@ const tokens: FastifyPluginAsync = async (fastify): Promise<void> => {
       },
     },
     async (request, reply) => {
+      // Debug logging for external auth configuration
+      fastify.log.info(
+        {
+          hasExternalAuth,
+          EXTERNAL_JWT_ISSUER: fastify.config?.EXTERNAL_JWT_ISSUER,
+          EXTERNAL_JWT_PUBLIC_KEY: !!fastify.config?.EXTERNAL_JWT_PUBLIC_KEY,
+          EXTERNAL_JWT_SECRET: !!fastify.config?.EXTERNAL_JWT_SECRET,
+        },
+        'Tokens endpoint called - debug auth config'
+      );
+
+      // Return 404 if external auth is configured
+      if (hasExternalAuth) {
+        throw fastify.httpErrors.notFound(
+          'Endpoint disabled when external auth is configured'
+        );
+      }
+
       try {
         // Parse and validate request body (if any)
         const { userId } = TokenRequestSchema.parse(request.body || {});

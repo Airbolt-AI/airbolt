@@ -57,12 +57,13 @@ const ChatDemo = ({ options }: { options?: UseChatOptions }) => {
           }}
         >
           <div style={{ display: 'flex', gap: '20px' }}>
-            {usage.tokens && (
+            {usage.tokens && usage.tokens.limit != null && (
               <div>
-                <strong>Tokens:</strong> {usage.tokens.used.toLocaleString()} /{' '}
+                <strong>Tokens:</strong>{' '}
+                {(usage.tokens.used ?? 0).toLocaleString()} /{' '}
                 {usage.tokens.limit.toLocaleString()} (
                 {Math.round(
-                  (usage.tokens.remaining / usage.tokens.limit) * 100
+                  ((usage.tokens.remaining ?? 0) / usage.tokens.limit) * 100
                 )}
                 % remaining)
               </div>
@@ -251,10 +252,10 @@ function ChatComponent() {
   return (
     <div>
       {/* Display usage info when available */}
-      {usage && usage.tokens && (
+      {usage && usage.tokens && usage.tokens.limit != null && (
         <div>
-          Tokens: {usage.tokens.used}/{usage.tokens.limit}
-          (resets {new Date(usage.tokens.resetAt).toLocaleTimeString()})
+          Tokens: {usage.tokens.used ?? 0}/{usage.tokens.limit}
+          (resets {usage.tokens.resetAt ? new Date(usage.tokens.resetAt).toLocaleTimeString() : 'N/A'})
         </div>
       )}
       
