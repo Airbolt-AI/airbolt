@@ -59,6 +59,10 @@ describe('BYOA Security Isolation', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'test-secret-key-for-integration-tests-32characters',
       ALLOWED_ORIGIN: 'https://example.com',
+      // Explicitly disable external auth
+      EXTERNAL_JWT_ISSUER: '',
+      EXTERNAL_JWT_PUBLIC_KEY: '',
+      EXTERNAL_JWT_SECRET: '',
     });
 
     // Get internal token

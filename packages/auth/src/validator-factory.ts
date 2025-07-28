@@ -33,7 +33,9 @@ export class AuthModeDetector {
       return AuthMode.LEGACY_KEY;
     }
 
-    if (config.NODE_ENV !== 'production') {
+    // Auto-discovery for non-production environments
+    const env = config.NODE_ENV?.toLowerCase();
+    if (env !== 'production' && env !== 'prod') {
       return AuthMode.AUTO_DISCOVERY;
     }
 
@@ -61,8 +63,8 @@ export class AuthModeDetector {
 export class AuthValidatorFactory {
   static create(config: AuthConfig, fastify: FastifyInstance): JWTValidator[] {
     const mode = AuthModeDetector.detect(config);
-    const isProd =
-      config.NODE_ENV === 'production' || config.NODE_ENV === 'prod';
+    const env = config.NODE_ENV?.toLowerCase();
+    const isProd = env === 'production' || env === 'prod';
 
     fastify.log.info(
       { mode, issuer: config.EXTERNAL_JWT_ISSUER },

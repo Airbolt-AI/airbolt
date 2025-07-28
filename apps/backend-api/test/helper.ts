@@ -10,10 +10,15 @@ export interface TestAppOptions extends AppOptions {
   EXTERNAL_JWT_ISSUER?: string;
   EXTERNAL_JWT_PUBLIC_KEY?: string;
   EXTERNAL_JWT_SECRET?: string;
+  EXTERNAL_JWT_AUDIENCE?: string;
   JWT_SECRET?: string;
   DATABASE_URL?: string;
   OPENAI_API_KEY?: string;
   ALLOWED_ORIGIN?: string;
+  REQUEST_LIMIT_MAX?: string;
+  REQUEST_LIMIT_TIME_WINDOW?: string;
+  TOKEN_LIMIT_MAX?: string;
+  TOKEN_LIMIT_TIME_WINDOW?: string;
 }
 
 // Default test configuration
@@ -34,10 +39,15 @@ export async function build(
     EXTERNAL_JWT_ISSUER,
     EXTERNAL_JWT_PUBLIC_KEY,
     EXTERNAL_JWT_SECRET,
+    EXTERNAL_JWT_AUDIENCE,
     JWT_SECRET,
     DATABASE_URL,
     OPENAI_API_KEY,
     ALLOWED_ORIGIN,
+    REQUEST_LIMIT_MAX,
+    REQUEST_LIMIT_TIME_WINDOW,
+    TOKEN_LIMIT_MAX,
+    TOKEN_LIMIT_TIME_WINDOW,
     ...appConfig
   } = config;
 
@@ -50,16 +60,26 @@ export async function build(
     EXTERNAL_JWT_ISSUER,
     EXTERNAL_JWT_PUBLIC_KEY,
     EXTERNAL_JWT_SECRET,
+    EXTERNAL_JWT_AUDIENCE,
     JWT_SECRET,
     DATABASE_URL,
     OPENAI_API_KEY,
     ALLOWED_ORIGIN,
+    REQUEST_LIMIT_MAX,
+    REQUEST_LIMIT_TIME_WINDOW,
+    TOKEN_LIMIT_MAX,
+    TOKEN_LIMIT_TIME_WINDOW,
   };
 
   Object.entries(envVars).forEach(([key, value]) => {
+    originalEnv[key] = process.env[key];
     if (value !== undefined) {
-      originalEnv[key] = process.env[key];
-      process.env[key] = value;
+      if (value === '') {
+        // Empty string means delete the env var
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
   });
 

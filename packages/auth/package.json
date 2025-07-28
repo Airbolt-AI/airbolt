@@ -18,6 +18,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@airbolt/config": "workspace:*",
     "@fastify/jwt": "^9.1.0",
     "@fastify/sensible": "^6.0.1",
     "@types/jsonwebtoken": "^9.0.10",
@@ -25,8 +26,9 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "@fast-check/vitest": "^0.2.2",
     "@types/node": "^22.10.6",
     "fast-check": "^4.1.1",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.3"
   }
 }

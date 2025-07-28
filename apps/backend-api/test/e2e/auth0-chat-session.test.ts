@@ -50,13 +50,14 @@ describe('Auth0 E2E Chat Session', () => {
     expect(res.statusCode).toBe(401);
     expect(res.json()).toMatchObject({
       error: 'Unauthorized',
-      message: expect.stringContaining('JWT'),
+      message: 'Missing authorization token',
     });
   });
 
   test('BYOA mode header indicates external auth mode', async () => {
     app = await build({
       NODE_ENV: 'production',
+      ALLOWED_ORIGIN: 'https://example.com',
       EXTERNAL_JWT_ISSUER: 'https://production.auth0.com/',
       JWT_SECRET: 'test-secret-key-for-integration-tests-32characters',
     });
