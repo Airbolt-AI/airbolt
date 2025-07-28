@@ -60,6 +60,7 @@
   "devDependencies": {
     "@airbolt/test-utils": "workspace:*",
     "@types/node": "^22.10.2",
+    "fast-check": "^4.1.1",
     "vitest": "^3.2.4"
   },
   "peerDependencies": {

@@ -1,8 +1,10 @@
+/* eslint-disable runtime-safety/require-property-tests */
 // Provider configuration structure
 // Required fields: envKey, defaultModel, keyRegex, keyFormat, features
 // Optional fields can be added directly when needed
 // Example: headers?: Record<string, string>, baseUrl?: string, etc.
 // NOTE: Tests are located in apps/backend-api/test/services/provider-config.test.ts
+// Property tests are in packages/core/test/services/provider-config.property.test.ts
 
 export const PROVIDER_CONFIG = {
   openai: {
@@ -58,16 +60,16 @@ export function getProviderConfig<T extends ProviderName>(
 ): (typeof PROVIDER_CONFIG)[T];
 export function getProviderConfig(
   provider: string
-): (typeof PROVIDER_CONFIG)[ProviderName] | undefined;
+): (typeof PROVIDER_CONFIG)[ProviderName];
 export function getProviderConfig(
   provider: string
-): (typeof PROVIDER_CONFIG)[ProviderName] | undefined {
+): (typeof PROVIDER_CONFIG)[ProviderName] {
   if (isProviderName(provider)) {
     // Safe: isProviderName type guard ensures provider is a known key
     // eslint-disable-next-line security/detect-object-injection
     return PROVIDER_CONFIG[provider];
   }
-  return undefined;
+  throw new Error(`Unsupported AI provider: ${provider}`);
 }
 
 export function getDefaultModel<T extends ProviderName>(provider: T): string;

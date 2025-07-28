@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "references": [
     { "path": "../config" },
     { "path": "../auth" }
