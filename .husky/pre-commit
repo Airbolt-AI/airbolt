@@ -6,16 +6,18 @@ if git diff --cached --name-only | grep -E "vitest\.(config|mutation|base)\.ts";
   node scripts/validate-vitest-configs.js
 fi
 
-# Auto-sync lockfile when package.json changes
+# Verify lockfile sync when package.json changes
 if git diff --cached --name-only | grep -E "package\.json$" > /dev/null; then
-  # Check if lockfile has actual changes or if versions were changed
-  if git diff --cached --name-only | grep -q "pnpm-lock.yaml" || git diff --quiet pnpm-lock.yaml; then
-    echo "✅ Package.json and lockfile are in sync"
-  else
-    echo "🔄 package.json changed, auto-syncing lockfile..."
-    pnpm install --lockfile-only --reporter=silent
-    git add pnpm-lock.yaml
-    echo "✅ Lockfile synced and staged automatically"
-  fi
+  echo "📦 package.json changed, checking lockfile sync..."
+  
+  # Verify lockfile is in sync (fail if not)
+  pnpm install --frozen-lockfile --dry-run || {
+    echo "❌ Lockfile out of sync with package.json"
+    echo "   Run: pnpm install"
+    echo "   Then stage both package.json and pnpm-lock.yaml"
+    exit 1
+  }
+  
+  echo "✅ Lockfile is in sync"
 fi
 
