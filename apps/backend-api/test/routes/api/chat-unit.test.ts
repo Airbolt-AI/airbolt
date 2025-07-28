@@ -109,7 +109,8 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Missing authorization token',
+          message:
+            'Missing authorization token. Include "Authorization: Bearer <token>" header',
           statusCode: 401,
         });
       });
@@ -129,7 +130,8 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Missing authorization token',
+          message:
+            'Missing authorization token. Include "Authorization: Bearer <token>" header',
           statusCode: 401,
         });
       });
@@ -149,7 +151,8 @@ describe('Chat Route Unit Tests', () => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toEqual({
           error: 'Unauthorized',
-          message: 'Invalid authorization token',
+          message:
+            'Invalid authorization token. For anonymous access, get a token from /api/tokens',
           statusCode: 401,
         });
       });

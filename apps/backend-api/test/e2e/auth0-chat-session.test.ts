@@ -50,7 +50,8 @@ describe('Auth0 E2E Chat Session', () => {
     expect(res.statusCode).toBe(401);
     expect(res.json()).toMatchObject({
       error: 'Unauthorized',
-      message: 'Missing authorization token',
+      message:
+        'Missing authorization token. Include "Authorization: Bearer <token>" header',
     });
   });
 
