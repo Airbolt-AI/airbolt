@@ -14,10 +14,8 @@
     "@airbolt/config",
     "@airbolt/types",
     "@airbolt/test-utils",
+    "@airbolt/auth",
     "backend-api",
-    "*-api",
-    "airbolt-node-cli-example",
-    "airbolt-hooks-demo",
-    "airbolt-widget-demo"
+    "*-api"
   ]
 }
