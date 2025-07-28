@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { JWTValidator, AuthConfig } from './types.js';
-import { AuthMode } from './types.js';
+import { AuthMode, AuthError } from './types.js';
 import { AuthModeDetector } from './utils/auth-mode-detector.js';
 import { InternalJWTValidator } from './validators/internal.js';
 import { ExternalJWTValidator } from './validators/external.js';
@@ -36,7 +36,12 @@ export class AuthValidatorFactory {
 
       default: {
         // This should never happen due to exhaustive switch
-        throw new Error(`Unknown auth mode: ${mode as string}`);
+        throw new AuthError(
+          `Unknown auth mode: ${mode as string}`,
+          undefined,
+          'Invalid auth configuration detected',
+          'Check environment variables and auth configuration'
+        );
       }
     }
   }

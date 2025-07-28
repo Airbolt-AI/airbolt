@@ -1,30 +1,18 @@
 import type { JWTValidator, JWTPayload, AuthConfig } from '../types.js';
 import { AuthError } from '../types.js';
-import { TokenValidator } from '../utils/token-validator.js';
-import { ValidationPolicy } from '../utils/validation-policy.js';
 import { JWKSManager } from '../utils/jwks-manager.js';
 import { ProviderDetector } from '../utils/provider-detector.js';
+import { BaseValidator } from './base.js';
 
-export class AutoDiscoveryValidator implements JWTValidator {
+export class AutoDiscoveryValidator
+  extends BaseValidator
+  implements JWTValidator
+{
   name = 'auto-discovery';
-  private tokenValidator = new TokenValidator();
   private jwksManager = new JWKSManager();
-  private policy: ValidationPolicy;
 
   constructor(config: AuthConfig) {
-    const isProduction =
-      config.NODE_ENV?.toLowerCase() === 'production' ||
-      config.NODE_ENV?.toLowerCase() === 'prod';
-    const validationConfig: {
-      issuer?: string;
-      audience?: string;
-      isProduction: boolean;
-    } = { isProduction };
-    if (config.EXTERNAL_JWT_ISSUER)
-      validationConfig.issuer = config.EXTERNAL_JWT_ISSUER;
-    if (config.EXTERNAL_JWT_AUDIENCE)
-      validationConfig.audience = config.EXTERNAL_JWT_AUDIENCE;
-    this.policy = new ValidationPolicy(validationConfig);
+    super(config);
   }
 
   canHandle(token: string): boolean {

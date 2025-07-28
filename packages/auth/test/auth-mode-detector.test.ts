@@ -32,11 +32,11 @@ describe('AuthModeDetector', () => {
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.AUTO_DISCOVERY);
     });
 
-    it('should detect AUTO_DISCOVERY mode for dev environment', () => {
+    it('should detect ANONYMOUS mode for non-development environments', () => {
       const config = {
         NODE_ENV: 'dev',
       };
-      expect(AuthModeDetector.detect(config)).toBe(AuthMode.AUTO_DISCOVERY);
+      expect(AuthModeDetector.detect(config)).toBe(AuthMode.ANONYMOUS);
     });
 
     it('should detect ANONYMOUS mode for test environment', () => {

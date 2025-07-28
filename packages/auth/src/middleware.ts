@@ -24,8 +24,10 @@ export function createAuthMiddleware(
   config?: AuthConfig
 ): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   // Auto-detect config from fastify if not provided
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  const authConfig = config || ((fastify as any).config as AuthConfig) || {};
+  const authConfig =
+    config ||
+    (fastify as FastifyInstance & { config?: AuthConfig }).config ||
+    {};
   const validators = AuthValidatorFactory.create(authConfig, fastify);
 
   return createMiddleware(fastify, validators, authConfig);
@@ -47,7 +49,9 @@ function createMiddleware(
 
     const token = extractBearerToken(request);
     if (!token) {
-      throw fastify.httpErrors.unauthorized('Missing authorization token');
+      throw fastify.httpErrors.unauthorized(
+        'Missing authorization token. Include "Authorization: Bearer <token>" header'
+      );
     }
 
     // Try each validator in order
@@ -100,6 +104,8 @@ function createMiddleware(
       { validatorCount: validators.length },
       'No validators could handle token'
     );
-    throw fastify.httpErrors.unauthorized('Invalid authorization token');
+    throw fastify.httpErrors.unauthorized(
+      'Invalid authorization token. For anonymous access, get a token from /api/tokens'
+    );
   };
 }

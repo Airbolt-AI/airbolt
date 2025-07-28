@@ -1,26 +1,15 @@
 import type { JWTValidator, JWTPayload, AuthConfig } from '../types.js';
-import { TokenValidator } from '../utils/token-validator.js';
-import { ValidationPolicy } from '../utils/validation-policy.js';
+import { AuthError } from '../types.js';
+import { BaseValidator } from './base.js';
 
-export class ExternalJWTValidator implements JWTValidator {
+export class ExternalJWTValidator
+  extends BaseValidator
+  implements JWTValidator
+{
   name = 'external-secret';
-  private tokenValidator = new TokenValidator();
-  private policy: ValidationPolicy;
 
   constructor(private config: AuthConfig) {
-    const isProduction =
-      config.NODE_ENV?.toLowerCase() === 'production' ||
-      config.NODE_ENV?.toLowerCase() === 'prod';
-    const validationConfig: {
-      issuer?: string;
-      audience?: string;
-      isProduction: boolean;
-    } = { isProduction };
-    if (config.EXTERNAL_JWT_ISSUER)
-      validationConfig.issuer = config.EXTERNAL_JWT_ISSUER;
-    if (config.EXTERNAL_JWT_AUDIENCE)
-      validationConfig.audience = config.EXTERNAL_JWT_AUDIENCE;
-    this.policy = new ValidationPolicy(validationConfig);
+    super(config);
   }
 
   canHandle(token: string): boolean {
@@ -36,7 +25,12 @@ export class ExternalJWTValidator implements JWTValidator {
   async verify(token: string): Promise<JWTPayload> {
     const secret = this.config.EXTERNAL_JWT_SECRET;
     if (!secret) {
-      throw new Error('EXTERNAL_JWT_SECRET not configured');
+      throw new AuthError(
+        'EXTERNAL_JWT_SECRET not configured',
+        undefined,
+        'Set EXTERNAL_JWT_SECRET environment variable',
+        'For HS256 tokens, provide the shared secret key'
+      );
     }
 
     const payload = await this.tokenValidator.verify(token, secret);
