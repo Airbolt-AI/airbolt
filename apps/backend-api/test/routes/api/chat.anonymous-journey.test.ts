@@ -25,6 +25,8 @@ describe('Anonymous Chat User Journey', () => {
       EXTERNAL_JWT_ISSUER: '',
       EXTERNAL_JWT_PUBLIC_KEY: '',
       EXTERNAL_JWT_SECRET: '',
+      // Explicitly set ALLOWED_ORIGIN to include test origins
+      ALLOWED_ORIGIN: 'http://localhost:3001',
     });
 
     await app.ready();
@@ -307,6 +309,11 @@ describe('Anonymous Chat User Journey', () => {
         messages: [{ role: 'user', content: 'Hello' }],
       },
     });
+
+    // If response is 500, log the error for debugging
+    if (response.statusCode === 500) {
+      console.error('500 error response:', response.payload);
+    }
 
     expect(response.statusCode).toBe(200);
     expect(response.headers['access-control-allow-origin']).toBe(
