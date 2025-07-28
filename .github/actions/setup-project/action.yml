@@ -26,10 +26,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
 
-    - name: Validate lockfile sync
-      shell: bash
-      run: pnpm lockfile:check
-
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
