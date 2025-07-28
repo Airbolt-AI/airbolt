@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 // Direct import to ensure mutation coverage
-import sensiblePlugin from '@airbolt/core/plugins/sensible.js';
+import sensiblePlugin from '@airbolt/core/plugins/sensible';
 
 describe('Sensible Plugin Unit Tests', () => {
   let app: FastifyInstance;

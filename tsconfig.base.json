@@ -5,7 +5,7 @@
     // Module system configuration (required, not in strictest)
     "target": "ES2022",
     "module": "ES2022",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
 
     // Additional safety beyond strictest preset

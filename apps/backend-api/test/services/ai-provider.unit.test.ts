@@ -3,8 +3,8 @@ import {
   AIProviderService,
   AIProviderError,
   PROVIDER_FEATURES,
-} from '@airbolt/core/services/ai-provider.js';
-import { UnknownProviderError } from '@airbolt/core/services/provider-config.js';
+} from '@airbolt/core/services/ai-provider';
+import { UnknownProviderError } from '@airbolt/core/services/provider-config';
 import { generateText } from 'ai';
 
 // Mock the AI SDK

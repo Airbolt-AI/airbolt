@@ -1,5 +1,7 @@
 import type { RateLimiterMemory } from 'rate-limiter-flexible';
 import type { AIProviderService } from '../services/ai-provider.js';
+import '@fastify/sensible';
+import '@fastify/jwt';
 
 // Extend FastifyInstance to include our custom properties
 declare module 'fastify' {

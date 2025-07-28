@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import { createTestEnv } from '@airbolt/test-utils';
 
-import envPlugin from '@airbolt/core/plugins/env.js';
-import corsPlugin from '@airbolt/core/plugins/cors.js';
+import envPlugin from '../../src/plugins/env.js';
+import corsPlugin from '@airbolt/core/plugins/cors';
 
 describe('CORS Plugin Integration', () => {
   beforeEach(() => {

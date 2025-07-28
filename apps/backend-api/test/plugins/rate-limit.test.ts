@@ -3,8 +3,8 @@ import Fastify from 'fastify';
 import { setTimeout } from 'node:timers/promises';
 import { createTestEnv } from '@airbolt/test-utils';
 
-import envPlugin from '@airbolt/core/plugins/env.js';
-import rateLimitPlugin from '@airbolt/core/plugins/rate-limit.js';
+import envPlugin from '../../src/plugins/env.js';
+import rateLimitPlugin from '@airbolt/core/plugins/rate-limit';
 
 describe('Rate Limit Plugin Integration', () => {
   beforeEach(() => {

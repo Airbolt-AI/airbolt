@@ -61,8 +61,10 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
     AI_PROVIDER: 'openai',
   };
   
-  // Decorate fastify with config
-  fastify.decorate('config', config);
+  // Decorate fastify with config if it doesn't already exist
+  if (!fastify.hasDecorator('config')) {
+    fastify.decorate('config', config);
+  }
   
   // Register CORS plugin
   await fastify.register(fastifyCors, {

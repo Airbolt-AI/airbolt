@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fc from 'fast-check';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import userRateLimit from '@airbolt/core/plugins/user-rate-limit.js';
-import envPlugin from '@airbolt/core/plugins/env.js';
-import sensiblePlugin from '@airbolt/core/plugins/sensible.js';
+import userRateLimit from '@airbolt/core/plugins/user-rate-limit';
+import envPlugin from '../../src/plugins/env.js';
+import sensiblePlugin from '@airbolt/core/plugins/sensible';
 import { createTestEnv } from '@airbolt/test-utils';
 
 // Generate unique user IDs to avoid state pollution between tests

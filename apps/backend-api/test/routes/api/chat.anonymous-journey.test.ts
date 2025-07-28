@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { build } from '../../helper.js';
 import type { FastifyInstance } from 'fastify';
-import type { AIProviderService } from '../../../src/services/ai-provider.js';
+import type { AIProviderService } from '@airbolt/core/services/ai-provider';
 
 describe('Anonymous Chat User Journey', () => {
   let app: FastifyInstance;

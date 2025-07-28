@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
-import chatRoutes from '@airbolt/core/routes/api/chat.js';
-import { AIProviderError } from '../../../src/services/ai-provider.js';
+import fastifySensible from '@fastify/sensible';
+import fastifyJWT from '@fastify/jwt';
+import chatRoutes from '@airbolt/core/routes/api/chat';
+import { AIProviderError } from '@airbolt/core/services/ai-provider';
 
 // Mock the AI Provider service
 const mockAIProviderService = {
@@ -27,10 +29,10 @@ describe('Chat Route Unit Tests', () => {
     app = Fastify();
 
     // Register sensible plugin first for httpErrors
-    await app.register(import('@fastify/sensible'));
+    await app.register(fastifySensible);
 
     // Register JWT plugin with test secret
-    await app.register(import('@fastify/jwt'), {
+    await app.register(fastifyJWT, {
       secret: 'test-secret-key-for-unit-tests-32chars',
       sign: {
         algorithm: 'HS256',

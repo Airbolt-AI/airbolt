@@ -120,7 +120,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
     
     // Register the core plugin with configuration from env
     await fastify.register(createAirboltCore, {
-      jwtSecret: fastify.config!.JWT_SECRET,
+      jwtSecret: fastify.config!.JWT_SECRET || '',
       getApiKey: (provider: string) => {
         if (provider === 'openai') return fastify.config!.OPENAI_API_KEY || '';
         if (provider === 'anthropic') return fastify.config!.ANTHROPIC_API_KEY || '';
@@ -135,10 +135,10 @@ const app: FastifyPluginAsync<AppOptions> = async (
       tokenLimitTimeWindow: fastify.config!.TOKEN_LIMIT_TIME_WINDOW,
       requestLimitMax: fastify.config!.REQUEST_LIMIT_MAX,
       requestLimitTimeWindow: fastify.config!.REQUEST_LIMIT_TIME_WINDOW,
-      externalJwtIssuer: fastify.config!.EXTERNAL_JWT_ISSUER,
-      externalJwtPublicKey: fastify.config!.EXTERNAL_JWT_PUBLIC_KEY,
-      externalJwtSecret: fastify.config!.EXTERNAL_JWT_SECRET,
-      externalJwtAudience: fastify.config!.EXTERNAL_JWT_AUDIENCE,
+      ...(fastify.config!.EXTERNAL_JWT_ISSUER && { externalJwtIssuer: fastify.config!.EXTERNAL_JWT_ISSUER }),
+      ...(fastify.config!.EXTERNAL_JWT_PUBLIC_KEY && { externalJwtPublicKey: fastify.config!.EXTERNAL_JWT_PUBLIC_KEY }),
+      ...(fastify.config!.EXTERNAL_JWT_SECRET && { externalJwtSecret: fastify.config!.EXTERNAL_JWT_SECRET }),
+      ...(fastify.config!.EXTERNAL_JWT_AUDIENCE && { externalJwtAudience: fastify.config!.EXTERNAL_JWT_AUDIENCE }),
     });
   } else {
     // When skipping env validation (for OpenAPI generation), register a mock env plugin

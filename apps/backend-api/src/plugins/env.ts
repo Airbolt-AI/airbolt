@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
-import { PROVIDER_CONFIG } from '../services/provider-config.js';
+import { PROVIDER_CONFIG } from '@airbolt/core/services/provider-config';
 // CORS constants inlined for simplicity
 const COMMON_DEV_PORTS = [
   'http://localhost:3000',
@@ -14,7 +14,7 @@ const COMMON_DEV_PORTS = [
 
 const DEFAULT_TEST_ORIGINS = 'http://localhost:3000,http://localhost:3001';
 
-const providerNames = Object.keys(PROVIDER_CONFIG) as [
+const providerNames = Object.keys(PROVIDER_CONFIG).filter((key): key is keyof typeof PROVIDER_CONFIG => typeof key === 'string') as [
   keyof typeof PROVIDER_CONFIG,
   ...Array<keyof typeof PROVIDER_CONFIG>,
 ];

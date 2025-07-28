@@ -1,9 +1,9 @@
 import { describe, it, beforeEach, afterEach } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import userRateLimit from '@airbolt/core/plugins/user-rate-limit.js';
-import envPlugin from '@airbolt/core/plugins/env.js';
-import sensiblePlugin from '@airbolt/core/plugins/sensible.js';
+import userRateLimit from '@airbolt/core/plugins/user-rate-limit';
+import envPlugin from '../../src/plugins/env.js';
+import sensiblePlugin from '@airbolt/core/plugins/sensible';
 import { createTestEnv } from '@airbolt/test-utils';
 
 describe('Rate Limiter Behavior Test', () => {
