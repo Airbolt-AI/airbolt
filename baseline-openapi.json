@@ -19,7 +19,9 @@
     "/": {
       "get": {
         "summary": "Get welcome message",
-        "tags": ["Root"],
+        "tags": [
+          "Root"
+        ],
         "description": "Returns a hello world message for API health check",
         "responses": {
           "200": {
@@ -36,7 +38,9 @@
                       "example": "Hello World!"
                     }
                   },
-                  "required": ["message"]
+                  "required": [
+                    "message"
+                  ]
                 }
               }
             }
@@ -65,7 +69,11 @@
                       "example": 400
                     }
                   },
-                  "required": ["error", "message", "statusCode"]
+                  "required": [
+                    "error",
+                    "message",
+                    "statusCode"
+                  ]
                 }
               }
             }
@@ -76,14 +84,18 @@
     "/api/chat": {
       "post": {
         "summary": "Send chat messages to AI",
-        "tags": ["Chat"],
+        "tags": [
+          "Chat"
+        ],
         "description": "Proxies chat messages to configured AI provider and returns the assistant response",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["messages"],
+                "required": [
+                  "messages"
+                ],
                 "properties": {
                   "messages": {
                     "type": "array",
@@ -91,11 +103,18 @@
                     "maxItems": 50,
                     "items": {
                       "type": "object",
-                      "required": ["role", "content"],
+                      "required": [
+                        "role",
+                        "content"
+                      ],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": ["user", "assistant", "system"],
+                          "enum": [
+                            "user",
+                            "assistant",
+                            "system"
+                          ],
                           "description": "The role of the message sender"
                         },
                         "content": {
@@ -112,7 +131,10 @@
                   },
                   "provider": {
                     "type": "string",
-                    "enum": ["openai", "anthropic"],
+                    "enum": [
+                      "openai",
+                      "anthropic"
+                    ],
                     "description": "AI provider to use (defaults to environment setting)"
                   },
                   "model": {
@@ -138,7 +160,9 @@
                 "schema": {
                   "description": "Successful chat response",
                   "type": "object",
-                  "required": ["content"],
+                  "required": [
+                    "content"
+                  ],
                   "properties": {
                     "content": {
                       "type": "string",
@@ -329,7 +353,9 @@
     "/api/tokens": {
       "post": {
         "summary": "Generate JWT token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Generate a JWT token for API authentication (development endpoint)",
         "requestBody": {
           "content": {
@@ -355,7 +381,11 @@
                 "schema": {
                   "description": "Token generated successfully",
                   "type": "object",
-                  "required": ["token", "expiresIn", "tokenType"],
+                  "required": [
+                    "token",
+                    "expiresIn",
+                    "tokenType"
+                  ],
                   "properties": {
                     "token": {
                       "type": "string",

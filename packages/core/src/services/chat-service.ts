@@ -108,7 +108,7 @@ export class ChatService {
     import('../plugins/user-rate-limit.js').UsageInfo
   > {
     const { fastify, userId } = this.options;
-    return fastify.getUserUsage(userId);
+    return fastify.getUserUsage(userId) as Promise<import('../plugins/user-rate-limit.js').UsageInfo>;
   }
 
   /**
@@ -116,7 +116,7 @@ export class ChatService {
    */
   private async consumeTokens(tokensUsed: number): Promise<void> {
     const { fastify, userId } = this.options;
-    await fastify.consumeTokens(userId, tokensUsed);
+    await fastify.consumeUserTokens(userId, tokensUsed);
   }
 
   /**

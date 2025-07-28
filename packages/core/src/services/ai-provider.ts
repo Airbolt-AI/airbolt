@@ -62,11 +62,11 @@ export { PROVIDER_FEATURES } from './provider-config.js';
 
 // Provider factory registry
 const PROVIDER_FACTORIES = {
-  openai: (apiKey: string, model: string) => {
+  openai: (apiKey: string, model: string): LanguageModel => {
     const provider = createOpenAI({ apiKey });
     return provider.chat(model);
   },
-  anthropic: (apiKey: string, model: string) => {
+  anthropic: (apiKey: string, model: string): LanguageModel => {
     const provider = createAnthropic({ apiKey });
     return provider.messages(model);
   },
@@ -225,7 +225,7 @@ export class AIProviderService {
     );
 
     // Determine which model to use
-    let modelToUse = this.model;
+    let modelToUse: LanguageModel = this.model;
     let providerForError = this.provider;
 
     if (providerOverride || modelOverride) {
@@ -319,7 +319,7 @@ export class AIProviderService {
     );
 
     // Determine which model to use
-    let modelToUse = this.model;
+    let modelToUse: LanguageModel = this.model;
     let providerForError = this.provider;
 
     if (providerOverride || modelOverride) {

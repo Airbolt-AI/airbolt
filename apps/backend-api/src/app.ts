@@ -1,8 +1,3 @@
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import AutoLoad from '@fastify/autoload';
-import type { AutoloadPluginOptions } from '@fastify/autoload';
 import type {
   FastifyPluginAsync,
   FastifyServerOptions,
@@ -11,23 +6,13 @@ import type {
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
 import { isDevelopment } from '@airbolt/config';
+import { createAirboltCore } from '@airbolt/core';
 
 import envPlugin, { type Env } from './plugins/env.js';
-import corsPlugin from './plugins/cors.js';
-import rateLimitPlugin from './plugins/rate-limit.js';
-import fastifyJwt from '@fastify/jwt';
-import aiProviderService from './services/ai-provider.js';
-import fastifySse from 'fastify-sse-v2';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Import JWT types
-import '@fastify/jwt';
 
 export interface AppOptions
   extends FastifyServerOptions,
-    Partial<AutoloadPluginOptions> {
+    Partial<{ skipEnvValidation?: boolean }> {
   skipEnvValidation?: boolean;
 }
 
@@ -132,6 +117,29 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // Register env plugin first (unless skipped for OpenAPI generation)
   if (!opts.skipEnvValidation) {
     await fastify.register(envPlugin);
+    
+    // Register the core plugin with configuration from env
+    await fastify.register(createAirboltCore, {
+      jwtSecret: fastify.config!.JWT_SECRET,
+      getApiKey: (provider: string) => {
+        if (provider === 'openai') return fastify.config!.OPENAI_API_KEY || '';
+        if (provider === 'anthropic') return fastify.config!.ANTHROPIC_API_KEY || '';
+        throw new Error(`Unknown provider: ${provider}`);
+      },
+      allowedOrigins: fastify.config!.ALLOWED_ORIGIN,
+      systemPrompt: fastify.config!.SYSTEM_PROMPT,
+      rateLimitMax: fastify.config!.RATE_LIMIT_MAX,
+      rateLimitTimeWindow: fastify.config!.RATE_LIMIT_TIME_WINDOW,
+      trustProxy: fastify.config!.TRUST_PROXY,
+      tokenLimitMax: fastify.config!.TOKEN_LIMIT_MAX,
+      tokenLimitTimeWindow: fastify.config!.TOKEN_LIMIT_TIME_WINDOW,
+      requestLimitMax: fastify.config!.REQUEST_LIMIT_MAX,
+      requestLimitTimeWindow: fastify.config!.REQUEST_LIMIT_TIME_WINDOW,
+      externalJwtIssuer: fastify.config!.EXTERNAL_JWT_ISSUER,
+      externalJwtPublicKey: fastify.config!.EXTERNAL_JWT_PUBLIC_KEY,
+      externalJwtSecret: fastify.config!.EXTERNAL_JWT_SECRET,
+      externalJwtAudience: fastify.config!.EXTERNAL_JWT_AUDIENCE,
+    });
   } else {
     // When skipping env validation (for OpenAPI generation), register a mock env plugin
     // to satisfy plugin dependencies
@@ -160,77 +168,22 @@ const app: FastifyPluginAsync<AppOptions> = async (
         { name: 'env-plugin' }
       )
     );
-  }
-
-  // Register CORS plugin after env (it depends on ALLOWED_ORIGIN from env)
-  await fastify.register(corsPlugin);
-
-  // Register rate limit plugin after env (it depends on RATE_LIMIT_* from env)
-  await fastify.register(rateLimitPlugin);
-
-  // Register user rate limit plugin after env (for token/request tracking)
-  await fastify.register(import('./plugins/user-rate-limit.js'));
-
-  // Register SSE plugin for streaming support
-  await fastify.register(fastifySse);
-
-  // Register JWT plugin after env (it depends on JWT_SECRET from env)
-  // Use config which is decorated by the env plugin
-  await fastify.register(fastifyJwt, {
-    secret: fastify.config?.JWT_SECRET || 'development-secret',
-    sign: {
-      algorithm: 'HS256',
-      expiresIn: '15m',
-      iss: 'airbolt-api', // Issuer claim for token validation
-    },
-    verify: {
-      allowedIss: 'airbolt-api', // Only accept tokens from our API
-    },
-  });
-
-  // Register external JWT namespace if configured
-  if (
-    fastify.config?.EXTERNAL_JWT_PUBLIC_KEY ||
-    fastify.config?.EXTERNAL_JWT_SECRET
-  ) {
-    await fastify.register(fastifyJwt, {
-      namespace: 'external',
-      secret:
-        fastify.config.EXTERNAL_JWT_PUBLIC_KEY ||
-        fastify.config.EXTERNAL_JWT_SECRET ||
-        '',
-      verify: {
-        algorithms: fastify.config.EXTERNAL_JWT_PUBLIC_KEY
-          ? ['RS256']
-          : ['HS256'],
-      },
+    
+    // Register core with mock configuration
+    await fastify.register(createAirboltCore, {
+      jwtSecret: 'openapi-generation-only-jwt-secret-placeholder',
+      getApiKey: () => 'sk-openapi-generation-placeholder',
+      allowedOrigins: ['*'],
+      systemPrompt: '',
+      rateLimitMax: 100,
+      rateLimitTimeWindow: 60000,
+      trustProxy: false,
+      tokenLimitMax: 100000,
+      tokenLimitTimeWindow: 3600000,
+      requestLimitMax: 100,
+      requestLimitTimeWindow: 3600000,
     });
   }
-
-  // Register AI provider service after env (it depends on API keys from env)
-  // Only register if env validation was not skipped (meaning we have real config)
-  if (!opts.skipEnvValidation) {
-    await fastify.register(aiProviderService);
-  }
-
-  // Swagger plugin registration moved to root level in buildApp function
-
-  // Place here your custom code!
-
-  // Do not touch the following lines
-
-  // Register support plugins explicitly
-  // No autoload = no stale cached files breaking builds
-  await fastify.register(import('./plugins/sensible.js'));
-  await fastify.register(import('./plugins/support.js'));
-
-  // This loads all plugins defined in routes
-  // define your routes in one of these
-  void fastify.register(AutoLoad, {
-    dir: join(__dirname, 'routes'),
-    options: opts,
-    forceESM: true,
-  });
 };
 
 export default app;

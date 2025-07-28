@@ -208,7 +208,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (isStreaming) {
           // Streaming response
-          reply.sse({
+          reply.sse!({
             event: 'start',
             data: JSON.stringify({ type: 'start' }),
           });
@@ -220,14 +220,14 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             )) {
               if ('content' in chunk) {
                 // Stream chunk
-                reply.sse({
+                reply.sse!({
                   event: 'chunk',
                   data: JSON.stringify({ content: chunk.content }),
                 });
               } else {
                 // Completion info
                 const usageInfo = await chatService.getUserUsage();
-                reply.sse({
+                reply.sse!({
                   event: 'done',
                   data: JSON.stringify({
                     usage: {
@@ -272,7 +272,7 @@ const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
             }
 
             // Send error event
-            reply.sse({
+            reply.sse!({
               event: 'error',
               data: JSON.stringify(errorData),
             });

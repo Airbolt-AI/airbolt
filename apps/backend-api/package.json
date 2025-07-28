@@ -50,23 +50,13 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.2.12",
-    "@ai-sdk/openai": "^1.3.23",
     "@airbolt/auth": "workspace:*",
     "@airbolt/config": "workspace:*",
-    "@fastify/autoload": "^6.0.0",
-    "@fastify/cors": "^11.0.1",
-    "@fastify/jwt": "^9.1.0",
-    "@fastify/rate-limit": "^10.3.0",
-    "@fastify/sensible": "^6.0.0",
+    "@airbolt/core": "workspace:*",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
-    "ai": "^4.3.19",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
-    "fastify-sse-v2": "^4.2.1",
-    "openai": "^5.8.2",
-    "rate-limiter-flexible": "^7.1.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {
