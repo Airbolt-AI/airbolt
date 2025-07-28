@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
 import { randomBytes } from 'node:crypto';
-import { EnvSchema } from '../../src/plugins/env.js';
+import { EnvSchema } from '@airbolt/core/plugins/env.js';
 
 describe('Environment Schema Validation', () => {
   const validApiKey = 'sk-test1234567890abcdef';

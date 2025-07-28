@@ -3,7 +3,7 @@ import Fastify from 'fastify';
 import { randomBytes } from 'node:crypto';
 
 // Direct import to ensure mutation coverage
-import envPlugin from '../../src/plugins/env.js';
+import envPlugin from '@airbolt/core/plugins/env.js';
 
 describe('Environment Plugin Direct Tests', () => {
   const validApiKey = 'sk-test1234567890abcdef';

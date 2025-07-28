@@ -9,7 +9,6 @@ import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
-import './types/fastify.js';
 import sensiblePlugin from './plugins/sensible.js';
 import supportPlugin from './plugins/support.js';
 import aiProviderService from './services/ai-provider.js';
@@ -60,9 +59,6 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
     ...(options.externalJwtSecret ? { EXTERNAL_JWT_SECRET: options.externalJwtSecret } : {}),
     ...(options.externalJwtAudience ? { EXTERNAL_JWT_AUDIENCE: options.externalJwtAudience } : {}),
     AI_PROVIDER: 'openai',
-    OPENAI_API_KEY: undefined,
-    ANTHROPIC_API_KEY: undefined,
-    AI_MODEL: undefined,
   };
   
   // Decorate fastify with config
@@ -148,7 +144,8 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
       const usageError = new Error(`Token limit exceeded for user ${userId}`);
       Object.assign(usageError, { 
         statusCode: 429, 
-        usage: await getUserUsage(userId) as any 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        usage: await getUserUsage(userId) 
       });
       throw usageError;
     }
@@ -171,7 +168,9 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
     };
     
     if (config.TOKEN_LIMIT_MAX && config.TOKEN_LIMIT_MAX > 0) {
-      const typedUsage = usage as any;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const typedUsage = usage;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       typedUsage.tokens = {
         used: tokenStatus?.consumedPoints || 0,
         remaining: tokenStatus ? tokenStatus.remainingPoints : config.TOKEN_LIMIT_MAX,
@@ -180,6 +179,7 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
       };
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return usage;
   }
   
@@ -194,10 +194,11 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
     try {
       await requestLimiter.consume(user.userId);
     } catch (error) {
-      const usage = await getUserUsage(user.userId);
       const err = fastify.httpErrors.tooManyRequests('Request limit exceeded');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const errorWithUsage = err as any;
-      errorWithUsage.usage = usage;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      errorWithUsage.usage = await getUserUsage(user.userId);
       throw errorWithUsage;
     }
   });
@@ -243,13 +244,17 @@ async function airboltCore(fastify: FastifyInstance, options: CoreOptions): Prom
     
     // Temporarily override config for AI provider registration
     const originalConfig = fastify.config;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const typedConfig = aiConfig as any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     fastify.config = typedConfig;
     
     await fastify.register(aiProviderService);
     
     // Restore original config
-    fastify.config = originalConfig;
+    if (originalConfig !== undefined) {
+      fastify.config = originalConfig;
+    }
   });
   
   await fastify.register(aiProviderPlugin);

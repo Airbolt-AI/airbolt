@@ -7,7 +7,7 @@ import {
   isProviderName,
   UnknownProviderError,
   PROVIDER_CONFIG,
-} from '../../src/services/provider-config.js';
+} from '@airbolt/core/services/provider-config.js';
 
 describe('Provider Config Property Tests', () => {
   describe('isProviderName', () => {

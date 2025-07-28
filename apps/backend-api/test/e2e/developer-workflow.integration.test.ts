@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 
-import envPlugin from '../../src/plugins/env.js';
-import corsPlugin from '../../src/plugins/cors.js';
-import sensiblePlugin from '../../src/plugins/sensible.js';
+import envPlugin from '@airbolt/core/plugins/env.js';
+import corsPlugin from '@airbolt/core/plugins/cors.js';
+import sensiblePlugin from '@airbolt/core/plugins/sensible.js';
 
 describe('Developer Experience Integration', () => {
   beforeEach(() => {

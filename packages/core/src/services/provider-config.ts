@@ -2,6 +2,7 @@
 // Required fields: envKey, defaultModel, keyRegex, keyFormat, features
 // Optional fields can be added directly when needed
 // Example: headers?: Record<string, string>, baseUrl?: string, etc.
+// NOTE: Tests are located in apps/backend-api/test/services/provider-config.test.ts
 
 export const PROVIDER_CONFIG = {
   openai: {

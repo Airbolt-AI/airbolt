@@ -8,6 +8,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./services/*": {
+      "types": "./dist/services/*.d.ts",
+      "import": "./dist/services/*.js"
+    },
+    "./plugins/*": {
+      "types": "./dist/plugins/*.d.ts",
+      "import": "./dist/plugins/*.js"
+    },
+    "./routes/*": {
+      "types": "./dist/routes/*.d.ts",
+      "import": "./dist/routes/*.js"
+    },
+    "./routes/api/*": {
+      "types": "./dist/routes/api/*.d.ts",
+      "import": "./dist/routes/api/*.js"
     }
   },
   "files": [

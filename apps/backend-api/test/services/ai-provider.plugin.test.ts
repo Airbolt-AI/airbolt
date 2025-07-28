@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
-import aiProviderPlugin from '../../src/services/ai-provider.js';
-import envPlugin from '../../src/plugins/env.js';
+import aiProviderPlugin from '@airbolt/core/services/ai-provider.js';
+import envPlugin from '@airbolt/core/plugins/env.js';
 import { createTestEnv } from '@airbolt/test-utils';
 
 // Mock the AI SDK modules

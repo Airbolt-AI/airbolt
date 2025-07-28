@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
-import chatRoutes from '../../../src/routes/api/chat.js';
+import chatRoutes from '@airbolt/core/routes/api/chat.js';
 import { AIProviderError } from '../../../src/services/ai-provider.js';
 
 // Mock the AI Provider service

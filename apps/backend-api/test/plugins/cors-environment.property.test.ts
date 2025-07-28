@@ -3,8 +3,8 @@ import fc from 'fast-check';
 import Fastify from 'fastify';
 import { createTestEnv, createProductionTestEnv } from '@airbolt/test-utils';
 
-import envPlugin from '../../src/plugins/env.js';
-import corsPlugin from '../../src/plugins/cors.js';
+import envPlugin from '@airbolt/core/plugins/env.js';
+import corsPlugin from '@airbolt/core/plugins/cors.js';
 
 describe('CORS Environment Property Tests', () => {
   beforeEach(() => {

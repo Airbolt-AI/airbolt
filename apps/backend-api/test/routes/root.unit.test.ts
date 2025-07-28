@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 // Direct import of the root route to ensure mutation coverage
-import rootRoute from '../../src/routes/root.js';
+import rootRoute from '@airbolt/core/routes/root.js';
 
 describe('Root Route Unit Tests', () => {
   let app: FastifyInstance;

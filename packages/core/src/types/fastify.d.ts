@@ -28,7 +28,7 @@ declare module 'fastify' {
       LOG_LEVEL?: string;
     };
     consumeUserTokens: (userId: string, tokens: number) => Promise<void>;
-    getUserUsage: (userId: string) => Promise<any>;
+    getUserUsage: (userId: string) => Promise<import('../plugins/user-rate-limit.js').UsageInfo>;
     checkUserRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     aiProvider: AIProviderService;
   }

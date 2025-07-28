@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
-import Support from '../../src/plugins/support.js';
+import Support from '@airbolt/core/plugins/support.js';
 import { build } from '../helper.js';
 
 describe('Support plugin', () => {

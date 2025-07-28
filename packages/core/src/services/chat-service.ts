@@ -108,7 +108,7 @@ export class ChatService {
     import('../plugins/user-rate-limit.js').UsageInfo
   > {
     const { fastify, userId } = this.options;
-    return fastify.getUserUsage(userId) as Promise<import('../plugins/user-rate-limit.js').UsageInfo>;
+    return fastify.getUserUsage(userId);
   }
 
   /**
