@@ -1,5 +1,7 @@
 import type { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
-import type { JWTValidator } from './jwt-validators.js';
+import { isProduction } from '@airbolt/config';
+import type { JWTValidator, AuthConfig } from './types.js';
+import { AuthValidatorFactory } from './factory.js';
 import '@fastify/sensible';
 
 export interface AuthUser {
@@ -16,22 +18,33 @@ function extractBearerToken(request: FastifyRequest): string | null {
   return auth.slice(7);
 }
 
+// Simplified API - single function call
 export function createAuthMiddleware(
   fastify: FastifyInstance,
-  validators: JWTValidator[]
+  config?: AuthConfig
+): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+  // Auto-detect config from fastify if not provided
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  const authConfig = config || ((fastify as any).config as AuthConfig) || {};
+  const validators = AuthValidatorFactory.create(authConfig, fastify);
+
+  return createMiddleware(fastify, validators, authConfig);
+}
+
+// Internal function for creating middleware with validators
+function createMiddleware(
+  fastify: FastifyInstance,
+  validators: JWTValidator[],
+  config: AuthConfig
 ): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   return async function verifyJWT(
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    // Set BYOA mode header for transparency about auth configuration (if header method exists)
-    if (typeof reply.header === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const config = (fastify as any).config;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const byoaMode = config?.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
-      reply.header('X-BYOA-Mode', byoaMode);
-    }
+    // Set BYOA mode header for transparency about auth configuration
+    const byoaMode = config.EXTERNAL_JWT_ISSUER ? 'strict' : 'auto';
+    reply.header('X-BYOA-Mode', byoaMode);
+
     const token = extractBearerToken(request);
     if (!token) {
       throw fastify.httpErrors.unauthorized('Missing authorization token');
@@ -47,21 +60,17 @@ export function createAuthMiddleware(
 
           // Log auto-discovery warnings with structured logging
           if (validator.name === 'auto-discovery' && payload.iss) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-            const config = (fastify as any).config;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            const isProduction = config?.NODE_ENV === 'production';
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-            const hasConfiguredIssuer = config?.EXTERNAL_JWT_ISSUER;
+            const isProd = isProduction();
+            const hasConfiguredIssuer = config.EXTERNAL_JWT_ISSUER;
 
             if (!hasConfiguredIssuer) {
               fastify.log.warn(
                 {
                   issuer: payload.iss,
-                  isProduction,
+                  isProduction: isProd,
                   authMethod: 'auto-discovery',
                 },
-                isProduction
+                isProd
                   ? 'Production auto-discovery: accepting external JWT. Configure EXTERNAL_JWT_ISSUER for enhanced security'
                   : 'Development auto-discovery: accepting external JWT. Set NODE_ENV=production and configure EXTERNAL_JWT_ISSUER for production'
               );
@@ -87,6 +96,10 @@ export function createAuthMiddleware(
       }
     }
 
+    fastify.log.debug(
+      { validatorCount: validators.length },
+      'No validators could handle token'
+    );
     throw fastify.httpErrors.unauthorized('Invalid authorization token');
   };
 }

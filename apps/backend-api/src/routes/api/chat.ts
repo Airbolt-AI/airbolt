@@ -6,12 +6,7 @@ import {
   ChatResponseSchema,
 } from '../../services/ai-provider.js';
 import type { UsageInfo } from '../../plugins/user-rate-limit.js';
-import {
-  AuthValidatorFactory,
-  createAuthMiddleware,
-  type AuthUser,
-  type AuthConfig,
-} from '@airbolt/auth';
+import { createAuthMiddleware, type AuthUser } from '@airbolt/auth';
 import { ChatService } from '../../services/chat-service.js';
 
 // Request schema for chat endpoint
@@ -26,10 +21,8 @@ const ChatRequestSchema = z.object({
 });
 
 const chat: FastifyPluginAsync = async (fastify): Promise<void> => {
-  // Create auth validators using factory pattern
-  const config = fastify.config as AuthConfig | undefined;
-  const validators = AuthValidatorFactory.create(config || {}, fastify);
-  const verifyJWT = createAuthMiddleware(fastify, validators, config);
+  // Simplified auth setup - now just one line!
+  const verifyJWT = createAuthMiddleware(fastify);
 
   fastify.post(
     '/chat',
