@@ -6,6 +6,41 @@ Ultrathink about what makes an exceptional code review—one that elevates both 
 
 **Review Philosophy**: Champion simplicity over cleverness. The best suggestions reduce code while increasing clarity. Today's elegant abstraction is tomorrow's technical debt.
 
+## 0. Gather Context (You're a Fresh Agent!)
+
+Since you're starting fresh, gather comprehensive context:
+
+1. **Get PR Information**:
+
+   ```bash
+   gh pr view --json title,body,state,files,commits,url
+   ```
+
+2. **Read the Linear Ticket**:
+   - Extract ticket ID from PR title/body
+   - Use Linear MCP tools to read full ticket details
+   - Check comments for additional context
+
+3. **Understand the Changes**:
+
+   ```bash
+   git fetch origin
+   git diff origin/main...HEAD --stat
+   ```
+
+   - Review list of changed files
+   - Identify patterns: new features vs modifications
+
+4. **Examine Code Changes**:
+   - Use `git diff` to see actual changes
+   - Read modified files to understand context
+   - Check related files that might be affected
+
+5. **Review Codebase Context**:
+   - Look at existing patterns in similar files
+   - Check architecture docs if available
+   - Understand the project's quality standards
+
 ## Quality Gates Verification
 
 Review these explicit quality checks:
@@ -73,41 +108,6 @@ Format your review to be:
 - **Actionable**: Provide clear guidance on fixes
 - **Balanced**: Acknowledge good decisions alongside improvements
 <!-- SHARED:END -->
-
-## 0. Gather Context (You're a Fresh Agent!)
-
-Since you're starting fresh, gather comprehensive context:
-
-1. **Get PR Information**:
-
-   ```bash
-   gh pr view --json title,body,state,files,commits,url
-   ```
-
-2. **Read the Linear Ticket**:
-   - Extract ticket ID from PR title/body
-   - Use Linear MCP tools to read full ticket details
-   - Check comments for additional context
-
-3. **Understand the Changes**:
-
-   ```bash
-   git fetch origin
-   git diff origin/main...HEAD --stat
-   ```
-
-   - Review list of changed files
-   - Identify patterns: new features vs modifications
-
-4. **Examine Code Changes**:
-   - Use `git diff` to see actual changes
-   - Read modified files to understand context
-   - Check related files that might be affected
-
-5. **Review Codebase Context**:
-   - Look at existing patterns in similar files
-   - Check architecture docs if available
-   - Understand the project's quality standards
 
 ## Posting Your Review
 
