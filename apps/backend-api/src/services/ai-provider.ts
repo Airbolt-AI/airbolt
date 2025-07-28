@@ -170,9 +170,8 @@ export class AIProviderService {
       modelName = config.model || getDefaultModel(config.provider);
     } catch (error) {
       if (error instanceof UnknownProviderError && options?.isProduction) {
-        console.warn(
-          `[AI Provider] Unknown provider "${error.provider}", using fallback model "${error.suggestedFallback}"`
-        );
+        // In production, use the suggested fallback without warning
+        // This ensures graceful degradation while maintaining service availability
         modelName = error.suggestedFallback;
       } else {
         throw error;

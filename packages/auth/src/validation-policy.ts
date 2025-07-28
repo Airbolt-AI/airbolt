@@ -8,8 +8,6 @@ export interface ValidationConfig {
 }
 
 export class ValidationPolicy {
-  private hasLoggedWarning = false;
-
   constructor(private readonly config: ValidationConfig) {}
 
   /**
@@ -17,7 +15,9 @@ export class ValidationPolicy {
    */
   validateIssuer(issuer: string | undefined): void {
     if (!issuer || !issuer.startsWith('https://')) {
-      throw new Error('JWT must have an HTTPS issuer for auto-discovery');
+      throw new Error(
+        `Auto-discovery requires HTTPS issuer. Got: ${issuer || 'undefined'}`
+      );
     }
 
     // If an issuer is configured, validate strictly
@@ -26,25 +26,6 @@ export class ValidationPolicy {
         throw new Error(
           `Token issuer mismatch. Expected: ${this.config.issuer}, Got: ${issuer}`
         );
-      }
-    } else if (this.config.isProduction) {
-      // In production without explicit issuer config, log warning but allow
-      if (!this.hasLoggedWarning) {
-        console.warn(
-          `⚠️  Production auto-discovery: Accepting JWT from ${issuer}.\n` +
-            `    For enhanced security, configure EXTERNAL_JWT_ISSUER to restrict accepted issuers.`
-        );
-        this.hasLoggedWarning = true;
-      }
-    } else {
-      // Development mode warnings
-      if (!this.hasLoggedWarning) {
-        const isTrusted = ProviderDetector.isTrustedProvider(issuer);
-        console.warn(
-          `⚠️  Auto-discovery mode: Accepting JWT from ${issuer}${isTrusted ? ' (trusted provider)' : ''}.\n` +
-            `    For production, set NODE_ENV=production and configure EXTERNAL_JWT_ISSUER.`
-        );
-        this.hasLoggedWarning = true;
       }
     }
   }

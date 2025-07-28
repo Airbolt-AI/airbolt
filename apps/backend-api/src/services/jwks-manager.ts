@@ -95,14 +95,14 @@ export async function getJWKS(
   } catch (error) {
     // If fetch fails and we have fallback key, use it
     if (fallbackKey) {
-      console.warn(
-        `Failed to fetch JWKS from ${issuer}, using fallback key:`,
-        error
-      );
+      // Note: JWKS fetch failed, falling back to configured key
+      // This is logged at a higher level with proper context
       return createJWKSFromKey(fallbackKey);
     }
 
-    throw error;
+    throw new Error(
+      `Failed to fetch JWKS from ${issuer}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 

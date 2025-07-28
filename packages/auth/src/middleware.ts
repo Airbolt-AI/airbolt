@@ -45,6 +45,29 @@ export function createAuthMiddleware(
           // Type assertion needed because Fastify request typing doesn't include custom properties
           const req = request as FastifyRequest & { user: AuthUser };
 
+          // Log auto-discovery warnings with structured logging
+          if (validator.name === 'auto-discovery' && payload.iss) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            const config = (fastify as any).config;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const isProduction = config?.NODE_ENV === 'production';
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            const hasConfiguredIssuer = config?.EXTERNAL_JWT_ISSUER;
+
+            if (!hasConfiguredIssuer) {
+              fastify.log.warn(
+                {
+                  issuer: payload.iss,
+                  isProduction,
+                  authMethod: 'auto-discovery',
+                },
+                isProduction
+                  ? 'Production auto-discovery: accepting external JWT. Configure EXTERNAL_JWT_ISSUER for enhanced security'
+                  : 'Development auto-discovery: accepting external JWT. Set NODE_ENV=production and configure EXTERNAL_JWT_ISSUER for production'
+              );
+            }
+          }
+
           // Extract userId separately to prevent JWT payload from overwriting our normalized userId
           // Some JWTs may contain userId: null which would override our extracted value
           const { userId: _userId, ...restPayload } = payload;
