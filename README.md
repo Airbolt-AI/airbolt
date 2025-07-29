@@ -388,6 +388,35 @@ The monorepo structure makes it easy to contribute and understand how everything
 - **[GitHub Discussions](https://github.com/Airbolt-AI/airbolt/discussions)** - Feature requests and roadmap input
 - **[Issues](https://github.com/Airbolt-AI/airbolt/issues)** - Bug reports and technical questions
 
+## Advanced Usage: @airbolt/core
+
+**Need more control?** The Airbolt backend is powered by `@airbolt/core`, a reusable Fastify plugin that you can integrate into your existing Node.js applications.
+
+Use `@airbolt/core` when you want to:
+
+- Integrate Airbolt into an existing Fastify server
+- Customize authentication beyond JWT
+- Build multi-tenant AI services with dynamic API keys
+- Add custom middleware or routes alongside Airbolt
+
+```bash
+npm install @airbolt/core
+```
+
+```typescript
+import { createAirboltCore } from '@airbolt/core';
+
+await fastify.register(createAirboltCore, {
+  jwtSecret: process.env.JWT_SECRET,
+  getApiKey: async provider => {
+    // Fetch API keys dynamically from database, vault, etc.
+    return getKeyForProvider(provider);
+  },
+});
+```
+
+See the [@airbolt/core documentation](./packages/core/README.md) for advanced integration patterns.
+
 ## Why Airbolt?
 
 **Stop rebuilding the same AI plumbing.** Every AI-powered app needs the same backend infrastructure: secure API key storage, user authentication, rate limiting, logging, provider switching. You shouldn't have to rebuild this from scratch every time.

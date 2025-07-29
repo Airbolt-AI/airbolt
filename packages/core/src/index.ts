@@ -176,6 +176,7 @@ async function airboltCore(
   // @ts-expect-error - Fastify decorateRequest type issue
   fastify.decorateRequest('userRateLimiters', null);
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   fastify.addHook('onRequest', async request => {
     request.userRateLimiters = { request: requestLimiter, token: tokenLimiter };
   });

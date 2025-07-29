@@ -297,12 +297,15 @@ The API uses Fastify's built-in error handling with custom error messages:
 ## Architecture
 
 - **Framework**: Fastify for high performance
+- **Core Plugin**: Built on [@airbolt/core](../../packages/core) - a reusable Fastify plugin
 - **Language**: TypeScript with strict type checking
 - **Validation**: Zod for runtime validation
 - **Authentication**: JWT tokens with configurable expiration
 - **Rate Limiting**: Per-IP rate limiting using @fastify/rate-limit
 - **Logging**: Structured JSON logging with Pino
 - **Security**: CORS, Helmet, request validation
+
+This backend API serves as a reference implementation of the @airbolt/core plugin. If you're looking to integrate Airbolt's functionality into your own Fastify application, see the [@airbolt/core documentation](../../packages/core/README.md).
 
 ## Health Check
 
