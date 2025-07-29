@@ -21,7 +21,7 @@
 
 ## Getting Started
 
-### Deploy to Render
+### Deploy the Airbolt backend
 
 **Option 1: Deploy Latest Stable Release (Recommended)**  
 Deploy our production-tested version:
