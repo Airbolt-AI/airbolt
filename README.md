@@ -21,10 +21,14 @@
 
 ## Getting Started
 
-**Deploy the Airbolt backend**
+### Deploy to Render
 
-Deploy our production-ready LLM proxy to Render. You'll get your own private API that securely handles LLM calls:
+**Option 1: Deploy Latest Stable Release (Recommended)**  
+Deploy our production-tested version:
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt&branch=v0.8.0)
 
+**Option 2: Deploy Latest Development**  
+Deploy the latest features from main branch (may include unreleased changes):
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt)
 
 **What this deploys:**
