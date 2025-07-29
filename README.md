@@ -25,7 +25,7 @@
 
 **Option 1: Deploy Latest Stable Release (Recommended)**  
 Deploy our production-tested version:
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt&branch=v0.8.0)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Airbolt-AI/airbolt&branch=release%2Fv0.8.0)
 
 **Option 2: Deploy Latest Development**  
 Deploy the latest features from main branch (may include unreleased changes):
