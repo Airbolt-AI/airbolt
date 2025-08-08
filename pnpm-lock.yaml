@@ -387,6 +387,9 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@fast-check/vitest':
+        specifier: ^0.2.2
+        version: 0.2.2(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.7)(happy-dom@15.11.7)(msw@2.10.4(@types/node@20.19.7)(typescript@5.8.3)))
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.7
@@ -6176,6 +6179,11 @@ snapshots:
     dependencies:
       '@eslint/core': 0.15.1
       levn: 0.4.1
+
+  '@fast-check/vitest@0.2.2(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.7)(happy-dom@15.11.7)(msw@2.10.4(@types/node@20.19.7)(typescript@5.8.3)))':
+    dependencies:
+      fast-check: 4.2.0
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.7)(happy-dom@15.11.7)(msw@2.10.4(@types/node@20.19.7)(typescript@5.8.3))
 
   '@fast-check/vitest@0.2.2(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.3)(happy-dom@15.11.7)(msw@2.10.4(@types/node@22.16.3)(typescript@5.8.3)))':
     dependencies:

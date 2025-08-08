@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { test, fc } from '@fast-check/vitest';
 import { detectAuthProvider } from './auth-providers.js';
 
 describe('Auth Provider Detection', () => {
@@ -18,6 +19,7 @@ describe('Auth Provider Detection', () => {
     it('detects Clerk when available', () => {
       (global as any).window = {
         Clerk: {
+          loaded: true,
           session: {
             getToken: vi.fn().mockResolvedValue('clerk-token'),
           },
@@ -33,6 +35,7 @@ describe('Auth Provider Detection', () => {
       const mockToken = 'clerk-jwt-token';
       (global as any).window = {
         Clerk: {
+          loaded: true,
           session: {
             getToken: vi.fn().mockResolvedValue(mockToken),
           },
@@ -187,6 +190,7 @@ describe('Auth Provider Detection', () => {
       // Setup multiple providers - Clerk should be detected first
       (global as any).window = {
         Clerk: {
+          loaded: true,
           session: {
             getToken: vi.fn(),
           },
@@ -217,6 +221,185 @@ describe('Auth Provider Detection', () => {
       delete (global as any).window;
       const provider = detectAuthProvider();
       expect(provider).toBeNull();
+    });
+  });
+
+  describe('Property tests - Edge cases', () => {
+    test.prop([
+      fc.record({
+        hasClerk: fc.boolean(),
+        clerkLoaded: fc.boolean(),
+        clerkSession: fc.option(fc.constant({ getToken: vi.fn() })),
+        hasSupabase: fc.boolean(),
+        supabaseAuth: fc.option(
+          fc.constant({
+            getSession: vi.fn().mockResolvedValue({
+              data: { session: { access_token: 'supabase-token' } },
+            }),
+          })
+        ),
+        hasAuth0: fc.boolean(),
+        auth0Method: fc.option(
+          fc.constant(vi.fn().mockResolvedValue('auth0-token'))
+        ),
+        hasFirebase: fc.boolean(),
+        firebaseAuth: fc.option(
+          fc.constant(() => ({
+            currentUser: {
+              getIdToken: vi.fn().mockResolvedValue('firebase-token'),
+            },
+          }))
+        ),
+      }),
+    ])(
+      'correctly prioritizes providers in all combinations',
+      ({
+        hasClerk,
+        clerkLoaded,
+        clerkSession,
+        hasSupabase,
+        supabaseAuth,
+        hasAuth0,
+        auth0Method,
+        hasFirebase,
+        firebaseAuth,
+      }) => {
+        // Setup window based on scenario
+        const windowObj: any = {};
+
+        if (hasClerk) {
+          windowObj.Clerk = {
+            loaded: clerkLoaded,
+            session: clerkSession === null ? undefined : clerkSession,
+          };
+        }
+
+        if (hasSupabase) {
+          windowObj.supabase = supabaseAuth ? { auth: supabaseAuth } : {};
+        }
+
+        if (hasAuth0) {
+          windowObj.auth0 = auth0Method
+            ? { getAccessTokenSilently: auth0Method }
+            : {};
+        }
+
+        if (hasFirebase) {
+          windowObj.firebase = firebaseAuth ? { auth: firebaseAuth } : {};
+        }
+
+        (global as any).window = windowObj;
+
+        const provider = detectAuthProvider();
+
+        // Verify detection logic follows priority order
+        // Clerk requires loaded === true and session !== undefined (not null)
+        const shouldDetectClerk =
+          hasClerk && clerkLoaded && clerkSession !== null;
+        const shouldDetectSupabase =
+          !shouldDetectClerk && hasSupabase && supabaseAuth !== null;
+        const shouldDetectAuth0 =
+          !shouldDetectClerk &&
+          !shouldDetectSupabase &&
+          hasAuth0 &&
+          auth0Method !== null;
+        const shouldDetectFirebase =
+          !shouldDetectClerk &&
+          !shouldDetectSupabase &&
+          !shouldDetectAuth0 &&
+          hasFirebase &&
+          firebaseAuth !== null;
+
+        if (shouldDetectClerk) {
+          expect(provider?.name).toBe('clerk');
+        } else if (shouldDetectSupabase) {
+          expect(provider?.name).toBe('supabase');
+        } else if (shouldDetectAuth0) {
+          expect(provider?.name).toBe('auth0');
+        } else if (shouldDetectFirebase) {
+          expect(provider?.name).toBe('firebase');
+        } else {
+          expect(provider).toBeNull();
+        }
+      }
+    );
+
+    test.prop([
+      fc.record({
+        throwOnClerk: fc.boolean(),
+        throwOnSupabase: fc.boolean(),
+        errorMessage: fc.string({ minLength: 1, maxLength: 50 }),
+      }),
+    ])(
+      'handles provider errors gracefully',
+      async ({ throwOnClerk, throwOnSupabase, errorMessage }) => {
+        // Setup providers with potential errors
+        (global as any).window = {
+          Clerk: throwOnClerk
+            ? undefined
+            : {
+                loaded: true,
+                session: {
+                  getToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
+                },
+              },
+          supabase: throwOnSupabase
+            ? undefined
+            : {
+                auth: {
+                  getSession: vi
+                    .fn()
+                    .mockRejectedValue(new Error(errorMessage)),
+                },
+              },
+        };
+
+        const provider = detectAuthProvider();
+
+        if (!throwOnClerk) {
+          expect(provider?.name).toBe('clerk');
+          await expect(provider!.getToken()).rejects.toThrow(errorMessage);
+        } else if (!throwOnSupabase) {
+          expect(provider?.name).toBe('supabase');
+          await expect(provider!.getToken()).rejects.toThrow();
+        } else {
+          expect(provider).toBeNull();
+        }
+      }
+    );
+
+    it('handles falsy token values properly', async () => {
+      // Test each falsy value separately
+      const falsyValues = [undefined, null, '', false, 0];
+
+      for (const falsyValue of falsyValues) {
+        vi.useFakeTimers();
+
+        (global as any).window = {
+          Clerk: {
+            loaded: true,
+            session: {
+              getToken: vi.fn().mockResolvedValue(falsyValue),
+            },
+          },
+        };
+
+        const provider = detectAuthProvider();
+        expect(provider?.name).toBe('clerk');
+
+        // All falsy values should retry/fail in Clerk implementation
+        // because line 66 checks `if (token)` which excludes all falsy values
+        const tokenPromise = provider!.getToken();
+
+        // Fast-forward through all retries (20 attempts * 100ms = 2000ms)
+        await vi.advanceTimersByTimeAsync(2100);
+
+        await expect(tokenPromise).rejects.toThrow(
+          'Clerk session not available'
+        );
+
+        vi.useRealTimers();
+      }
     });
   });
 });

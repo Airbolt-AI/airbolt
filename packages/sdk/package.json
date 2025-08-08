@@ -70,6 +70,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@fast-check/vitest": "^0.2.2",
     "@types/node": "^20.0.0",
     "@types/node-fetch": "^2.6.12",
     "fast-check": "^4.1.1",
