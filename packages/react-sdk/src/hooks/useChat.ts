@@ -102,12 +102,18 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     // Only auto-detect if no explicit auth provided
     if (options?.getAuthToken) return;
 
+    // Skip detection in non-browser environments (fixes SSR/tests)
+    if (typeof window === 'undefined') return;
+
+    // Track if effect is still mounted for cleanup
+    let cancelled = false;
+
     async function detectAuth() {
       // Wait for potential Clerk initialization (max 2s)
       const maxWait = 2000;
       const start = Date.now();
 
-      while (Date.now() - start < maxWait) {
+      while (!cancelled && Date.now() - start < maxWait) {
         // Check for Clerk - using a type-safe approach
         const globalWindow = window as Window & {
           Clerk?: {
@@ -119,15 +125,17 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         };
 
         if (globalWindow.Clerk?.session?.getToken) {
-          setDetectedAuth(() => async () => {
-            const getToken = globalWindow.Clerk?.session?.getToken;
-            if (!getToken) throw new Error('Clerk getToken not available');
+          if (!cancelled) {
+            setDetectedAuth(() => async () => {
+              const getToken = globalWindow.Clerk?.session?.getToken;
+              if (!getToken) throw new Error('Clerk getToken not available');
 
-            const token = await getToken();
-            if (!token) throw new Error('Clerk session has no token');
+              const token = await getToken();
+              if (!token) throw new Error('Clerk session has no token');
 
-            return token;
-          });
+              return token;
+            });
+          }
           break;
         }
 
@@ -138,6 +146,11 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     }
 
     void detectAuth();
+
+    // Cleanup function to cancel detection on unmount
+    return () => {
+      cancelled = true;
+    };
   }, [options?.getAuthToken]);
 
   const send = useCallback(async () => {
