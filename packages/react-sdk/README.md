@@ -67,6 +67,44 @@ function ChatComponent() {
 
 > 💡 **Want to see it in action?** Check out our [Interactive Demo](#interactive-demo) to explore all features with live examples including streaming responses!
 
+## Supported Auth Providers
+
+Airbolt SDK automatically detects and integrates with popular authentication providers - **zero configuration required**:
+
+| Provider        | Auto-Detection        | Status           |
+| --------------- | --------------------- | ---------------- |
+| **Clerk**       | ✅ Automatic          | Production Ready |
+| **Supabase**    | ✅ Automatic          | Production Ready |
+| **Auth0**       | ✅ Automatic          | Production Ready |
+| **Firebase**    | ✅ Automatic          | Production Ready |
+| **Custom/BYOA** | ✅ Via `getAuthToken` | Production Ready |
+
+**Zero Configuration = Just use ChatWidget!** If your app already uses Clerk, Supabase, Auth0, or Firebase authentication, Airbolt automatically detects and uses it:
+
+```tsx
+// Your existing app with Clerk already set up somewhere
+function App() {
+  return (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    // That's it! Clerk auth detected and used automatically
+  );
+}
+
+// Your existing app with Supabase already set up somewhere
+function App() {
+  return (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    // That's it! Supabase auth detected and used automatically
+  );
+}
+
+// Custom auth - Only if you need to override or use a custom provider
+<ChatWidget
+  baseURL="https://your-deployment.onrender.com"
+  getAuthToken={async () => myCustomAuth.getToken()}
+/>;
+```
+
 ## API Reference
 
 ### ChatWidget

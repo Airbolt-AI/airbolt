@@ -59,11 +59,20 @@ console.log(
 - Full TypeScript support with type safety
 - Works in Node.js, browsers, and edge runtimes
 
-### 🔄 Zero Configuration
+### 🔄 Zero Configuration Authentication
 
-- No environment variables needed
+**Just use the SDK - auth is automatic!** If your app uses Clerk, Supabase, Auth0, or Firebase, we detect and use it automatically:
+
+```typescript
+// Your app already has Clerk/Supabase/Auth0/Firebase set up?
+// Just use the SDK - no auth configuration needed!
+const response = await chat([{ role: 'user', content: 'Hello!' }]);
+```
+
+- Auto-detects Clerk, Supabase, Auth0, Firebase
+- No auth configuration needed
 - Pass `baseURL` when you need a custom backend
-- Handles authentication automatically
+- Override with `getAuthToken` for custom providers
 
 ### 📊 Rate Limiting & Usage Tracking
 
