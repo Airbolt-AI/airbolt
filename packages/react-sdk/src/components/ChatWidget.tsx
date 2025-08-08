@@ -58,6 +58,11 @@ export interface ChatWidgetProps {
    */
   streaming?: boolean;
   /**
+   * Custom auth token getter function for BYOA (Bring Your Own Auth)
+   * @example getAuthToken: async () => await clerk.session.getToken()
+   */
+  getAuthToken?: () => Promise<string> | string;
+  /**
    * Custom styles for widget elements
    */
   customStyles?: {
@@ -104,6 +109,7 @@ export function ChatWidget({
   className,
   minimalTheme,
   streaming = true,
+  getAuthToken,
   customStyles,
 }: ChatWidgetProps): React.ReactElement {
   const chatOptions: UseChatOptions = {};
@@ -121,6 +127,9 @@ export function ChatWidget({
   }
   if (streaming !== undefined) {
     chatOptions.streaming = streaming;
+  }
+  if (getAuthToken !== undefined) {
+    chatOptions.getAuthToken = getAuthToken;
   }
 
   const {

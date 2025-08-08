@@ -210,6 +210,14 @@ export class AirboltClient {
   }
 
   /**
+   * Get a valid token (for streaming support)
+   * @internal
+   */
+  async getToken(): Promise<string> {
+    return this.tokenManager.getToken();
+  }
+
+  /**
    * Get the base URL
    */
   getBaseURL(): string {

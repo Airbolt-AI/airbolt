@@ -12,22 +12,30 @@ class ClerkAuthProvider implements AuthProvider {
   name = 'clerk';
 
   detect(): boolean {
+    // Check if Clerk is fully loaded (not just present)
     return (
       typeof window !== 'undefined' &&
-      (window as any).Clerk?.session?.getToken !== undefined &&
-      typeof (window as any).Clerk.session.getToken === 'function'
+      (window as any).Clerk?.loaded === true &&
+      (window as any).Clerk?.session !== undefined
     );
   }
 
   async getToken(): Promise<string> {
-    if (!this.detect()) {
-      throw new Error('Clerk not ready or session unavailable');
+    // Handle async Clerk initialization
+    const maxAttempts = 20; // 2 seconds
+    let attempts = 0;
+
+    while (attempts++ < maxAttempts) {
+      if ((window as any).Clerk?.session?.getToken) {
+        const token = (await (
+          window as any
+        ).Clerk.session.getToken()) as string;
+        if (token) return token;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
-    const token = (await (window as any).Clerk.session.getToken()) as string;
-    if (!token) {
-      throw new Error('Clerk returned empty token');
-    }
-    return token;
+
+    throw new Error('Clerk session not available');
   }
 }
 

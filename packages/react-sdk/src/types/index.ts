@@ -33,6 +33,11 @@ export interface UseChatOptions {
    * Callback for streaming chunks
    */
   onChunk?: (chunk: string) => void;
+  /**
+   * Custom auth token getter function for BYOA (Bring Your Own Auth)
+   * @example getAuthToken: async () => await clerk.session.getToken()
+   */
+  getAuthToken?: () => Promise<string> | string;
 }
 
 /**

@@ -123,6 +123,12 @@ export async function* chatStream(
 }> {
   const baseURL = options?.baseURL || 'http://localhost:3000';
 
+  // Get or create a client instance with auth support
+  const client = getClientInstance(options?.baseURL, options);
+
+  // Get token through the client's TokenManager (handles custom auth)
+  const token = await client.getToken();
+
   try {
     // Create EventSource-like connection for SSE
     const response = await fetch(joinUrl(baseURL, 'api/chat'), {
@@ -130,7 +136,7 @@ export async function* chatStream(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-        Authorization: `Bearer ${await getOrCreateToken(baseURL)}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         messages,
@@ -275,27 +281,6 @@ export async function* chatStream(
       500
     );
   }
-}
-
-// Helper function to get or create token
-async function getOrCreateToken(baseURL: string): Promise<string> {
-  const response = await fetch(joinUrl(baseURL, 'api/tokens'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ userId: 'streaming-user' }),
-  });
-
-  if (!response.ok) {
-    throw new AirboltError(
-      `Failed to get token: ${response.status}`,
-      response.status
-    );
-  }
-
-  const data = (await response.json()) as { token: string };
-  return data.token;
 }
 
 // Export aliases for renamed functions

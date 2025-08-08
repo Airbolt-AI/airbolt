@@ -76,6 +76,9 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [detectedAuth, setDetectedAuth] = useState<
+    (() => Promise<string> | string) | null
+  >(null);
 
   // Use ref to track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(false);
@@ -93,6 +96,42 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       abortControllerRef.current?.abort();
     };
   }, []);
+
+  // Auto-detect Clerk or other auth providers when no explicit auth is provided
+  useEffect(() => {
+    // Only auto-detect if no explicit auth provided
+    if (options?.getAuthToken) return;
+
+    async function detectAuth() {
+      // Wait for potential Clerk initialization (max 2s)
+      const maxWait = 2000;
+      const start = Date.now();
+
+      while (Date.now() - start < maxWait) {
+        // Check for Clerk
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if ((window as any).Clerk?.session?.getToken) {
+          setDetectedAuth(() => async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            const token = (await (
+              window as any
+            ).Clerk.session.getToken()) as string;
+            if (!token) throw new Error('Clerk session has no token');
+
+            return token;
+          });
+          break;
+        }
+
+        // Check for other auth providers could be added here
+        // if ((window as any).auth0?.getAccessTokenSilently) { ... }
+
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+
+    void detectAuth();
+  }, [options?.getAuthToken]);
 
   const send = useCallback(async () => {
     if (!input.trim() || isLoading || isStreaming) {
@@ -129,6 +168,12 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       }
       if (options?.model !== undefined) {
         chatOptions.model = options.model;
+      }
+      // Use provided auth or detected auth
+      if (options?.getAuthToken !== undefined) {
+        chatOptions.getAuthToken = options.getAuthToken;
+      } else if (detectedAuth !== null) {
+        chatOptions.getAuthToken = detectedAuth;
       }
 
       if (options?.streaming !== false) {
@@ -215,7 +260,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         setInput(userMessage.content);
       }
     }
-  }, [input, isLoading, isStreaming, messages, options]);
+  }, [input, isLoading, isStreaming, messages, options, detectedAuth]);
 
   const clear = useCallback(() => {
     setMessages([]);
