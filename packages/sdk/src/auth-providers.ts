@@ -56,7 +56,12 @@ class ClerkAuthProvider implements AuthProvider {
   }
 
   async getToken(): Promise<string> {
-    // Handle async Clerk initialization
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') {
+      throw new Error('Clerk requires a browser environment');
+    }
+
+    // Handle async Clerk initialization with simple retry
     const maxAttempts = 20; // 2 seconds
     let attempts = 0;
 
@@ -66,7 +71,11 @@ class ClerkAuthProvider implements AuthProvider {
         const token = await getTokenFn();
         if (token) return token;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Only wait if we haven't exhausted attempts
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
     throw new Error('Clerk session not available');

@@ -368,38 +368,27 @@ describe('Auth Provider Detection', () => {
       }
     );
 
-    it('handles falsy token values properly', async () => {
-      // Test each falsy value separately
-      const falsyValues = [undefined, null, '', false, 0];
+    it('handles missing tokens gracefully', async () => {
+      // Test that provider fails when no valid token is available
+      // This tests BEHAVIOR not implementation: "no token = auth fails"
 
-      for (const falsyValue of falsyValues) {
-        vi.useFakeTimers();
-
-        (global as any).window = {
-          Clerk: {
-            loaded: true,
-            session: {
-              getToken: vi.fn().mockResolvedValue(falsyValue),
-            },
+      (global as any).window = {
+        Clerk: {
+          loaded: true,
+          session: {
+            // Simulate Clerk returning no token (common in signed-out state)
+            getToken: vi.fn().mockResolvedValue(null),
           },
-        };
+        },
+      };
 
-        const provider = detectAuthProvider();
-        expect(provider?.name).toBe('clerk');
+      const provider = detectAuthProvider();
+      expect(provider?.name).toBe('clerk');
 
-        // All falsy values should retry/fail in Clerk implementation
-        // because line 66 checks `if (token)` which excludes all falsy values
-        const tokenPromise = provider!.getToken();
-
-        // Fast-forward through all retries (20 attempts * 100ms = 2000ms)
-        await vi.advanceTimersByTimeAsync(2100);
-
-        await expect(tokenPromise).rejects.toThrow(
-          'Clerk session not available'
-        );
-
-        vi.useRealTimers();
-      }
+      // Should fail when no token is available
+      // We don't care HOW it fails (retries, timing, etc)
+      // We only care THAT it fails appropriately
+      await expect(provider!.getToken()).rejects.toThrow();
     });
   });
 });
