@@ -50,7 +50,8 @@ class ClerkAuthProvider implements AuthProvider {
     return (
       typeof window !== 'undefined' &&
       window.Clerk?.loaded === true &&
-      window.Clerk?.session !== undefined
+      window.Clerk?.session !== undefined &&
+      window.Clerk?.session !== null
     );
   }
 
