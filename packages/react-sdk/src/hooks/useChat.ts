@@ -108,14 +108,22 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
       const start = Date.now();
 
       while (Date.now() - start < maxWait) {
-        // Check for Clerk
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if ((window as any).Clerk?.session?.getToken) {
+        // Check for Clerk - using a type-safe approach
+        const globalWindow = window as Window & {
+          Clerk?: {
+            loaded?: boolean;
+            session?: {
+              getToken?: () => Promise<string>;
+            };
+          };
+        };
+
+        if (globalWindow.Clerk?.session?.getToken) {
           setDetectedAuth(() => async () => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            const token = await (
-              (window as any).Clerk.session.getToken() as () => Promise<string>
-            )();
+            const getToken = globalWindow.Clerk?.session?.getToken;
+            if (!getToken) throw new Error('Clerk getToken not available');
+
+            const token = await getToken();
             if (!token) throw new Error('Clerk session has no token');
 
             return token;
@@ -123,8 +131,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
           break;
         }
 
-        // Check for other auth providers could be added here
-        // if ((window as any).auth0?.getAccessTokenSilently) { ... }
+        // Check for other auth providers could be added here with proper typing
 
         await new Promise(r => setTimeout(r, 100));
       }

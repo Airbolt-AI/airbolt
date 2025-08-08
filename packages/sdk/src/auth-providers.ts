@@ -1,6 +1,40 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+// Type definitions for external auth providers
+interface ClerkGlobal {
+  loaded?: boolean;
+  session?: {
+    getToken?: () => Promise<string>;
+  };
+}
+
+interface SupabaseGlobal {
+  auth?: {
+    getSession?: () => Promise<{
+      data?: { session?: { access_token?: string } };
+    }>;
+  };
+}
+
+interface Auth0Global {
+  getAccessTokenSilently?: () => Promise<string>;
+}
+
+interface FirebaseGlobal {
+  auth?: () => {
+    currentUser?: {
+      getIdToken: () => Promise<string>;
+    } | null;
+  };
+}
+
+// Extend Window interface with auth provider types
+declare global {
+  interface Window {
+    Clerk?: ClerkGlobal;
+    supabase?: SupabaseGlobal;
+    auth0?: Auth0Global;
+    firebase?: FirebaseGlobal;
+  }
+}
 
 export interface AuthProvider {
   name: string;
@@ -15,8 +49,8 @@ class ClerkAuthProvider implements AuthProvider {
     // Check if Clerk is fully loaded (not just present)
     return (
       typeof window !== 'undefined' &&
-      (window as any).Clerk?.loaded === true &&
-      (window as any).Clerk?.session !== undefined
+      window.Clerk?.loaded === true &&
+      window.Clerk?.session !== undefined
     );
   }
 
@@ -26,10 +60,9 @@ class ClerkAuthProvider implements AuthProvider {
     let attempts = 0;
 
     while (attempts++ < maxAttempts) {
-      if ((window as any).Clerk?.session?.getToken) {
-        const token = (await (
-          window as any
-        ).Clerk.session.getToken()) as string;
+      const getTokenFn = window.Clerk?.session?.getToken;
+      if (getTokenFn) {
+        const token = await getTokenFn();
         if (token) return token;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -45,8 +78,8 @@ class SupabaseAuthProvider implements AuthProvider {
   detect(): boolean {
     return (
       typeof window !== 'undefined' &&
-      (window as any).supabase?.auth?.getSession !== undefined &&
-      typeof (window as any).supabase.auth.getSession === 'function'
+      window.supabase?.auth?.getSession !== undefined &&
+      typeof window.supabase.auth.getSession === 'function'
     );
   }
 
@@ -54,9 +87,13 @@ class SupabaseAuthProvider implements AuthProvider {
     if (!this.detect()) {
       throw new Error('Supabase not ready or auth unavailable');
     }
-    const response = (await (window as any).supabase.auth.getSession()) as {
-      data?: { session?: { access_token?: string } };
-    };
+
+    const getSession = window.supabase?.auth?.getSession;
+    if (!getSession) {
+      throw new Error('Supabase getSession not available');
+    }
+
+    const response = await getSession();
     const token = response?.data?.session?.access_token;
     if (!token) {
       throw new Error('Supabase returned empty token or no active session');
@@ -71,8 +108,8 @@ class Auth0Provider implements AuthProvider {
   detect(): boolean {
     return (
       typeof window !== 'undefined' &&
-      (window as any).auth0?.getAccessTokenSilently !== undefined &&
-      typeof (window as any).auth0.getAccessTokenSilently === 'function'
+      window.auth0?.getAccessTokenSilently !== undefined &&
+      typeof window.auth0.getAccessTokenSilently === 'function'
     );
   }
 
@@ -80,9 +117,13 @@ class Auth0Provider implements AuthProvider {
     if (!this.detect()) {
       throw new Error('Auth0 not ready or client unavailable');
     }
-    const token = (await (
-      window as any
-    ).auth0.getAccessTokenSilently()) as string;
+
+    const getAccessTokenSilently = window.auth0?.getAccessTokenSilently;
+    if (!getAccessTokenSilently) {
+      throw new Error('Auth0 getAccessTokenSilently not available');
+    }
+
+    const token = await getAccessTokenSilently();
     if (!token) {
       throw new Error('Auth0 returned empty token');
     }
@@ -96,8 +137,8 @@ class FirebaseAuthProvider implements AuthProvider {
   detect(): boolean {
     return (
       typeof window !== 'undefined' &&
-      (window as any).firebase?.auth !== undefined &&
-      typeof (window as any).firebase.auth === 'function'
+      window.firebase?.auth !== undefined &&
+      typeof window.firebase.auth === 'function'
     );
   }
 
@@ -105,12 +146,17 @@ class FirebaseAuthProvider implements AuthProvider {
     if (!this.detect()) {
       throw new Error('Firebase not ready or auth unavailable');
     }
-    const currentUser = (window as any).firebase.auth().currentUser as {
-      getIdToken: () => Promise<string>;
-    } | null;
+
+    const auth = window.firebase?.auth;
+    if (!auth) {
+      throw new Error('Firebase auth not available');
+    }
+
+    const currentUser = auth().currentUser;
     if (!currentUser) {
       throw new Error('Firebase user not authenticated');
     }
+
     const token = await currentUser.getIdToken();
     if (!token) {
       throw new Error('Firebase returned empty token');
