@@ -101,52 +101,62 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 ## Bring Your Own Auth (BYOA)
 
-Use your existing authentication provider (Auth0, Clerk, Firebase, Supabase) with Airbolt.
+Use your existing authentication provider with Airbolt. **Zero configuration required!**
 
-### Quick Start
+### 🎉 Automatic Authentication (NEW!)
 
-**Development (Zero-Config)**
+The React SDK now automatically detects and uses your auth provider - no configuration needed:
 
-In development, Airbolt automatically validates tokens from common providers - no backend configuration needed!
+```jsx
+// Clerk - Automatically detected!
+<ClerkProvider publishableKey="pk_...">
+  <ChatWidget />  {/* No auth props needed! */}
+</ClerkProvider>
 
-```javascript
-// Frontend - SDK auto-detects your auth provider
-import { chat } from '@airbolt/sdk';
+// Auth0 - Automatically detected!
+<Auth0Provider domain="..." clientId="...">
+  <ChatWidget />  {/* No auth props needed! */}
+</Auth0Provider>
 
-const response = await chat([{ role: 'user', content: 'Hello!' }]);
+// Supabase - Automatically detected!
+// After Supabase init
+<ChatWidget />  {/* No auth props needed! */}
+
+// Firebase - Automatically detected!
+// After Firebase auth init
+<ChatWidget />  {/* No auth props needed! */}
 ```
 
-```bash
-# Backend - Auto-discovers JWKS in development mode
-# Just start the server and it works!
+**That's it!** The SDK automatically:
+
+- ✅ Detects your auth provider
+- ✅ Gets tokens when needed
+- ✅ Refreshes expired tokens
+- ✅ Falls back to anonymous auth if not signed in
+
+### How It Works
+
+1. **Frontend**: SDK auto-detects Auth0/Clerk/Firebase/Supabase on window object
+2. **Backend**: Auto-validates tokens via JWKS discovery
+3. **Security**: Rate limiting by issuer + user ID prevents abuse
+
+### Manual Configuration (Optional)
+
+For custom auth providers or when you need explicit control:
+
+```jsx
+<ChatWidget getAuthToken={async () => await myCustomAuth.getToken()} />
 ```
 
-**Production (Secure by Default)**
+### Production Configuration
 
-Production requires explicit configuration for security:
+For enhanced security in production, configure your backend:
 
 ```bash
 NODE_ENV=production
 EXTERNAL_JWT_ISSUER=https://your-auth-provider.com/
-EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
+EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Optional but recommended
 ```
-
-### How It Works
-
-1. **Frontend**: SDK detects Auth0/Clerk/Firebase/Supabase automatically
-2. **Backend**:
-   - Development: Auto-discovers JWKS from any HTTPS issuer
-   - Production: Validates against configured issuer only
-3. **Security**: Rate limiting by issuer + user ID prevents abuse
-
-### Migration Guide
-
-**Existing Users**: No changes required! Your current `EXTERNAL_JWT_ISSUER` configuration continues to work.
-
-**New Users**:
-
-- Development: No configuration needed
-- Production: Set `EXTERNAL_JWT_ISSUER` and optionally `EXTERNAL_JWT_AUDIENCE`
 
 ### Auth0 Setup Example
 
@@ -178,11 +188,40 @@ EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
 
 The Airbolt SDK automatically detects Auth0 - no additional configuration needed! See the [Auth0 example](examples/auth0-authenticated) for a complete implementation.
 
+### Clerk Setup Example
+
+Zero configuration needed! Just wrap with ClerkProvider:
+
+```jsx
+import { ClerkProvider } from '@clerk/clerk-react';
+import { ChatWidget } from '@airbolt/react-sdk';
+
+<ClerkProvider publishableKey="pk_test_...">
+  <ChatWidget /> {/* Automatically uses Clerk tokens! */}
+</ClerkProvider>;
+```
+
+See the [Clerk example](examples/clerk-authenticated) for a complete implementation.
+
+### Supported Auth Providers
+
+| Provider | Auto-Detection     | Example                                      |
+| -------- | ------------------ | -------------------------------------------- |
+| Clerk    | ✅ Automatic       | [View Example](examples/clerk-authenticated) |
+| Auth0    | ✅ Automatic       | [View Example](examples/auth0-authenticated) |
+| Supabase | ✅ Automatic       | Coming Soon                                  |
+| Firebase | ✅ Automatic       | Coming Soon                                  |
+| Custom   | Via `getAuthToken` | See below                                    |
+
 ### Custom Auth Providers
 
 For other auth providers or server-side rendering:
 
 ```javascript
+// React
+<ChatWidget getAuthToken={async () => await myAuth.getToken()} />;
+
+// Vanilla JavaScript
 const response = await chat(messages, {
   getAuthToken: () => myAuth.getToken(),
 });

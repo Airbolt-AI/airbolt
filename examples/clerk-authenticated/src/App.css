@@ -1,0 +1,138 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sign-in-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.sign-in-container h2 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.sign-in-container p {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.sign-in-container ul {
+  list-style: none;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.sign-in-container li {
+  color: #059669;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+.chat-container {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container h2 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.magic-notice {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #4c1d95;
+}
+
+.code-example {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.code-example h3 {
+  color: #1f2937;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.code-example pre {
+  background: #1f2937;
+  color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+footer {
+  background: #f3f4f6;
+  padding: 2rem;
+  margin-top: auto;
+}
+
+footer h3 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+footer ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: #4b5563;
+}
+
+footer li {
+  margin: 0.5rem 0;
+}
+
+.note {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  padding: 1rem;
+  margin-top: 1rem;
+  color: #92400e;
+  border-radius: 4px;
+}
