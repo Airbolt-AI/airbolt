@@ -79,30 +79,49 @@ Airbolt SDK automatically detects and integrates with popular authentication pro
 | **Firebase**    | ✅ Automatic          | Production Ready |
 | **Custom/BYOA** | ✅ Via `getAuthToken` | Production Ready |
 
-**Zero Configuration = Just use ChatWidget!** If your app already uses Clerk, Supabase, Auth0, or Firebase authentication, Airbolt automatically detects and uses it:
+### How Zero-Config Auth Works
+
+**Place ChatWidget inside your authenticated components** - it automatically detects and uses your auth:
 
 ```tsx
-// Your existing app with Clerk already set up somewhere
-function App() {
-  return (
+// With Clerk - ChatWidget inside SignedIn component
+<ClerkProvider publishableKey={key}>
+  <SignedIn>
     <ChatWidget baseURL="https://your-deployment.onrender.com" />
-    // That's it! Clerk auth detected and used automatically
-  );
-}
+    {/* ✅ Automatically uses Clerk auth */}
+  </SignedIn>
+</ClerkProvider>
 
-// Your existing app with Supabase already set up somewhere
-function App() {
-  return (
+// With Supabase - ChatWidget inside authenticated component
+<SessionContextProvider supabaseClient={supabase}>
+  {user && (
     <ChatWidget baseURL="https://your-deployment.onrender.com" />
-    // That's it! Supabase auth detected and used automatically
-  );
-}
+    {/* ✅ Automatically uses Supabase auth */}
+  )}
+</SessionContextProvider>
 
-// Custom auth - Only if you need to override or use a custom provider
+// With Auth0 - ChatWidget inside authenticated component
+<Auth0Provider domain={domain} clientId={clientId}>
+  {isAuthenticated && (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    {/* ✅ Automatically uses Auth0 auth */}
+  )}
+</Auth0Provider>
+```
+
+### Manual Configuration (If Needed)
+
+If ChatWidget is rendered outside the auth context or you need custom auth:
+
+```tsx
+// Provide your own token getter
 <ChatWidget
   baseURL="https://your-deployment.onrender.com"
-  getAuthToken={async () => myCustomAuth.getToken()}
-/>;
+  getAuthToken={async () => {
+    // Your custom auth logic
+    return await myAuth.getToken();
+  }}
+/>
 ```
 
 ## API Reference

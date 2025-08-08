@@ -63,7 +63,9 @@ function App() {
               <div className="code-example">
                 <h3>The entire integration code:</h3>
                 <pre>{`<ClerkProvider publishableKey="pk_test_...">
-  <ChatWidget />  {/* That's it! No auth config! */}
+  <SignedIn>
+    <ChatWidget />  {/* Zero auth config needed! */}
+  </SignedIn>
 </ClerkProvider>`}</pre>
               </div>
             </div>

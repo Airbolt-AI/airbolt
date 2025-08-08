@@ -5,13 +5,15 @@ This example demonstrates how Airbolt's ChatWidget automatically detects and use
 ## 🚀 Zero Configuration Required!
 
 ```jsx
-// That's literally all you need!
+// Place ChatWidget inside your authenticated components
 <ClerkProvider publishableKey="pk_test_...">
-  <ChatWidget />
+  <SignedIn>
+    <ChatWidget /> {/* Automatically uses Clerk auth! */}
+  </SignedIn>
 </ClerkProvider>
 ```
 
-No `getAuthToken` prop. No auth configuration. It just works!
+No `getAuthToken` prop. No auth configuration. ChatWidget automatically detects and uses Clerk when placed inside authenticated components!
 
 ## Setup
 

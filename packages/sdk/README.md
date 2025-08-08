@@ -61,18 +61,18 @@ console.log(
 
 ### 🔄 Zero Configuration Authentication
 
-**Just use the SDK - auth is automatic!** If your app uses Clerk, Supabase, Auth0, or Firebase, we detect and use it automatically:
+**Automatic auth detection when used within your auth context!** If your code runs inside an authenticated context (Clerk, Supabase, Auth0, or Firebase), we detect and use it automatically:
 
 ```typescript
-// Your app already has Clerk/Supabase/Auth0/Firebase set up?
+// Your code is inside an authenticated component/context?
 // Just use the SDK - no auth configuration needed!
 const response = await chat([{ role: 'user', content: 'Hello!' }]);
 ```
 
-- Auto-detects Clerk, Supabase, Auth0, Firebase
+- Auto-detects auth when inside provider context
+- Works with Clerk `<SignedIn>`, Supabase authenticated routes, etc.
 - No auth configuration needed
-- Pass `baseURL` when you need a custom backend
-- Override with `getAuthToken` for custom providers
+- Override with `getAuthToken` for custom providers or when outside auth context
 
 ### 📊 Rate Limiting & Usage Tracking
 
