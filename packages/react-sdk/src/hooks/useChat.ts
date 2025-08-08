@@ -113,9 +113,9 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         if ((window as any).Clerk?.session?.getToken) {
           setDetectedAuth(() => async () => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            const token = (await (
-              window as any
-            ).Clerk.session.getToken()) as string;
+            const token = await (
+              (window as any).Clerk.session.getToken() as () => Promise<string>
+            )();
             if (!token) throw new Error('Clerk session has no token');
 
             return token;
