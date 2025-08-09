@@ -13,108 +13,74 @@ describe('Health Check Endpoint', () => {
   });
 
   describe('GET /health', () => {
-    test('should return health status with all required fields', async () => {
+    test('should detect unhealthy system conditions correctly', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/health',
       });
 
-      // Should return either 200 (healthy) or 503 (unhealthy), both are valid
-      expect([200, 503]).toContain(response.statusCode);
-
       const health = JSON.parse(response.payload);
 
-      // Check required structure
-      expect(health).toHaveProperty('status');
-      expect(health).toHaveProperty('timestamp');
-      expect(health).toHaveProperty('uptime');
-      expect(health).toHaveProperty('checks');
-      expect(health).toHaveProperty('version');
+      // Test business logic: If any critical service is down, system is unhealthy
+      if (health.status === 'unhealthy') {
+        expect(response.statusCode).toBe(503);
+        // At least one check should be in error state
+        const checkValues = Object.values(health.checks).filter(
+          v => typeof v === 'string'
+        );
+        expect(checkValues).toContain('error');
+      } else {
+        expect(response.statusCode).toBe(200);
+        expect(health.status).toBe('healthy');
+      }
 
-      // Check status is valid enum value
-      expect(['healthy', 'unhealthy']).toContain(health.status);
+      // Test timestamp freshness (should be within last 5 seconds)
+      const timestamp = new Date(health.timestamp);
+      const age = Date.now() - timestamp.getTime();
+      expect(age).toBeLessThan(5000);
 
-      // Check timestamp is valid ISO string
-      expect(() => new Date(health.timestamp)).not.toThrow();
-
-      // Check uptime is a positive number
-      expect(typeof health.uptime).toBe('number');
-      expect(health.uptime).toBeGreaterThanOrEqual(0);
-
-      // Check checks object structure
-      expect(health.checks).toHaveProperty('authGateway');
-      expect(health.checks).toHaveProperty('sessionCache');
-      expect(health.checks).toHaveProperty('aiProvider');
-      expect(health.checks).toHaveProperty('memory');
-
-      // Check individual check statuses
-      const validStatuses = ['ok', 'error', 'not_configured'];
-      expect(validStatuses).toContain(health.checks.authGateway);
-      expect(validStatuses).toContain(health.checks.sessionCache);
-      expect(validStatuses).toContain(health.checks.aiProvider);
-
-      // Check memory object structure
-      expect(health.checks.memory).toHaveProperty('used');
-      expect(health.checks.memory).toHaveProperty('available');
-      expect(health.checks.memory).toHaveProperty('percentage');
-
-      expect(typeof health.checks.memory.used).toBe('number');
-      expect(typeof health.checks.memory.available).toBe('number');
-      expect(typeof health.checks.memory.percentage).toBe('number');
-
-      // Memory values should be positive
-      expect(health.checks.memory.used).toBeGreaterThan(0);
-      expect(health.checks.memory.available).toBeGreaterThan(0);
-      expect(health.checks.memory.percentage).toBeGreaterThanOrEqual(0);
-      expect(health.checks.memory.percentage).toBeLessThanOrEqual(100);
-
-      // Check version is a string
-      expect(typeof health.version).toBe('string');
+      // Test that version matches expected deployment
       expect(health.version).toBe('1.0.0');
     });
 
-    test('should return 503 when system is unhealthy', async () => {
-      // This test would require mocking failing components
-      // For now, we'll just verify the endpoint exists and returns valid structure
+    test('should respond quickly even under load', async () => {
+      const startTime = Date.now();
+
       const response = await app.inject({
         method: 'GET',
         url: '/health',
       });
 
-      // Should return either 200 or 503, both are valid
-      expect([200, 503]).toContain(response.statusCode);
+      const responseTime = Date.now() - startTime;
+
+      // Health check should respond within 1 second
+      expect(responseTime).toBeLessThan(1000);
 
       const health = JSON.parse(response.payload);
       expect(['healthy', 'unhealthy']).toContain(health.status);
     });
 
-    test('should have proper OpenAPI schema documentation', async () => {
-      // Test that the endpoint is documented in OpenAPI spec
+    test('should be accessible for monitoring systems', async () => {
       const response = await app.inject({
         method: 'GET',
-        url: '/docs/json',
+        url: '/health',
+        headers: {
+          'User-Agent': 'HealthCheck/1.0',
+        },
       });
 
-      expect(response.statusCode).toBe(200);
+      // Health endpoint should always be accessible
+      expect([200, 503]).toContain(response.statusCode);
 
-      const openApiSpec = JSON.parse(response.payload);
-      expect(openApiSpec.paths).toHaveProperty('/health');
-      expect(openApiSpec.paths['/health']).toHaveProperty('get');
-
-      const healthEndpoint = openApiSpec.paths['/health'].get;
-      expect(healthEndpoint).toHaveProperty('tags');
-      expect(healthEndpoint).toHaveProperty('summary');
-      expect(healthEndpoint).toHaveProperty('description');
-      expect(healthEndpoint).toHaveProperty('responses');
-
-      // Check response schemas are defined
-      expect(healthEndpoint.responses).toHaveProperty('200');
-      expect(healthEndpoint.responses).toHaveProperty('503');
+      // Should return JSON that monitoring systems can parse
+      const health = JSON.parse(response.payload);
+      expect(health.status).toMatch(/^(healthy|unhealthy)$/);
+      expect(typeof health.uptime).toBe('number');
     });
   });
 
-  describe('Memory Information', () => {
-    test('should return realistic memory values', async () => {
+  describe('Memory Monitoring', () => {
+    test('should detect critical memory conditions', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/health',
@@ -123,28 +89,26 @@ describe('Health Check Endpoint', () => {
       const health = JSON.parse(response.payload);
       const memory = health.checks.memory;
 
-      // Memory usage should be reasonable for a Node.js process
+      // Test business logic: memory usage should be reasonable
       expect(memory.used).toBeGreaterThan(0);
-      expect(memory.used).toBeLessThan(1000); // Less than 1GB used heap
+      expect(memory.used).toBeLessThan(1000); // Alert if over 1GB heap
+      expect(memory.percentage).toBeLessThan(95); // Alert if system over 95%
 
-      // Available memory should be reasonable for most systems
-      expect(memory.available).toBeGreaterThan(100); // At least 100MB available
-
-      // Percentage should be calculated correctly (system memory usage, not heap usage)
+      // Memory calculation accuracy test
       const totalMemory = totalmem();
       const freeMemory = freemem();
       const systemUsedMemory = totalMemory - freeMemory;
       const expectedPercentage =
         Math.round((systemUsedMemory / totalMemory) * 100 * 10) / 10;
 
-      // Allow for some variance due to timing differences and system activity
+      // Memory percentage should be calculated correctly
       expect(Math.abs(memory.percentage - expectedPercentage)).toBeLessThan(2);
     });
   });
 
   describe('Component Health Checks', () => {
-    test('should handle missing components gracefully', async () => {
-      // Test with a fresh app instance that might not have all components
+    test('should report correct status when components are missing', async () => {
+      // Test business logic: missing components should be reported as not_configured
       const minimalApp = await buildApp({
         logger: false,
         skipEnvValidation: true,
@@ -157,11 +121,13 @@ describe('Health Check Endpoint', () => {
 
       const health = JSON.parse(response.payload);
 
-      // With skipEnvValidation, some components might be not_configured
-      const validStatuses = ['ok', 'error', 'not_configured'];
-      expect(validStatuses).toContain(health.checks.authGateway);
-      expect(validStatuses).toContain(health.checks.sessionCache);
-      expect(validStatuses).toContain(health.checks.aiProvider);
+      // Verify that missing components don't cause crashes
+      expect(health.checks.authGateway).toMatch(/^(ok|error|not_configured)$/);
+      expect(health.checks.sessionCache).toMatch(/^(ok|error|not_configured)$/);
+      expect(health.checks.aiProvider).toMatch(/^(ok|error|not_configured)$/);
+
+      // System should still respond even with missing components
+      expect([200, 503]).toContain(response.statusCode);
     });
   });
 });

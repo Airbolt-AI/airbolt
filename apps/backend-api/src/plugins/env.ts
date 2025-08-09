@@ -265,7 +265,7 @@ export const EnvSchema = z
     if (!data.JWT_SECRET && data.NODE_ENV !== 'production') {
       data = {
         ...data,
-        JWT_SECRET: generateSecureJWTSecret(16), // Simple 16-byte secret for development
+        JWT_SECRET: generateSecureJWTSecret(), // 32-byte (64-char hex) secret for development
       };
     }
 
@@ -416,7 +416,7 @@ export default fp(
       // Warn about auto-generated JWT_SECRET in development
       if (config.NODE_ENV === 'development' && !process.env['JWT_SECRET']) {
         fastify.log.warn(
-          { JWT_SECRET: '[REDACTED - auto-generated 32-char secret]' },
+          { JWT_SECRET: '[REDACTED - auto-generated 64-char secret]' },
           'JWT_SECRET auto-generated for development. Set JWT_SECRET for stable tokens across restarts.'
         );
       }

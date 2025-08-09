@@ -314,8 +314,8 @@ export default fp(
             throw new Error(error);
           }
 
-          // Verify the userId from token matches the provided userId
-          if (validationResult.userId && validationResult.userId !== userId) {
+          // Verify the userId from token matches the provided userId (strict validation)
+          if (!validationResult.userId || validationResult.userId !== userId) {
             // Track exchange failure
             metrics.exchanges.failures++;
 
@@ -323,7 +323,9 @@ export default fp(
               {
                 provider,
                 providedUserId: userId.substring(0, 8) + '...',
-                tokenUserId: validationResult.userId.substring(0, 8) + '...',
+                tokenUserId: validationResult.userId
+                  ? validationResult.userId.substring(0, 8) + '...'
+                  : 'undefined',
               },
               'Token exchange failed - userId mismatch'
             );

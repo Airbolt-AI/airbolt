@@ -17,30 +17,24 @@ describe('Root routes', () => {
   });
 
   describe('GET /', () => {
-    it('should return hello world message', async () => {
+    it('should redirect to health endpoint', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/',
       });
 
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['content-type']).toContain('application/json');
-
-      const payload = JSON.parse(response.payload);
-      expect(payload).toEqual({
-        message: 'Hello World!',
-      });
+      expect(response.statusCode).toBe(302);
+      expect(response.headers.location).toBe('/health');
     });
 
-    it('should have proper response headers', async () => {
+    it('should have proper redirect headers', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/',
       });
 
-      expect(response.headers).toHaveProperty('content-type');
-      expect(response.headers['content-type']).toContain('application/json');
-      expect(response.headers).toHaveProperty('content-length');
+      expect(response.headers).toHaveProperty('location');
+      expect(response.headers.location).toBe('/health');
     });
 
     it('should handle HEAD requests', async () => {
@@ -49,9 +43,9 @@ describe('Root routes', () => {
         url: '/',
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(302);
       expect(response.payload).toBe('');
-      expect(response.headers['content-type']).toContain('application/json');
+      expect(response.headers.location).toBe('/health');
     });
   });
 

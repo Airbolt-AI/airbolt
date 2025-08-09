@@ -4,7 +4,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 // Direct import to ensure mutation coverage
 import sensiblePlugin from '../../src/plugins/sensible.js';
 
-describe('Sensible Plugin Unit Tests', () => {
+describe('Sensible Plugin Business Logic', () => {
   let app: FastifyInstance;
 
   afterEach(async () => {
@@ -13,47 +13,35 @@ describe('Sensible Plugin Unit Tests', () => {
     }
   });
 
-  it('should register sensible plugin successfully', async () => {
+  it('should create proper HTTP errors for API validation failures', async () => {
     app = Fastify({ logger: false });
     await app.register(sensiblePlugin);
     await app.ready();
 
-    // Verify sensible decorators are available
-    expect(app.httpErrors).toBeDefined();
-    expect(app.httpErrors.badRequest).toBeTypeOf('function');
-    expect(app.httpErrors.notFound).toBeTypeOf('function');
-  });
+    // Test actual error creation for common API scenarios
+    const validationError = app.httpErrors.badRequest(
+      'Email format is invalid'
+    );
+    expect(validationError.statusCode).toBe(400);
+    expect(validationError.message).toBe('Email format is invalid');
 
-  it('should provide HTTP error creators', async () => {
-    app = Fastify({ logger: false });
-    await app.register(sensiblePlugin);
-    await app.ready();
-
-    // Test that sensible error creators work
-    const badRequestError = app.httpErrors.badRequest('Test error');
-    expect(badRequestError.statusCode).toBe(400);
-    expect(badRequestError.message).toBe('Test error');
-
-    const notFoundError = app.httpErrors.notFound('Not found');
+    const notFoundError = app.httpErrors.notFound('User not found');
     expect(notFoundError.statusCode).toBe(404);
-    expect(notFoundError.message).toBe('Not found');
+    expect(notFoundError.message).toBe('User not found');
   });
 
-  it('should provide assert functionality', async () => {
+  it('should handle assertion failures properly for critical business rules', async () => {
     app = Fastify({ logger: false });
     await app.register(sensiblePlugin);
     await app.ready();
 
-    // Test assert functionality from sensible
-    expect(app.assert).toBeDefined();
-    expect(app.assert).toBeTypeOf('function');
-
-    // Test assert works
+    // Test assert works for business rule enforcement
     expect(() => {
-      app.assert(true, 400, 'Should not throw');
+      app.assert(true, 400, 'Should not throw for valid condition');
     }).not.toThrow();
+
     expect(() => {
-      app.assert(false, 400, 'Should throw');
-    }).toThrow();
+      app.assert(false, 403, 'Insufficient permissions');
+    }).toThrowError('Insufficient permissions');
   });
 });

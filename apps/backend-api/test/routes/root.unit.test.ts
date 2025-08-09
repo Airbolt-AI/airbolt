@@ -23,14 +23,11 @@ describe('Root Route Unit Tests', () => {
       url: '/',
     });
 
-    expect(response.statusCode).toBe(200);
-    const payload = JSON.parse(response.payload);
-    expect(payload).toEqual({
-      message: 'Hello World!',
-    });
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location).toBe('/health');
   });
 
-  it('should return correct message format', async () => {
+  it('should return correct redirect response', async () => {
     app = Fastify({ logger: false });
     await app.register(rootRoute);
     await app.ready();
@@ -40,10 +37,9 @@ describe('Root Route Unit Tests', () => {
       url: '/',
     });
 
-    const payload = JSON.parse(response.payload);
-    expect(payload).toHaveProperty('message');
-    expect(payload.message).toBe('Hello World!');
-    expect(typeof payload.message).toBe('string');
+    expect(response.statusCode).toBe(302);
+    expect(response.headers).toHaveProperty('location');
+    expect(response.headers.location).toBe('/health');
   });
 
   it('should handle GET request to root path', async () => {
@@ -56,7 +52,7 @@ describe('Root Route Unit Tests', () => {
       url: '/',
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.headers['content-type']).toMatch(/application\/json/);
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location).toBe('/health');
   });
 });

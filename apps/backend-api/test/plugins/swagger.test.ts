@@ -135,9 +135,9 @@ describe('Swagger Plugin', () => {
 
       // Root endpoint
       const rootGet = spec.paths['/']?.get;
-      expect(rootGet?.summary).toBe('Get welcome message');
+      expect(rootGet?.summary).toBe('Root endpoint redirect');
       expect(rootGet?.description).toBe(
-        'Returns a hello world message for API health check'
+        'Redirects to the comprehensive health check endpoint'
       );
     });
   });
