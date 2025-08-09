@@ -50,6 +50,7 @@ describe('Chat Route Unit Tests', () => {
       AI_PROVIDER: 'openai' as const,
       OPENAI_API_KEY: 'sk-test123',
       JWT_SECRET: 'test-secret-key-for-unit-tests-32chars',
+      VALIDATE_JWT: true,
       ALLOWED_ORIGIN: ['http://localhost:3000'],
       SYSTEM_PROMPT: '',
       RATE_LIMIT_MAX: 60,

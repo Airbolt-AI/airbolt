@@ -144,6 +144,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
             LOG_LEVEL: 'info',
             OPENAI_API_KEY: 'sk-openapi-generation-placeholder',
             AI_PROVIDER: 'openai',
+            VALIDATE_JWT: false,
             ALLOWED_ORIGIN: ['*'], // Allow all origins for OpenAPI generation
             SYSTEM_PROMPT: '',
             RATE_LIMIT_MAX: 100,

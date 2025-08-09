@@ -93,6 +93,12 @@ export const EnvSchema = z
       .min(32, 'JWT_SECRET must be at least 32 characters for security')
       .optional(),
 
+    VALIDATE_JWT: z.coerce
+      .boolean({
+        invalid_type_error: 'VALIDATE_JWT must be a boolean',
+      })
+      .default(true), // Will be set to false for development in transform
+
     // External JWT configuration for BYOA
     EXTERNAL_JWT_ISSUER: z
       .string({
@@ -197,6 +203,17 @@ export const EnvSchema = z
       data = {
         ...data,
         JWT_SECRET: randomBytes(32).toString('hex'),
+      };
+    }
+
+    // Set VALIDATE_JWT to false in development by default (unless explicitly set)
+    if (
+      data.NODE_ENV === 'development' &&
+      process.env['VALIDATE_JWT'] === undefined
+    ) {
+      data = {
+        ...data,
+        VALIDATE_JWT: false,
       };
     }
 

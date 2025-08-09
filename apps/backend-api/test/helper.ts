@@ -12,6 +12,7 @@ export interface TestAppOptions extends AppOptions {
   EXTERNAL_JWT_SECRET?: string;
   EXTERNAL_JWT_AUDIENCE?: string;
   JWT_SECRET?: string;
+  VALIDATE_JWT?: string;
   DATABASE_URL?: string;
   OPENAI_API_KEY?: string;
   ALLOWED_ORIGIN?: string;
@@ -41,6 +42,7 @@ export async function build(
     EXTERNAL_JWT_SECRET,
     EXTERNAL_JWT_AUDIENCE,
     JWT_SECRET,
+    VALIDATE_JWT,
     DATABASE_URL,
     OPENAI_API_KEY,
     ALLOWED_ORIGIN,
@@ -62,6 +64,7 @@ export async function build(
     EXTERNAL_JWT_SECRET,
     EXTERNAL_JWT_AUDIENCE,
     JWT_SECRET,
+    VALIDATE_JWT,
     DATABASE_URL,
     OPENAI_API_KEY,
     ALLOWED_ORIGIN,
