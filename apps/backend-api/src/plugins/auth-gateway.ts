@@ -142,11 +142,39 @@ export default fp(
       return randomBytes(32).toString('base64url');
     };
 
-    // Simple token-to-user mapping for session lookup
+    // Simple token-to-user mapping for session lookup with size limit
+    const MAX_TOKEN_MAP_SIZE = config.cache.maxSize * 2; // Double cache size as safety buffer
     const tokenToUserMap = new Map<
       string,
-      { userId: string; provider: AuthProvider }
+      { userId: string; provider: AuthProvider; createdAt: number }
     >();
+
+    // Helper function to enforce token map size limit
+    const enforceTokenMapSizeLimit = (): void => {
+      if (tokenToUserMap.size >= MAX_TOKEN_MAP_SIZE) {
+        // Remove oldest 25% of tokens to prevent frequent cleanup
+        const tokensToRemove = Math.floor(MAX_TOKEN_MAP_SIZE * 0.25);
+        const sortedTokens = Array.from(tokenToUserMap.entries()).sort(
+          ([, a], [, b]) => a.createdAt - b.createdAt
+        );
+
+        const tokensToRemoveArray = sortedTokens.slice(0, tokensToRemove);
+        tokensToRemoveArray.forEach(([token]) => {
+          tokenToUserMap.delete(token);
+        });
+
+        if (tokensToRemoveArray.length > 0) {
+          fastify.log.debug(
+            {
+              removedTokens: tokensToRemoveArray.length,
+              currentSize: tokenToUserMap.size,
+              maxSize: MAX_TOKEN_MAP_SIZE,
+            },
+            'Enforced token map size limit by removing oldest tokens'
+          );
+        }
+      }
+    };
 
     // Helper function to safely increment provider metrics
     const incrementProviderCount = (provider: AuthProvider): void => {
@@ -183,6 +211,32 @@ export default fp(
         try {
           if (!token || token.trim() === '') {
             return null;
+          }
+
+          // Quick cleanup check on every 10th validation to prevent accumulation
+          if (Math.random() < 0.1) {
+            const now = new Date();
+            const expiredTokens: string[] = [];
+
+            tokenToUserMap.forEach((userInfo, mapToken) => {
+              const session = sessionCache.getSession(
+                userInfo.userId,
+                userInfo.provider
+              );
+              if (!session || session.expiresAt <= now) {
+                expiredTokens.push(mapToken);
+              }
+            });
+
+            if (expiredTokens.length > 0) {
+              expiredTokens.forEach(expiredToken =>
+                tokenToUserMap.delete(expiredToken)
+              );
+              fastify.log.debug(
+                { cleanedExpiredTokens: expiredTokens.length },
+                'Opportunistically cleaned expired tokens during validation'
+              );
+            }
           }
 
           const userInfo = tokenToUserMap.get(token);
@@ -235,7 +289,15 @@ export default fp(
         };
 
         sessionCache.setSession(sessionToken);
-        tokenToUserMap.set(token, { userId, provider });
+
+        // Enforce size limit before adding new token
+        enforceTokenMapSizeLimit();
+
+        tokenToUserMap.set(token, {
+          userId,
+          provider,
+          createdAt: now.getTime(),
+        });
 
         // Track session creation
         metrics.sessions.created++;
