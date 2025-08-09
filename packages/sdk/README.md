@@ -61,18 +61,35 @@ console.log(
 
 ### 🔄 Zero Configuration Authentication
 
-**Automatic auth detection when used within your auth context!** If your code runs inside an authenticated context (Clerk, Supabase, Auth0, or Firebase), we detect and use it automatically:
+**Works automatically with popular auth providers!** When your app uses Clerk, Supabase, Auth0, or Firebase, the SDK automatically detects and uses your authentication:
 
 ```typescript
-// Your code is inside an authenticated component/context?
-// Just use the SDK - no auth configuration needed!
+// Inside authenticated context - just use it!
 const response = await chat([{ role: 'user', content: 'Hello!' }]);
 ```
 
-- Auto-detects auth when inside provider context
-- Works with Clerk `<SignedIn>`, Supabase authenticated routes, etc.
-- No auth configuration needed
-- Override with `getAuthToken` for custom providers or when outside auth context
+**How it works:**
+
+- **Clerk**: Detects `window.Clerk` and uses `getToken()`
+- **Supabase**: Detects `window.supabase` and uses session tokens
+- **Auth0**: Detects `window.auth0` and uses `getAccessTokenSilently()`
+- **Firebase**: Detects `window.firebase` and uses `getIdToken()`
+
+**When auth is detected:**
+
+- ✅ Automatic token retrieval and refresh
+- ✅ Secure requests with Bearer authorization
+- ✅ Per-user rate limiting
+- ✅ No configuration required
+
+**Manual configuration (if needed):**
+
+```typescript
+// For custom auth or when outside provider context
+const response = await chat(messages, {
+  getAuthToken: async () => await myAuthProvider.getToken(),
+});
+```
 
 ### 📊 Rate Limiting & Usage Tracking
 
@@ -155,7 +172,7 @@ function createChatSession(options?: ChatOptions): ChatSession;
 
 ## Error Handling
 
-The SDK provides clear error messages:
+The SDK provides clear error messages and handles authentication errors gracefully:
 
 ```typescript
 import { chat, ColdStartError } from '@airbolt/sdk';
@@ -168,7 +185,11 @@ try {
   } else if (error.message.includes('fetch failed')) {
     console.error('Backend is not running. Start it with: pnpm dev');
   } else if (error.message.includes('401')) {
-    console.error('Authentication failed. Token may be expired.');
+    console.error('Authentication failed. Check your auth provider setup.');
+    // For auth errors, ensure:
+    // 1. User is signed in to your auth provider
+    // 2. Auth provider is properly configured
+    // 3. Backend JWT validation is set up
   } else if (error.message.includes('429')) {
     console.error('Rate limit exceeded. Try again later.');
   } else {
@@ -176,6 +197,21 @@ try {
   }
 }
 ```
+
+### Authentication Troubleshooting
+
+**Common auth issues:**
+
+- **"No auth token available"**: User not signed in or auth provider not detected
+- **"Invalid authorization token"**: Token expired or backend misconfigured
+- **"Auth provider not found"**: SDK couldn't detect your auth provider
+
+**Solutions:**
+
+1. Ensure user is authenticated with your provider
+2. Verify auth provider SDK is loaded before Airbolt SDK
+3. Check browser console for auth provider errors
+4. For production: configure backend with proper JWT validation
 
 ### Rate Limit Handling
 

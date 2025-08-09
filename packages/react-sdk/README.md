@@ -107,6 +107,76 @@ Airbolt SDK automatically detects and integrates with popular authentication pro
     {/* ✅ Automatically uses Auth0 auth */}
   )}
 </Auth0Provider>
+
+// With Firebase - ChatWidget inside authenticated component
+<FirebaseProvider app={firebaseApp}>
+  {user && (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    {/* ✅ Automatically uses Firebase auth */}
+  )}
+</FirebaseProvider>
+```
+
+### Complete Setup Examples
+
+**Supabase Setup:**
+
+```tsx
+import { createClient } from '@supabase/supabase-js';
+import { SessionContextProvider, useUser } from '@supabase/auth-helpers-react';
+import { ChatWidget } from '@airbolt/react-sdk';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+function App() {
+  return (
+    <SessionContextProvider supabaseClient={supabase}>
+      <AuthenticatedChat />
+    </SessionContextProvider>
+  );
+}
+
+function AuthenticatedChat() {
+  const user = useUser();
+
+  if (!user) return <div>Please sign in</div>;
+
+  return (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    // ✅ Automatically detects and uses Supabase auth
+  );
+}
+```
+
+**Firebase Setup:**
+
+```tsx
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { ChatWidget } from '@airbolt/react-sdk';
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
+function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return unsubscribe;
+  }, []);
+
+  if (!user) return <div>Please sign in</div>;
+
+  return (
+    <ChatWidget baseURL="https://your-deployment.onrender.com" />
+    // ✅ Automatically detects and uses Firebase auth
+  );
+}
 ```
 
 ### Manual Configuration (If Needed)
@@ -123,6 +193,29 @@ If ChatWidget is rendered outside the auth context or you need custom auth:
   }}
 />
 ```
+
+### Production Security
+
+**Development**: Zero configuration - auth providers are auto-detected
+
+**Production**: Configure your backend for security:
+
+```bash
+# Backend environment variables
+NODE_ENV=production
+EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/  # or your provider's issuer
+EXTERNAL_JWT_AUDIENCE=your-api-identifier  # if applicable
+```
+
+**Security checklist:**
+
+- [ ] Set `NODE_ENV=production` on your backend
+- [ ] Configure `EXTERNAL_JWT_ISSUER` for your auth provider
+- [ ] Use HTTPS for all production deployments
+- [ ] Ensure auth provider is configured correctly
+- [ ] Test authentication flow in production environment
+
+See [SECURITY.md](../../SECURITY.md) for comprehensive security guidelines.
 
 ## API Reference
 

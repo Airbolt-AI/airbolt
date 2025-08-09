@@ -25,7 +25,11 @@ describe('SDK Integration', () => {
     vi.stubEnv('RATE_LIMIT_MAX', '1000');
     vi.stubEnv('RATE_LIMIT_TIME_WINDOW', '60000');
     vi.stubEnv('OPENAI_API_KEY', 'sk-test123456789012345678901234567890');
-    vi.stubEnv('JWT_SECRET', 'test-secret-key-for-sdk-integration-tests-32');
+    // Use the same JWT_SECRET as the test setup.ts file
+    vi.stubEnv(
+      'JWT_SECRET',
+      'test-jwt-secret-for-testing-purposes-only-32chars'
+    );
 
     app = await build({
       logger: false,
@@ -294,22 +298,19 @@ describe('SDK Integration', () => {
 
   describe('Authentication Flow Integration', () => {
     it('should support complete token-based authentication workflow', async () => {
-      // Step 1: Create token (valid auth flow)
-      const tokenResponse = await app.inject({
-        method: 'POST',
-        url: '/api/tokens',
-        payload: {
+      // Create JWT directly since /api/tokens is disabled when JWT_SECRET is configured
+      const jwt = await import('jsonwebtoken');
+      const token = jwt.sign(
+        {
+          sub: 'test-user-id',
           userId: 'test-user-id',
           email: 'test@example.com',
         },
-      });
+        'test-jwt-secret-for-testing-purposes-only-32chars',
+        { expiresIn: '1h', issuer: 'airbolt-api', algorithm: 'HS256' }
+      );
 
-      expect(tokenResponse.statusCode).toBe(201);
-      const { token } = JSON.parse(tokenResponse.payload);
-      expect(token).toBeDefined();
-      expect(typeof token).toBe('string');
-
-      // Step 2: Use token for authenticated request
+      // Use token for authenticated request
       const authenticatedResponse = await app.inject({
         method: 'POST',
         url: '/api/chat',
@@ -373,7 +374,7 @@ describe('SDK Integration', () => {
           userId: 'sdk-user-123',
           email: 'sdk@example.com',
         },
-        'test-secret-key-for-sdk-integration-tests-32',
+        'test-jwt-secret-for-testing-purposes-only-32chars',
         { expiresIn: '1h', issuer: 'airbolt-api', algorithm: 'HS256' }
       );
 
@@ -425,7 +426,7 @@ describe('SDK Integration', () => {
           userId: 'concurrent-user',
           email: 'concurrent@example.com',
         },
-        'test-secret-key-for-sdk-integration-tests-32',
+        'test-jwt-secret-for-testing-purposes-only-32chars',
         { expiresIn: '1h', issuer: 'airbolt-api', algorithm: 'HS256' }
       );
 
