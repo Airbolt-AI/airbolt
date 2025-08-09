@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -42,6 +50,13 @@ describe('SDK Integration', () => {
     if (app) {
       await app.close();
     }
+    // Clean up environment stubs
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(() => {
+    // Clean up any test-specific environment changes
+    vi.unstubAllEnvs();
   });
 
   describe('OpenAPI Specification Quality', () => {

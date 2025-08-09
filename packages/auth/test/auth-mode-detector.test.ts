@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { AuthModeDetector } from '../src/utils/auth-mode-detector.js';
 import { AuthMode } from '../src/types.js';
 import { createTestEnv } from '@airbolt/test-utils';
 
 describe('AuthModeDetector', () => {
+  afterEach(() => {
+    // Clean up environment stubs to prevent test pollution
+    vi.unstubAllEnvs();
+  });
   describe('detect', () => {
     it('should detect CONFIGURED_ISSUER mode when issuer is set', () => {
       const config = {
