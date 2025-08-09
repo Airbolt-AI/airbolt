@@ -319,6 +319,9 @@ importers:
         specifier: ^9.0.2
         version: 9.0.2
     devDependencies:
+      '@airbolt/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@fast-check/vitest':
         specifier: ^0.2.2
         version: 0.2.2(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.3)(happy-dom@15.11.7)(msw@2.10.4(@types/node@22.16.3)(typescript@5.8.3)))
