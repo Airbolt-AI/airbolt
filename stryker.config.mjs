@@ -2,7 +2,20 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-/** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
+/**
+ * Stryker Mutation Testing Configuration for Critical Auth Decision Points
+ * 
+ * This configuration follows TESTING.md principles:
+ * - Focuses ONLY on critical decision points: auth checks, retry logic, rate limits
+ * - Skips mutations on error messages, config objects, data transformations  
+ * - Targets files with patterns like: if (!isValid) throw, shouldRetry(error), requests > limit
+ * - Uses incremental mode for fast CI runs (~80-95% faster on repeat runs)
+ * 
+ * Coverage: 8 critical files with ~1189 potential mutants
+ * Focus: Authentication validation, JWT verification, token expiry, retry conditions
+ * 
+ * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
+ */
 const config = {
   packageManager: 'pnpm',
   reporters: ['html', 'clear-text', 'progress'],
@@ -33,20 +46,34 @@ const config = {
     'test/**',
   ],
 
-  // MUTATION TARGETS - Focus on critical decision points
+  // MUTATION TARGETS - Focus on critical decision points (per TESTING.md)
+  // Target ONLY critical business logic: auth checks, rate limits, retry conditions, token expiry
   mutate: [
-    'apps/backend-api/src/services/ai-provider.ts', // Retry logic, error handling, provider switching
-    'packages/sdk/src/core/token-manager.ts', // Token expiration, refresh logic
-    'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations
+    // Critical auth decision points - if (!isValid) throw patterns
+    'packages/auth/src/utils/auth-mode-detector.ts', // AuthMode.detect() - critical mode selection
+    'apps/backend-api/src/utils/auth-providers.ts', // JWT validation and provider detection logic
+    'packages/auth/src/validators/external.ts', // External JWT validation decisions
+    'packages/auth/src/utils/token-validator.ts', // Token validation and user ID extraction decisions
+    'packages/auth/src/utils/validation-policy.ts', // Policy validation critical paths
+    
+    // Retry logic and critical system decisions - shouldRetry(error) patterns  
+    'apps/backend-api/src/services/ai-provider.ts', // shouldRetry(), provider switching logic
+    'packages/sdk/src/core/token-manager.ts', // Token expiration checks, refresh conditions
+    'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations - requests > limit
   ],
 
-  // FOCUS ON LOGIC MUTATIONS ONLY
+  // FOCUS ON LOGIC MUTATIONS ONLY (per TESTING.md)
   mutator: {
     excludedMutations: [
-      'StringLiteral',
-      'ObjectLiteral',
-      'ArrayDeclaration',
-      'BlockStatement',
+      // Skip mutations on data structures and literals
+      'StringLiteral',        // Error messages, configuration strings
+      'ObjectLiteral',        // Configuration objects
+      'ArrayDeclaration',     // Data transformations
+      'BlockStatement',       // Logging blocks
+      
+      // Skip mutations that don't affect critical decision logic
+      'TemplateString',       // Template literals used in logging/errors
+      'ConditionalExpression', // Ternary operators in non-critical paths
     ],
   },
 

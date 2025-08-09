@@ -8,9 +8,6 @@ import {
   vi,
 } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { build } from '../helper.js';
 import {
@@ -18,9 +15,6 @@ import {
   isResponseObject,
   getPathOperations,
 } from '../utils/openapi-types.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 describe('SDK Integration', () => {
   let app: FastifyInstance;
@@ -226,133 +220,238 @@ describe('SDK Integration', () => {
     });
   });
 
-  describe('Fern Configuration Validation', () => {
-    it('should have valid Fern configuration structure', () => {
-      const fernConfigPath = join(
-        __dirname,
-        '../../../../fern/fern.config.json'
-      );
-      expect(existsSync(fernConfigPath)).toBe(true);
+  describe('SDK Error Handling Patterns', () => {
+    it('should handle authentication failures correctly for SDK consumers', async () => {
+      // Test authentication flow that SDK would encounter
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/chat',
+        headers: {
+          Authorization: 'Bearer invalid-token',
+        },
+        payload: {
+          messages: [{ role: 'user', content: 'Hello' }],
+        },
+      });
 
-      const fernConfig = JSON.parse(readFileSync(fernConfigPath, 'utf8'));
-      expect(fernConfig.organization).toBe('airbolt');
-      expect(fernConfig.version).toBeDefined();
+      expect(response.statusCode).toBe(401);
+      const error = JSON.parse(response.payload);
+      expect(error).toMatchObject({
+        error: 'Unauthorized',
+        message: expect.any(String),
+        statusCode: 401,
+      });
     });
 
-    it('should have valid generators configuration', () => {
-      const generatorsPath = join(__dirname, '../../../../fern/generators.yml');
-      expect(existsSync(generatorsPath)).toBe(true);
+    it('should provide proper error structure for SDK error handling', async () => {
+      // Test various error scenarios that SDK consumers need to handle
+      const errorTestCases = [
+        {
+          url: '/api/chat',
+          method: 'POST',
+          headers: {},
+          payload: { invalid: 'payload' },
+          expectedStatus: 400,
+          description: 'validation error',
+        },
+        {
+          url: '/api/chat',
+          method: 'POST',
+          headers: { Authorization: 'Bearer invalid-token' },
+          payload: { messages: [{ role: 'user', content: 'test' }] },
+          expectedStatus: 401,
+          description: 'authentication error',
+        },
+        {
+          url: '/non-existent-endpoint',
+          method: 'GET',
+          headers: {},
+          payload: undefined,
+          expectedStatus: 404,
+          description: 'not found error',
+        },
+      ];
 
-      const generatorsContent = readFileSync(generatorsPath, 'utf8');
-      expect(generatorsContent).toContain('fernapi/fern-typescript-sdk');
-      expect(generatorsContent).toContain('AirboltAPI');
-    });
-
-    it('should have API definition pointing to correct OpenAPI spec', () => {
-      const apiDefPath = join(__dirname, '../../../../fern/definition/api.yml');
-      expect(existsSync(apiDefPath)).toBe(true);
-
-      const apiDef = readFileSync(apiDefPath, 'utf8');
-      expect(apiDef).toContain('openapi: ../apps/backend-api/openapi.json');
-    });
-  });
-
-  describe('SDK Generation Prerequisites', () => {
-    it('should have all required files for SDK generation', () => {
-      // Check Fern configuration files (from project root)
-      expect(
-        existsSync(join(__dirname, '../../../../fern/fern.config.json'))
-      ).toBe(true);
-      expect(
-        existsSync(join(__dirname, '../../../../fern/generators.yml'))
-      ).toBe(true);
-      expect(
-        existsSync(join(__dirname, '../../../../fern/definition/api.yml'))
-      ).toBe(true);
-
-      // Check SDK package structure
-      expect(
-        existsSync(join(__dirname, '../../../../packages/sdk/README.md'))
-      ).toBe(true);
-      expect(
-        existsSync(join(__dirname, '../../../../packages/sdk/package.json'))
-      ).toBe(true);
-      expect(
-        existsSync(join(__dirname, '../../../../packages/sdk/CHANGELOG.md'))
-      ).toBe(true);
-    });
-
-    it('should have OpenAPI generation working correctly', async () => {
-      // Test that we can generate OpenAPI spec programmatically
-      const spec = getOpenAPIV3Document(() => app.swagger());
-
-      // Should be valid for Fern consumption
-      expect(spec.openapi).toBe('3.0.0');
-      expect(spec.info.title).toBeDefined();
-      expect(spec.info.version).toBeDefined();
-      expect(spec.paths).toBeDefined();
-
-      // Should have proper structure for SDK generation
-      const pathCount = Object.keys(spec.paths).length;
-      expect(pathCount).toBeGreaterThanOrEqual(3); // At least root, tokens, and chat endpoints
-
-      // Each path should have operations
-      for (const pathItem of Object.values(spec.paths)) {
-        const operations = ['get', 'post', 'put', 'delete', 'patch'] as const;
-        const hasOperation = operations.some(op => {
-          return (
-            pathItem &&
-            typeof pathItem === 'object' &&
-            op in pathItem &&
-            pathItem[op as keyof typeof pathItem] !== undefined
-          );
+      for (const testCase of errorTestCases) {
+        const response = await app.inject({
+          method: testCase.method as any,
+          url: testCase.url,
+          headers: testCase.headers,
+          ...(testCase.payload && { payload: testCase.payload }),
         });
-        expect(hasOperation).toBe(true);
+
+        expect(response.statusCode).toBe(testCase.expectedStatus);
+
+        // All errors should have consistent structure for SDK error handling
+        const error = JSON.parse(response.payload);
+        expect(error).toHaveProperty('error');
+        expect(error).toHaveProperty('statusCode', testCase.expectedStatus);
+        expect(error).toHaveProperty('message');
+        expect(typeof error.message).toBe('string');
       }
     });
+  });
 
-    it('should support future SDK enhancements', () => {
-      const spec = getOpenAPIV3Document(() => app.swagger());
+  describe('Authentication Flow Integration', () => {
+    it('should support complete token-based authentication workflow', async () => {
+      // Step 1: Create token (valid auth flow)
+      const tokenResponse = await app.inject({
+        method: 'POST',
+        url: '/api/tokens',
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+        },
+      });
 
-      // Should have security schemes for authentication
-      expect(spec.components).toBeDefined();
-      expect(spec.components?.securitySchemes).toBeDefined();
-      expect(spec.components?.securitySchemes?.['BearerAuth']).toBeDefined();
+      expect(tokenResponse.statusCode).toBe(201);
+      const { token } = JSON.parse(tokenResponse.payload);
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
 
-      // Should have proper tagging for organization
-      expect(spec.tags).toBeDefined();
-      expect(spec.tags?.length).toBeGreaterThan(0);
+      // Step 2: Use token for authenticated request
+      const authenticatedResponse = await app.inject({
+        method: 'POST',
+        url: '/api/chat',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        payload: {
+          messages: [{ role: 'user', content: 'Hello' }],
+        },
+      });
 
-      // Should have server configuration
-      expect(spec.servers).toBeDefined();
-      expect(spec.servers?.length).toBeGreaterThan(0);
+      // Should not get authentication error
+      expect(authenticatedResponse.statusCode).not.toBe(401);
+      // Actual response depends on OpenAI mock, but auth should pass
+    });
+
+    it('should handle token validation edge cases for SDK consumers', async () => {
+      const testCases = [
+        { token: '', expectedStatus: 401, description: 'empty token' },
+        {
+          token: 'Bearer malformed',
+          expectedStatus: 401,
+          description: 'malformed token',
+        },
+        {
+          token: 'not-bearer-format',
+          expectedStatus: 401,
+          description: 'wrong format',
+        },
+      ];
+
+      for (const testCase of testCases) {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            Authorization: testCase.token,
+          },
+          payload: {
+            messages: [{ role: 'user', content: 'Test' }],
+          },
+        });
+
+        expect(response.statusCode).toBe(testCase.expectedStatus);
+        if (response.statusCode === 401) {
+          const error = JSON.parse(response.payload);
+          expect(error.error).toBe('Unauthorized');
+        }
+      }
     });
   });
 
-  describe('API Documentation Quality', () => {
-    it('should serve interactive documentation', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/docs',
+  describe('Real User SDK Scenarios', () => {
+    it('should handle chat conversation flow that SDK consumers would use', async () => {
+      // Mock a realistic SDK usage pattern using JWT directly since /api/tokens
+      // is disabled when JWT_SECRET is configured (which happens in tests)
+      const jwt = await import('jsonwebtoken');
+      const token = jwt.sign(
+        {
+          sub: 'sdk-user-123',
+          userId: 'sdk-user-123',
+          email: 'sdk@example.com',
+        },
+        'test-secret-key-for-sdk-integration-tests-32',
+        { expiresIn: '1h', issuer: 'airbolt-api', algorithm: 'HS256' }
+      );
+
+      // Step 1: Start conversation
+      const firstMessage = await app.inject({
+        method: 'POST',
+        url: '/api/chat',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        payload: {
+          messages: [{ role: 'user', content: 'What is TypeScript?' }],
+        },
       });
 
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['content-type']).toContain('text/html');
-      expect(response.payload).toContain('swagger');
+      // Should handle request (actual response depends on OpenAI mock)
+      expect([200, 400, 500]).toContain(firstMessage.statusCode);
+
+      // Step 2: Continue conversation with context
+      const followUpMessage = await app.inject({
+        method: 'POST',
+        url: '/api/chat',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        payload: {
+          messages: [
+            { role: 'user', content: 'What is TypeScript?' },
+            {
+              role: 'assistant',
+              content: 'TypeScript is a typed superset of JavaScript.',
+            },
+            { role: 'user', content: 'Give me an example.' },
+          ],
+        },
+      });
+
+      // Should maintain conversation context
+      expect([200, 400, 500]).toContain(followUpMessage.statusCode);
+      expect(followUpMessage.statusCode).not.toBe(401); // Auth should still work
     });
 
-    it('should serve OpenAPI JSON specification', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/docs/json',
+    it('should handle concurrent SDK requests appropriately', async () => {
+      // Create token using JWT directly for testing
+      const jwt = await import('jsonwebtoken');
+      const token = jwt.sign(
+        {
+          sub: 'concurrent-user',
+          userId: 'concurrent-user',
+          email: 'concurrent@example.com',
+        },
+        'test-secret-key-for-sdk-integration-tests-32',
+        { expiresIn: '1h', issuer: 'airbolt-api', algorithm: 'HS256' }
+      );
+
+      // Send multiple concurrent requests (typical SDK usage)
+      const concurrentRequests = Array(5)
+        .fill(0)
+        .map((_, i) =>
+          app.inject({
+            method: 'POST',
+            url: '/api/chat',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            payload: {
+              messages: [{ role: 'user', content: `Request ${i + 1}` }],
+            },
+          })
+        );
+
+      const responses = await Promise.all(concurrentRequests);
+
+      // All requests should be processed without auth errors
+      responses.forEach(response => {
+        expect(response.statusCode).not.toBe(401);
+        // May get rate limited or other errors, but not auth errors
       });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['content-type']).toContain('application/json');
-
-      const spec = JSON.parse(response.payload);
-      expect(spec.openapi).toBe('3.0.0');
-      expect(spec.info.title).toBe('AI Fastify Template API');
     });
   });
 

@@ -1,7 +1,9 @@
 /* eslint-disable runtime-safety/require-property-tests */
 // TODO: Add property tests for JWT validation edge cases, provider detection, and token parsing
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { isProduction, isDevelopment } from '@airbolt/config';
 import { AuthProvider } from '../plugins/auth-gateway.js';
 import type { Env } from '../plugins/env.js';
 
@@ -73,6 +75,55 @@ export class AuthProviderError extends Error {
     super(`${provider} auth error: ${message}`);
     this.provider = provider;
     this.cause = cause;
+  }
+}
+
+/**
+ * Simplified provider token validation class for 100-1000 users
+ * Uses basic JWT decoding without signature verification for simplicity
+ * TODO: Add signature verification when scaling beyond 1000 users
+ */
+/**
+ * Secure development secret generator
+ * Generates cryptographically secure secrets that are:
+ * - Consistent within the same process (cached)
+ * - Different between server restarts for better security
+ * - Logged in development for transparency
+ */
+class DevelopmentSecretGenerator {
+  private static secretCache = new Map<string, string>();
+
+  /**
+   * Generates a secure secret for the given provider
+   * Uses crypto.randomBytes for cryptographic security
+   */
+  static getSecret(provider: string): string {
+    // Return cached secret if already generated
+    if (this.secretCache.has(provider)) {
+      return this.secretCache.get(provider)!;
+    }
+
+    // Generate new secure secret (32 bytes = 256 bits)
+    const secret = crypto.randomBytes(32).toString('hex');
+
+    // Cache for consistency within this process
+    this.secretCache.set(provider, secret);
+
+    // Log in development mode for transparency
+    if (isDevelopment()) {
+      console.log(
+        `Generated secure development secret for ${provider}: ${secret.substring(0, 12)}...`
+      );
+    }
+
+    return secret;
+  }
+
+  /**
+   * Clear all cached secrets (useful for testing)
+   */
+  static clearCache(): void {
+    this.secretCache.clear();
   }
 }
 
@@ -237,7 +288,8 @@ class AuthProviderValidator {
 
 /**
  * Helper function to get verification key based on token issuer
- * Simple approach for known providers
+ * Uses secure runtime-generated secrets for development
+ * In production, these should be proper provider secrets from environment variables
  */
 function getVerificationKey(token: string): string {
   try {
@@ -249,25 +301,25 @@ function getVerificationKey(token: string): string {
     const payload = decoded.payload as JWTClaims;
     const issuer = payload.iss?.toLowerCase() || '';
 
-    // Simple fallback verification - use common secrets for known providers
-    // In production, these should be proper provider secrets
+    // Use secure runtime-generated secrets for known providers
+    // These are consistent within the same process but change between restarts
     if (issuer.includes('clerk')) {
-      return 'clerk-development-secret';
+      return DevelopmentSecretGenerator.getSecret('clerk');
     }
     if (issuer.includes('auth0')) {
-      return 'auth0-development-secret';
+      return DevelopmentSecretGenerator.getSecret('auth0');
     }
     if (issuer.includes('supabase')) {
-      return 'supabase-development-secret';
+      return DevelopmentSecretGenerator.getSecret('supabase');
     }
     if (issuer.includes('firebase')) {
-      return 'firebase-development-secret';
+      return DevelopmentSecretGenerator.getSecret('firebase');
     }
 
-    // Default fallback
-    return 'default-jwt-secret';
+    // Default fallback with secure generation
+    return DevelopmentSecretGenerator.getSecret('default');
   } catch {
-    return 'default-jwt-secret';
+    return DevelopmentSecretGenerator.getSecret('default');
   }
 }
 
@@ -297,8 +349,18 @@ function decodeJWTForDetection(token: string, validateJWT = false): JWTClaims {
 
         return decoded;
       } catch (jwtError) {
-        // Fall back to basic validation if signature verification fails
-        // This maintains backward compatibility while adding security
+        // In production environment, JWT signature verification failures are fatal
+        // regardless of VALIDATE_JWT setting to prevent token tampering
+        if (isProduction()) {
+          throw new Error(
+            `JWT signature verification failed in production: ${
+              jwtError instanceof Error ? jwtError.message : 'Unknown error'
+            }`
+          );
+        }
+
+        // Development/Test mode: Fall back to basic validation if signature verification fails
+        // This maintains backward compatibility while adding security in production
         const decoded = jwt.decode(cleanToken, { complete: true });
         if (!decoded || typeof decoded === 'string') {
           throw new Error('Invalid JWT format');
@@ -493,4 +555,4 @@ export function validateProviderToken(
 }
 
 // Export individual validators and utilities for testing and specific use cases
-export { AuthProviderValidator };
+export { AuthProviderValidator, DevelopmentSecretGenerator };
