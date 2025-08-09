@@ -36,7 +36,7 @@ describe('AuthModeDetector', () => {
 
     it('should detect ANONYMOUS mode for non-development environments', () => {
       // Set up non-development environment (production is recognized as non-development)
-      createTestEnv({ NODE_ENV: 'prod' }); // 'prod' maps to 'production' internally
+      createTestEnv({ NODE_ENV: 'production' });
 
       const config = {};
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.ANONYMOUS);
