@@ -1,20 +1,19 @@
 import type { AuthConfig } from '../types.js';
 import { TokenValidator } from '../utils/token-validator.js';
 import { ValidationPolicy } from '../utils/validation-policy.js';
+import { isProduction } from '@airbolt/config';
 
 export abstract class BaseValidator {
   protected tokenValidator = new TokenValidator();
   protected policy: ValidationPolicy;
 
   constructor(config: AuthConfig) {
-    // Use 'production' string comparison for validation policy
-    // This is intentional as validation policy needs exact environment matching
-    const isProduction = config.NODE_ENV === 'production';
+    // Use centralized environment utility for validation policy
     const validationConfig: {
       issuer?: string;
       audience?: string;
       isProduction: boolean;
-    } = { isProduction };
+    } = { isProduction: isProduction() };
     if (config.EXTERNAL_JWT_ISSUER) {
       validationConfig.issuer = config.EXTERNAL_JWT_ISSUER;
     }

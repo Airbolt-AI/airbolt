@@ -172,6 +172,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // Register user rate limit plugin after env (for token/request tracking)
   await fastify.register(import('./plugins/user-rate-limit.js'));
 
+  // Register auth gateway plugin after env (it depends on configuration)
+  await fastify.register(import('./plugins/auth-gateway.js'));
+
   // Register SSE plugin for streaming support
   await fastify.register(fastifySse);
 

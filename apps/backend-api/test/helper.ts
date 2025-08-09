@@ -142,6 +142,83 @@ export async function injectRequest(
   return app.inject(options);
 }
 
+/**
+ * Creates a mock JWT token for testing purposes
+ * These tokens are NOT cryptographically valid, but have the correct structure
+ * for our provider detection and basic parsing logic
+ */
+export function createMockJWT(options: {
+  provider: 'clerk' | 'auth0' | 'firebase';
+  userId: string;
+  email?: string;
+  expiresInSeconds?: number;
+}): string {
+  const { provider, userId, email, expiresInSeconds = 3600 } = options;
+
+  const now = Math.floor(Date.now() / 1000);
+
+  // Create header
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT',
+  };
+
+  // Create payload based on provider
+  let payload: any = {
+    sub: userId,
+    iat: now,
+    exp: now + expiresInSeconds,
+  };
+
+  switch (provider) {
+    case 'clerk':
+      payload = {
+        ...payload,
+        iss: 'https://test-clerk-account.clerk.accounts.dev',
+        aud: 'test-audience',
+        user_id: userId,
+        email,
+      };
+      break;
+    case 'auth0':
+      payload = {
+        ...payload,
+        iss: 'https://test-domain.auth0.com/',
+        aud: 'test-audience',
+        email,
+      };
+      break;
+    case 'firebase':
+      payload = {
+        ...payload,
+        iss: 'https://securetoken.google.com/test-project',
+        aud: 'test-project',
+        auth_time: now,
+        email,
+      };
+      break;
+  }
+
+  // Base64url encode (simplified for testing)
+  const encodedHeader = btoa(JSON.stringify(header))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  const encodedPayload = btoa(JSON.stringify(payload))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  // Create a mock signature (not cryptographically valid)
+  const signature = btoa('mock-signature')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
 // Legacy exports for backwards compatibility with existing tests
 export { build as default };
 export const config = () => defaultConfig;

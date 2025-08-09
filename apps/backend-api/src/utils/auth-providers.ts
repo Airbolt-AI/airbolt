@@ -66,8 +66,8 @@ export interface AuthValidationResult {
 // Provider-specific validation error
 export class AuthProviderError extends Error {
   public readonly provider: AuthProvider;
-  public readonly name = 'AuthProviderError';
-  public readonly cause?: unknown;
+  public override readonly name = 'AuthProviderError';
+  public override readonly cause?: unknown;
 
   constructor(provider: AuthProvider, message: string, cause?: unknown) {
     super(`${provider} auth error: ${message}`);

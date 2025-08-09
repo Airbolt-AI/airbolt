@@ -1,5 +1,6 @@
 import type { AuthConfig } from '../types.js';
 import { AuthMode } from '../types.js';
+import { isDevelopment } from '@airbolt/config';
 
 export class AuthModeDetector {
   static detect(config: AuthConfig): AuthMode {
@@ -11,10 +12,8 @@ export class AuthModeDetector {
       return AuthMode.LEGACY_KEY;
     }
 
-    // Use 'development' string comparison for auth mode detection
-    // This is intentional as auth mode needs to match exact NODE_ENV value
-    const isDevelopment = config.NODE_ENV === 'development';
-    return isDevelopment ? AuthMode.AUTO_DISCOVERY : AuthMode.ANONYMOUS;
+    // Use centralized environment utility for auth mode detection
+    return isDevelopment() ? AuthMode.AUTO_DISCOVERY : AuthMode.ANONYMOUS;
   }
 
   static getDescription(mode: AuthMode): string {

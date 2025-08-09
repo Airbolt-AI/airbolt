@@ -15,7 +15,9 @@ describe('Support plugin', () => {
     });
 
     afterAll(async () => {
-      await fastify.close();
+      if (fastify) {
+        await fastify.close();
+      }
     });
 
     it('should work standalone', () => {

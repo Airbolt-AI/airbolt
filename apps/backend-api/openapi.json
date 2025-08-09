@@ -16,56 +16,186 @@
     "schemas": {}
   },
   "paths": {
-    "/": {
+    "/health": {
       "get": {
-        "summary": "Get welcome message",
-        "tags": ["Root"],
-        "description": "Returns a hello world message for API health check",
+        "summary": "Application health check",
+        "tags": ["Health"],
+        "description": "Returns detailed health information about the application and its dependencies",
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "System is healthy or unhealthy",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Successful response",
+                  "description": "System is healthy or unhealthy",
                   "type": "object",
                   "properties": {
-                    "message": {
+                    "status": {
                       "type": "string",
-                      "description": "Welcome message",
-                      "example": "Hello World!"
+                      "enum": ["healthy", "unhealthy"],
+                      "description": "Overall system health status"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Health check timestamp in ISO format"
+                    },
+                    "uptime": {
+                      "type": "number",
+                      "description": "Server uptime in seconds"
+                    },
+                    "checks": {
+                      "type": "object",
+                      "properties": {
+                        "authGateway": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "sessionCache": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "aiProvider": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "memory": {
+                          "type": "object",
+                          "properties": {
+                            "used": {
+                              "type": "number"
+                            },
+                            "available": {
+                              "type": "number"
+                            },
+                            "percentage": {
+                              "type": "number"
+                            }
+                          },
+                          "required": ["used", "available", "percentage"]
+                        }
+                      },
+                      "required": [
+                        "authGateway",
+                        "sessionCache",
+                        "aiProvider",
+                        "memory"
+                      ]
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "Application version"
                     }
                   },
-                  "required": ["message"]
+                  "required": [
+                    "status",
+                    "timestamp",
+                    "uptime",
+                    "checks",
+                    "version"
+                  ]
                 }
               }
             }
           },
-          "500": {
-            "description": "Internal Server Error",
+          "503": {
+            "description": "System is unhealthy",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Internal Server Error",
+                  "description": "System is unhealthy",
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "status": {
                       "type": "string",
-                      "description": "Error type",
-                      "example": "Bad Request"
+                      "enum": ["healthy", "unhealthy"]
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "uptime": {
+                      "type": "number"
+                    },
+                    "checks": {
+                      "type": "object",
+                      "properties": {
+                        "authGateway": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "sessionCache": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "aiProvider": {
+                          "type": "string",
+                          "enum": ["ok", "error", "not_configured"]
+                        },
+                        "memory": {
+                          "type": "object",
+                          "properties": {
+                            "used": {
+                              "type": "number"
+                            },
+                            "available": {
+                              "type": "number"
+                            },
+                            "percentage": {
+                              "type": "number"
+                            }
+                          },
+                          "required": ["used", "available", "percentage"]
+                        }
+                      },
+                      "required": [
+                        "authGateway",
+                        "sessionCache",
+                        "aiProvider",
+                        "memory"
+                      ]
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "timestamp",
+                    "uptime",
+                    "checks",
+                    "version"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root endpoint redirect",
+        "tags": ["Root"],
+        "description": "Redirects to the comprehensive health check endpoint",
+        "responses": {
+          "302": {
+            "description": "Redirect to health check endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Redirect to health check endpoint",
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 302
                     },
                     "message": {
                       "type": "string",
-                      "description": "Error message",
-                      "example": "Invalid request parameters"
-                    },
-                    "statusCode": {
-                      "type": "number",
-                      "description": "HTTP status code",
-                      "example": 400
+                      "example": "Found. Redirecting to /health"
                     }
-                  },
-                  "required": ["error", "message", "statusCode"]
+                  }
                 }
               }
             }
@@ -380,6 +510,91 @@
               "application/json": {
                 "schema": {
                   "description": "Bad Request",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/exchange": {
+      "post": {
+        "summary": "Exchange provider token for session token",
+        "tags": ["Authentication"],
+        "description": "Exchange a valid provider token for an internal session token",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token exchange successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Token exchange successful",
+                  "type": "object",
+                  "required": ["sessionToken", "expiresAt", "provider"],
+                  "properties": {
+                    "sessionToken": {
+                      "type": "string",
+                      "description": "Internal session JWT token"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Token expiration timestamp (ISO format)"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "description": "Authentication provider used"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input or malformed token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request - Invalid input or malformed token",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing provider token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Unauthorized - Invalid or missing provider token",
                   "type": "object",
                   "properties": {
                     "error": {

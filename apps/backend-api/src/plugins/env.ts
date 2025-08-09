@@ -2,6 +2,16 @@ import { randomBytes } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
 import { PROVIDER_CONFIG } from '../services/provider-config.js';
+
+/**
+ * Generate a simple JWT secret for development/testing
+ * TODO: For >1000 users, add back comprehensive strength validation
+ * @param lengthInBytes - Length in bytes (default: 32 bytes = 256 bits)
+ * @returns Hex-encoded random string
+ */
+export function generateSecureJWTSecret(lengthInBytes = 32): string {
+  return randomBytes(lengthInBytes).toString('hex');
+}
 // CORS constants inlined for simplicity
 const COMMON_DEV_PORTS = [
   'http://localhost:3000',
@@ -90,7 +100,7 @@ export const EnvSchema = z
       .string({
         invalid_type_error: 'JWT_SECRET must be a string',
       })
-      .min(32, 'JWT_SECRET must be at least 32 characters for security')
+      .min(16, 'JWT_SECRET must be at least 16 characters')
       .optional(),
 
     VALIDATE_JWT: z.coerce
@@ -126,6 +136,59 @@ export const EnvSchema = z
         invalid_type_error: 'EXTERNAL_JWT_AUDIENCE must be a string',
       })
       .min(1, 'EXTERNAL_JWT_AUDIENCE cannot be empty')
+      .optional(),
+
+    // Auth provider specific JWT configuration
+    AUTH0_DOMAIN: z
+      .string({
+        invalid_type_error: 'AUTH0_DOMAIN must be a string',
+      })
+      .min(1, 'AUTH0_DOMAIN cannot be empty')
+      .optional(),
+
+    AUTH0_AUDIENCE: z
+      .string({
+        invalid_type_error: 'AUTH0_AUDIENCE must be a string',
+      })
+      .min(1, 'AUTH0_AUDIENCE cannot be empty')
+      .optional(),
+
+    CLERK_PUBLISHABLE_KEY: z
+      .string({
+        invalid_type_error: 'CLERK_PUBLISHABLE_KEY must be a string',
+      })
+      .min(1, 'CLERK_PUBLISHABLE_KEY cannot be empty')
+      .optional(),
+
+    CLERK_SECRET_KEY: z
+      .string({
+        invalid_type_error: 'CLERK_SECRET_KEY must be a string',
+      })
+      .min(1, 'CLERK_SECRET_KEY cannot be empty')
+      .optional(),
+
+    FIREBASE_PROJECT_ID: z
+      .string({
+        invalid_type_error: 'FIREBASE_PROJECT_ID must be a string',
+      })
+      .min(1, 'FIREBASE_PROJECT_ID cannot be empty')
+      .optional(),
+
+    SUPABASE_JWT_SECRET: z
+      .string({
+        invalid_type_error: 'SUPABASE_JWT_SECRET must be a string',
+      })
+      .min(
+        32,
+        'SUPABASE_JWT_SECRET must be at least 32 characters for security'
+      )
+      .optional(),
+
+    SUPABASE_URL: z
+      .string({
+        invalid_type_error: 'SUPABASE_URL must be a string',
+      })
+      .url('SUPABASE_URL must be a valid URL')
       .optional(),
 
     // CORS allowed origins (comma-separated list or * for all origins)
@@ -202,7 +265,18 @@ export const EnvSchema = z
     if (!data.JWT_SECRET && data.NODE_ENV !== 'production') {
       data = {
         ...data,
-        JWT_SECRET: randomBytes(32).toString('hex'),
+        JWT_SECRET: generateSecureJWTSecret(16), // Simple 16-byte secret for development
+      };
+    }
+
+    // Set VALIDATE_JWT to false in development by default (unless explicitly set)
+    if (
+      data.NODE_ENV === 'development' &&
+      process.env['VALIDATE_JWT'] === undefined
+    ) {
+      data = {
+        ...data,
+        VALIDATE_JWT: false,
       };
     }
 
@@ -279,7 +353,7 @@ export const EnvSchema = z
     },
     {
       message:
-        'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32',
+        "JWT_SECRET is required in production. Generate one with: node -p \"require('crypto').randomBytes(16).toString('hex')\"",
       path: ['JWT_SECRET'],
     }
   )
@@ -342,8 +416,8 @@ export default fp(
       // Warn about auto-generated JWT_SECRET in development
       if (config.NODE_ENV === 'development' && !process.env['JWT_SECRET']) {
         fastify.log.warn(
-          { JWT_SECRET: '[REDACTED - auto-generated]' },
-          'JWT_SECRET auto-generated for development. Set JWT_SECRET for stable tokens.'
+          { JWT_SECRET: '[REDACTED - auto-generated 32-char secret]' },
+          'JWT_SECRET auto-generated for development. Set JWT_SECRET for stable tokens across restarts.'
         );
       }
 

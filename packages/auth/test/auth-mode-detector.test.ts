@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { AuthModeDetector } from '../src/utils/auth-mode-detector.js';
 import { AuthMode } from '../src/types.js';
+import { createTestEnv } from '@airbolt/test-utils';
 
 describe('AuthModeDetector', () => {
   describe('detect', () => {
@@ -26,30 +27,34 @@ describe('AuthModeDetector', () => {
     });
 
     it('should detect AUTO_DISCOVERY mode for development environment', () => {
-      const config = {
-        NODE_ENV: 'development',
-      };
+      // Set up development environment using standardized test utilities
+      createTestEnv({ NODE_ENV: 'development' });
+
+      const config = {};
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.AUTO_DISCOVERY);
     });
 
     it('should detect ANONYMOUS mode for non-development environments', () => {
-      const config = {
-        NODE_ENV: 'dev',
-      };
+      // Set up non-development environment (production is recognized as non-development)
+      createTestEnv({ NODE_ENV: 'prod' }); // 'prod' maps to 'production' internally
+
+      const config = {};
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.ANONYMOUS);
     });
 
     it('should detect ANONYMOUS mode for test environment', () => {
-      const config = {
-        NODE_ENV: 'test',
-      };
+      // Set up test environment
+      createTestEnv({ NODE_ENV: 'test' });
+
+      const config = {};
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.ANONYMOUS);
     });
 
     it('should detect ANONYMOUS mode for production without config', () => {
-      const config = {
-        NODE_ENV: 'production',
-      };
+      // Set up production environment
+      createTestEnv({ NODE_ENV: 'production' });
+
+      const config = {};
       expect(AuthModeDetector.detect(config)).toBe(AuthMode.ANONYMOUS);
     });
 

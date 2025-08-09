@@ -143,6 +143,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      lru-cache:
+        specifier: ^11.1.0
+        version: 11.1.0
       openai:
         specifier: ^5.8.2
         version: 5.9.0(zod@3.25.76)

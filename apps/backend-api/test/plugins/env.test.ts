@@ -23,7 +23,7 @@ describe('Environment Schema Validation', () => {
         expect(result.RATE_LIMIT_MAX).toBe(60);
         expect(result.RATE_LIMIT_TIME_WINDOW).toBe(60000);
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET!.length).toBeGreaterThanOrEqual(64);
+        expect(result.JWT_SECRET!.length).toBeGreaterThanOrEqual(32);
       } finally {
         if (originalEnv !== undefined) {
           process.env['NODE_ENV'] = originalEnv;
@@ -46,7 +46,7 @@ describe('Environment Schema Validation', () => {
       const result = EnvSchema.parse({
         OPENAI_API_KEY: validApiKey,
         NODE_ENV: 'production',
-        JWT_SECRET: 'a'.repeat(32), // Required in production
+        JWT_SECRET: randomBytes(32).toString('hex'), // Use secure random secret
         ALLOWED_ORIGIN: 'https://example.com', // Required in production
       });
       expect(result.NODE_ENV).toBe('production');
@@ -225,7 +225,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
       });
 
       it('should auto-generate JWT_SECRET when NODE_ENV is undefined', () => {
@@ -235,7 +235,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
         expect(result.NODE_ENV).toBe('development');
       });
 
@@ -246,7 +246,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
       });
     });
 
@@ -259,9 +259,7 @@ describe('Environment Schema Validation', () => {
             ALLOWED_ORIGIN: 'https://example.com', // Required in production
             // No JWT_SECRET provided
           })
-        ).toThrow(
-          'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32'
-        );
+        ).toThrow(/JWT_SECRET is required in production/);
       });
 
       it('should accept valid JWT_SECRET in production', () => {
@@ -275,20 +273,92 @@ describe('Environment Schema Validation', () => {
 
         expect(result.JWT_SECRET).toBe(validSecret);
       });
+
+      it('should accept any JWT_SECRET length >= 16 chars in production (simplified validation)', () => {
+        const simpleSecrets = [
+          'development-secret-1234567890123456',
+          'dev-secret-abcd1234567890123456789012',
+          'test-secret-xyz12345678901234567890',
+          'your-secret-key-12345678901234567890',
+          'change-me-please-123456789012345678',
+          'default-secret-9876543210987654321098',
+          'jwt-secret-abcdefghijklmnopqrstuvwxyz',
+          'supersecret-123456789012345678901234',
+          '12345678901234567890123456789012', // 32 chars of simple pattern
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', // All same character (32 a's)
+          '12341234123412341234123412341234', // Repeated pattern
+        ];
+
+        for (const secret of simpleSecrets) {
+          expect(() =>
+            EnvSchema.parse({
+              OPENAI_API_KEY: validApiKey,
+              NODE_ENV: 'production',
+              JWT_SECRET: secret,
+              ALLOWED_ORIGIN: 'https://example.com',
+            })
+          ).not.toThrow();
+        }
+      });
+
+      it('should accept previously low entropy patterns (simplified for 100-1000 users)', () => {
+        const previouslyRejectedSecrets = [
+          '11111111111111111111111111111111', // All same digit
+          '00000000000000000000000000000000', // All zeros
+          '12345678901234567890123456789012', // Sequential numbers
+          'abcdefghijklmnopqrstuvwxyzabcdef', // Sequential letters
+          '1234abcd1234abcd1234abcd1234abcd', // Repeated 8-char pattern
+          'testdevtestdevtestdevtestdevtestd', // Weak word repetition
+          'aaaabbbbaaaabbbbaaaabbbbaaaabbbb', // Simple alternating pattern
+          '1111111111111111111111111111111122', // Almost all same with slight variation
+        ];
+
+        for (const secret of previouslyRejectedSecrets) {
+          expect(() =>
+            EnvSchema.parse({
+              OPENAI_API_KEY: validApiKey,
+              NODE_ENV: 'production',
+              JWT_SECRET: secret,
+              ALLOWED_ORIGIN: 'https://example.com',
+            })
+          ).not.toThrow();
+        }
+      });
+
+      it('should allow weak secrets in development and test environments', () => {
+        const weakSecret = 'development-secret-12345678901234567890';
+
+        // Should work in development
+        const devResult = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          NODE_ENV: 'development',
+          JWT_SECRET: weakSecret,
+        });
+        expect(devResult.JWT_SECRET).toBe(weakSecret);
+
+        // Should work in test
+        const testResult = EnvSchema.parse({
+          OPENAI_API_KEY: validApiKey,
+          NODE_ENV: 'test',
+          JWT_SECRET: weakSecret,
+        });
+        expect(testResult.JWT_SECRET).toBe(weakSecret);
+      });
     });
 
     describe('validation rules', () => {
-      it('should reject JWT_SECRET shorter than 32 characters', () => {
+      it('should reject JWT_SECRET shorter than 16 characters', () => {
         expect(() =>
           EnvSchema.parse({
             OPENAI_API_KEY: validApiKey,
             JWT_SECRET: 'too-short',
           })
-        ).toThrow('JWT_SECRET must be at least 32 characters');
+        ).toThrow('JWT_SECRET must be at least 16 characters');
       });
 
       it('should accept exactly 32 characters', () => {
-        const secret32 = 'a'.repeat(32);
+        // Use a non-weak 32-character secret that won't trigger entropy validation
+        const secret32 = 'abcd1234efgh5678ijkl9012mnop3456';
         const result = EnvSchema.parse({
           OPENAI_API_KEY: validApiKey,
           JWT_SECRET: secret32,

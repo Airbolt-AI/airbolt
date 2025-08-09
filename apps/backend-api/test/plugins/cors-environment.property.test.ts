@@ -21,6 +21,9 @@ describe('CORS Environment Property Tests', () => {
     if (nodeEnv === 'production') {
       createProductionTestEnv({
         ALLOWED_ORIGIN: allowedOrigin,
+        // Ensure a cryptographically secure JWT_SECRET for production tests
+        JWT_SECRET:
+          'SecureProductionJWT2024!@#$%^&*()_+-={}[]|\\:";\'<>?,./1234567890abcdef',
       });
     } else {
       createTestEnv({
