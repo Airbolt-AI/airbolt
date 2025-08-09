@@ -67,11 +67,11 @@ describe('SDK Integration', () => {
             expect(operation.description).toBeDefined();
             expect(operation.tags).toBeDefined();
             expect(operation.responses).toBeDefined();
-            // Should have at least one success response (200, 201, etc.)
-            const successResponses = Object.keys(operation.responses).filter(
-              code => code.startsWith('2')
+            // Should have at least one valid response (2xx success or 302 redirect)
+            const validResponses = Object.keys(operation.responses).filter(
+              code => code.startsWith('2') || code === '302'
             );
-            expect(successResponses.length).toBeGreaterThan(0);
+            expect(validResponses.length).toBeGreaterThan(0);
           }
         }
       }
@@ -80,19 +80,19 @@ describe('SDK Integration', () => {
     it('should include error responses for better SDK error handling', async () => {
       const spec = getOpenAPIV3Document(() => app.swagger());
 
-      // Check that routes include error responses
-      const rootPath = spec.paths['/'];
+      // Check that routes include error responses - use chat endpoint which has 400 responses
+      const chatPath = spec.paths['/api/chat'];
 
-      expect(rootPath).toBeDefined();
+      expect(chatPath).toBeDefined();
 
-      if (rootPath) {
-        expect(rootPath.get).toBeDefined();
-        expect(rootPath.get?.responses?.['500']).toBeDefined();
+      if (chatPath) {
+        expect(chatPath.post).toBeDefined();
+        expect(chatPath.post?.responses?.['400']).toBeDefined();
 
         // Validate error response structure
-        const errorResponse = rootPath.get?.responses?.['500'];
+        const errorResponse = chatPath.post?.responses?.['400'];
         if (errorResponse && isResponseObject(errorResponse)) {
-          expect(errorResponse.description).toBe('Internal Server Error');
+          expect(errorResponse.description).toContain('Bad Request');
           expect(errorResponse.content).toBeDefined();
           expect(errorResponse.content?.['application/json']).toBeDefined();
 
@@ -146,12 +146,15 @@ describe('SDK Integration', () => {
             method: 'GET',
             url: '/',
           });
-          if (response.statusCode !== 200) {
+          if (response.statusCode !== 302) {
             throw new Error(
               `HTTP ${response.statusCode}: ${response.statusMessage}`
             );
           }
-          return JSON.parse(response.payload);
+          // Return redirect info instead of trying to parse JSON
+          return {
+            message: `Redirected to ${response.headers.location}`,
+          };
         }
       }
 
@@ -162,7 +165,7 @@ describe('SDK Integration', () => {
 
       // Test root endpoint
       const rootResponse = await client.getRootMessage();
-      expect(rootResponse).toEqual({ message: 'Hello World!' });
+      expect(rootResponse.message).toContain('Redirected to /health');
     });
 
     it('should handle errors appropriately in SDK pattern', async () => {
@@ -340,25 +343,32 @@ describe('SDK Integration', () => {
 
   describe('Real API Endpoint Testing', () => {
     it('should have working endpoints that match OpenAPI spec', async () => {
-      // Test root endpoint
+      // Test root endpoint (redirects to health)
       const rootResponse = await app.inject({
         method: 'GET',
         url: '/',
       });
 
-      expect(rootResponse.statusCode).toBe(200);
-      const rootData = JSON.parse(rootResponse.payload);
-      expect(rootData).toEqual({ message: 'Hello World!' });
+      expect(rootResponse.statusCode).toBe(302);
+      expect(rootResponse.headers.location).toBe('/health');
     });
 
     it('should return consistent response types for SDK generation', async () => {
       // Test individual endpoints for their expected content types
       const rootResponse = await app.inject({ method: 'GET', url: '/' });
-      expect(rootResponse.statusCode).toBe(200);
-      expect(rootResponse.headers['content-type']).toContain(
+      expect(rootResponse.statusCode).toBe(302);
+      expect(rootResponse.headers.location).toBe('/health');
+
+      // Test health endpoint for actual JSON response
+      const healthResponse = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+      expect(healthResponse.statusCode).toBeOneOf([200, 503]);
+      expect(healthResponse.headers['content-type']).toContain(
         'application/json'
       );
-      expect(() => JSON.parse(rootResponse.payload)).not.toThrow();
+      expect(() => JSON.parse(healthResponse.payload)).not.toThrow();
     });
   });
 });

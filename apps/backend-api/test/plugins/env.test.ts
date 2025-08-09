@@ -225,7 +225,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
       });
 
       it('should auto-generate JWT_SECRET when NODE_ENV is undefined', () => {
@@ -235,7 +235,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
         expect(result.NODE_ENV).toBe('development');
       });
 
@@ -246,7 +246,7 @@ describe('Environment Schema Validation', () => {
         });
 
         expect(result.JWT_SECRET).toBeDefined();
-        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{32}$/);
+        expect(result.JWT_SECRET).toMatch(/^[a-f0-9]{64}$/);
       });
     });
 

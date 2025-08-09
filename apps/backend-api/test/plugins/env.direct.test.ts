@@ -228,7 +228,7 @@ describe('Environment Plugin Direct Tests', () => {
     delete process.env['JWT_SECRET'];
 
     await expect(app.register(envPlugin).ready()).rejects.toThrow(
-      'JWT_SECRET is required in production. Generate one with: openssl rand -hex 32'
+      "JWT_SECRET is required in production. Generate one with: node -p \"require('crypto').randomBytes(16).toString('hex')\""
     );
 
     process.env = originalEnv;
@@ -402,20 +402,26 @@ describe('Environment Plugin Direct Tests', () => {
   });
 
   it('should validate JWT_SECRET minimum length', async () => {
-    const app = Fastify({ logger: false });
     const originalEnv = process.env;
     process.env = {
       ...originalEnv,
-      NODE_ENV: 'test', // Not development, so no auto-generation
+      NODE_ENV: 'production', // Production mode to prevent auto-generation
       OPENAI_API_KEY: validApiKey,
-      JWT_SECRET: 'too-short-secret', // Less than 32 characters
+      JWT_SECRET: 'short', // Less than 16 characters
     };
 
-    await expect(app.register(envPlugin).ready()).rejects.toThrow(
-      /JWT_SECRET.*at least 32 characters/
-    );
+    try {
+      const app = Fastify({ logger: false });
 
-    process.env = originalEnv;
+      await expect(async () => {
+        await app.register(envPlugin);
+        await app.ready();
+      }).rejects.toThrow(/JWT_SECRET.*at least 16 characters/);
+
+      await app.close();
+    } finally {
+      process.env = originalEnv;
+    }
   });
 
   it('should validate PORT is within valid range', async () => {
@@ -587,7 +593,9 @@ describe('Environment Plugin Direct Tests', () => {
       );
 
       expect(warningLog).toBeDefined();
-      expect(warningLog.JWT_SECRET).toBe('[REDACTED - auto-generated]');
+      expect(warningLog.JWT_SECRET).toBe(
+        '[REDACTED - auto-generated 64-char secret]'
+      );
       expect(warningLog.msg).toContain('auto-generated for development');
       expect(warningLog.msg).toContain('stable tokens');
     } finally {

@@ -40,25 +40,39 @@ describe('AuthValidatorFactory', () => {
     });
 
     it('should create InternalJWTValidator for AUTO_DISCOVERY mode', () => {
-      const config = {
-        NODE_ENV: 'development',
-      };
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
 
-      const validators = AuthValidatorFactory.create(config, mockFastify);
+      try {
+        const config = {
+          NODE_ENV: 'development',
+        };
 
-      expect(validators).toHaveLength(1);
-      expect(validators[0]).toBeInstanceOf(InternalJWTValidator);
+        const validators = AuthValidatorFactory.create(config, mockFastify);
+
+        expect(validators).toHaveLength(2);
+        expect(validators[1]).toBeInstanceOf(InternalJWTValidator);
+      } finally {
+        process.env['NODE_ENV'] = originalEnv;
+      }
     });
 
     it('should create InternalJWTValidator for ANONYMOUS mode', () => {
-      const config = {
-        NODE_ENV: 'production',
-      };
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'production';
 
-      const validators = AuthValidatorFactory.create(config, mockFastify);
+      try {
+        const config = {
+          NODE_ENV: 'production',
+        };
 
-      expect(validators).toHaveLength(1);
-      expect(validators[0]).toBeInstanceOf(InternalJWTValidator);
+        const validators = AuthValidatorFactory.create(config, mockFastify);
+
+        expect(validators).toHaveLength(1);
+        expect(validators[0]).toBeInstanceOf(InternalJWTValidator);
+      } finally {
+        process.env['NODE_ENV'] = originalEnv;
+      }
     });
 
     it('should log the detected mode', () => {

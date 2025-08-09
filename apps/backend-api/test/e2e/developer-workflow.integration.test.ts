@@ -29,8 +29,10 @@ describe('Developer Experience Integration', () => {
     await app.register(corsPlugin);
 
     // Add routes that simulate the real API endpoints
-    app.post('/api/tokens', async () => {
-      return { token: 'test-jwt-token', expiresIn: 3600 };
+    app.post('/api/tokens', async (_, reply) => {
+      return reply
+        .status(201)
+        .send({ token: 'test-jwt-token', expiresIn: 3600 });
     });
 
     app.post('/api/chat', async () => {
@@ -177,7 +179,7 @@ describe('Developer Experience Integration', () => {
       });
 
       // This now works thanks to our fix!
-      expect(actualRequest.statusCode).toBe(200);
+      expect(actualRequest.statusCode).toBe(201);
       expect(actualRequest.body).not.toContain('Not allowed by CORS');
 
       // The SDK no longer needs to retry - the first request succeeds!
@@ -231,7 +233,7 @@ describe('Developer Experience Integration', () => {
         payload: {},
       });
 
-      expect(legitimateRequest.statusCode).toBe(200);
+      expect(legitimateRequest.statusCode).toBe(201);
       expect(legitimateRequest.body).not.toContain('Not allowed by CORS');
     } finally {
       await cleanup();
@@ -261,7 +263,7 @@ describe('Developer Experience Integration', () => {
         });
 
         // After the fix, ALL development ports work!
-        expect(response.statusCode).toBe(200);
+        expect(response.statusCode).toBe(201);
         expect(response.body).not.toContain('Not allowed by CORS');
       }
     } finally {

@@ -184,11 +184,11 @@ process.exit(1);`;
             expect(operation.tags).toBeDefined();
             expect(operation.responses).toBeDefined();
 
-            // Should have at least one success response (200, 201, etc.)
-            const successResponses = Object.keys(operation.responses).filter(
-              code => code.startsWith('2')
+            // Should have at least one valid response (2xx success or 302 redirect)
+            const validResponses = Object.keys(operation.responses).filter(
+              code => code.startsWith('2') || code === '302'
             );
-            expect(successResponses.length).toBeGreaterThan(0);
+            expect(validResponses.length).toBeGreaterThan(0);
           }
         }
       }
