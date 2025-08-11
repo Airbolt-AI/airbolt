@@ -218,8 +218,10 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
           break;
         default:
           // This should never happen with current provider types, but added for safety
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          const unknownProvider = (providerConfig as any).provider;
           fastify.log.warn(
-            { provider: (providerConfig as any).provider },
+            { provider: unknownProvider as string },
             'Unknown provider type, skipping registration'
           );
       }
