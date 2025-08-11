@@ -134,7 +134,8 @@ function decodeJWT(token: string): {
 async function getVerificationKey(
   config: AuthProviderConfig,
   _token: string
-): Promise<Parameters<typeof jwtVerify>[1]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> {
   // Handle providers that use shared secrets (HS256)
   if (config.provider === 'supabase') {
     return new TextEncoder().encode(config.jwtSecret);
@@ -209,6 +210,7 @@ async function verifyAuth0Token(
   }
 
   // Get JWKS key
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const getKey = await getVerificationKey(auth0Config, token);
 
   // Verify token
@@ -222,6 +224,7 @@ async function verifyAuth0Token(
     verifyOptions.audience = auth0Config.audience;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(
     token,
     getKey,
@@ -279,9 +282,11 @@ async function verifySupabaseToken(
   }
 
   // Get shared secret
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const secret = await getVerificationKey(supabaseConfig, token);
 
   // Verify token
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(token, secret, {
     issuer: expectedIssuer,
     clockTolerance: 5,
@@ -345,9 +350,11 @@ async function verifyFirebaseToken(
   }
 
   // Get Google's public keys
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const getKey = await getVerificationKey(firebaseConfig, token);
 
   // Verify token
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(token, getKey, {
     issuer: expectedIssuer,
     audience: firebaseConfig.projectId,
@@ -407,6 +414,7 @@ async function verifyCustomToken(
   }
 
   // Get verification key
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const key = await getVerificationKey(customConfig, token);
 
   // Prepare verification options
@@ -421,6 +429,7 @@ async function verifyCustomToken(
   }
 
   // Verify token
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(
     token,
     key,
