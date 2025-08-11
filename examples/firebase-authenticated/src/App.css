@@ -1,0 +1,7 @@
+/* Additional App-specific styles if needed */
+.provider-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}

@@ -529,6 +529,192 @@
         }
       }
     },
+    "/api/auth/exchange/v2": {
+      "post": {
+        "summary": "Exchange provider token for session token (v2 - Infrastructure Manager)",
+        "tags": ["Authentication"],
+        "description": "Enhanced token exchange using centralized infrastructure management. Provides improved rate limiting, audit logging, and provider registry integration.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token exchange successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Token exchange successful",
+                  "type": "object",
+                  "required": [
+                    "sessionToken",
+                    "expiresAt",
+                    "provider",
+                    "metadata"
+                  ],
+                  "properties": {
+                    "sessionToken": {
+                      "type": "string",
+                      "description": "Internal session JWT token"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Token expiration timestamp (ISO format)"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "description": "Authentication provider used"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Additional metadata about the exchange",
+                      "properties": {
+                        "verificationMethod": {
+                          "type": "string"
+                        },
+                        "rateLimitRemaining": {
+                          "type": "number"
+                        },
+                        "infrastructureStats": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input or malformed token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request - Invalid input or malformed token",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing provider token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Unauthorized - Invalid or missing provider token",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Too Many Requests - Rate limit exceeded",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "retryAfter": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/exchange/v2/health": {
+      "get": {
+        "summary": "Health check for auth infrastructure",
+        "tags": ["Authentication", "Health"],
+        "description": "Returns status and statistics of auth infrastructure components",
+        "responses": {
+          "200": {
+            "description": "Infrastructure health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Infrastructure health status",
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    },
+                    "infrastructure": {
+                      "type": "object"
+                    },
+                    "providerRegistry": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/exchange": {
       "post": {
         "summary": "Exchange provider token for session token",
@@ -604,6 +790,53 @@
                       "type": "string"
                     },
                     "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Too Many Requests - Rate limit exceeded",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "retryAfter": {
                       "type": "number"
                     }
                   }

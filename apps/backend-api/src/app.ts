@@ -155,6 +155,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
             TOKEN_LIMIT_TIME_WINDOW: 3600000,
             REQUEST_LIMIT_MAX: 100,
             REQUEST_LIMIT_TIME_WINDOW: 3600000,
+            AUTH_RATE_LIMIT_MAX: 10,
+            AUTH_RATE_LIMIT_WINDOW_MS: 900000,
           };
           fastify.decorate('config', mockConfig);
         },
@@ -162,6 +164,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
       )
     );
   }
+
+  // Register security headers plugin early (before other plugins)
+  await fastify.register(import('./plugins/security-headers.js'));
 
   // Register CORS plugin after env (it depends on ALLOWED_ORIGIN from env)
   await fastify.register(corsPlugin);

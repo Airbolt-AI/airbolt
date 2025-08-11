@@ -65,6 +65,7 @@
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
     "fastify-sse-v2": "^4.2.1",
+    "jose": "^6.0.12",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.1.0",
     "openai": "^5.8.2",

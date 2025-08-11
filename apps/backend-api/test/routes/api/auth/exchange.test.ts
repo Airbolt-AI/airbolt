@@ -13,7 +13,7 @@ describe('Token Exchange Route', () => {
 
   describe('POST /api/auth/exchange', () => {
     it('should require Authorization header', async () => {
-      app = await build();
+      app = await build({ AUTH_REQUIRED: '1' });
       await app.ready();
 
       const response = await app.inject({
@@ -32,7 +32,7 @@ describe('Token Exchange Route', () => {
     });
 
     it('should require Bearer format in Authorization header', async () => {
-      app = await build();
+      app = await build({ AUTH_REQUIRED: '1' });
       await app.ready();
 
       const response = await app.inject({
@@ -54,7 +54,7 @@ describe('Token Exchange Route', () => {
     });
 
     it('should reject empty Bearer token', async () => {
-      app = await build();
+      app = await build({ AUTH_REQUIRED: '1' });
       await app.ready();
 
       const response = await app.inject({

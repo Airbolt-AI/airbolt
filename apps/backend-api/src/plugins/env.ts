@@ -191,6 +191,26 @@ export const EnvSchema = z
       .url('SUPABASE_URL must be a valid URL')
       .optional(),
 
+    // Auth rate limiting configuration
+    AUTH_RATE_LIMIT_MAX: z.coerce
+      .number({
+        invalid_type_error: 'AUTH_RATE_LIMIT_MAX must be a number',
+      })
+      .int('AUTH_RATE_LIMIT_MAX must be an integer')
+      .min(1, 'AUTH_RATE_LIMIT_MAX must be greater than 0')
+      .default(10),
+
+    AUTH_RATE_LIMIT_WINDOW_MS: z.coerce
+      .number({
+        invalid_type_error: 'AUTH_RATE_LIMIT_WINDOW_MS must be a number',
+      })
+      .int('AUTH_RATE_LIMIT_WINDOW_MS must be an integer')
+      .min(
+        60000,
+        'AUTH_RATE_LIMIT_WINDOW_MS must be at least 60000ms (1 minute)'
+      )
+      .default(900000), // 15 minutes default
+
     // CORS allowed origins (comma-separated list or * for all origins)
     ALLOWED_ORIGIN: z.string().optional(),
 

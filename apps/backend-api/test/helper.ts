@@ -7,6 +7,7 @@ import { type AppOptions } from '../src/app.js';
 export interface TestAppOptions extends AppOptions {
   // Environment variables that tests may need to override
   NODE_ENV?: string;
+  AUTH_REQUIRED?: string;
   EXTERNAL_JWT_ISSUER?: string;
   EXTERNAL_JWT_PUBLIC_KEY?: string;
   EXTERNAL_JWT_SECRET?: string;
@@ -20,6 +21,8 @@ export interface TestAppOptions extends AppOptions {
   REQUEST_LIMIT_TIME_WINDOW?: string;
   TOKEN_LIMIT_MAX?: string;
   TOKEN_LIMIT_TIME_WINDOW?: string;
+  AUTH_RATE_LIMIT_MAX?: string;
+  AUTH_RATE_LIMIT_WINDOW_MS?: string;
 }
 
 // Default test configuration
@@ -37,6 +40,7 @@ export async function build(
   // Extract environment variables from config and set them
   const {
     NODE_ENV,
+    AUTH_REQUIRED,
     EXTERNAL_JWT_ISSUER,
     EXTERNAL_JWT_PUBLIC_KEY,
     EXTERNAL_JWT_SECRET,
@@ -50,6 +54,8 @@ export async function build(
     REQUEST_LIMIT_TIME_WINDOW,
     TOKEN_LIMIT_MAX,
     TOKEN_LIMIT_TIME_WINDOW,
+    AUTH_RATE_LIMIT_MAX,
+    AUTH_RATE_LIMIT_WINDOW_MS,
     ...appConfig
   } = config;
 
@@ -59,6 +65,7 @@ export async function build(
   // Set test environment variables
   const envVars = {
     NODE_ENV,
+    AUTH_REQUIRED,
     EXTERNAL_JWT_ISSUER,
     EXTERNAL_JWT_PUBLIC_KEY,
     EXTERNAL_JWT_SECRET,
@@ -72,6 +79,8 @@ export async function build(
     REQUEST_LIMIT_TIME_WINDOW,
     TOKEN_LIMIT_MAX,
     TOKEN_LIMIT_TIME_WINDOW,
+    AUTH_RATE_LIMIT_MAX,
+    AUTH_RATE_LIMIT_WINDOW_MS,
   };
 
   Object.entries(envVars).forEach(([key, value]) => {

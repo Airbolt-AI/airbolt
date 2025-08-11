@@ -74,15 +74,15 @@ That's it! Your app now has secure AI chat that can't be abused by random users.
 
 ## What you get today
 
-**Secure LLM proxy** - Your AI provider API keys stay on the server. Frontend gets short-lived JWT tokens (15 min expiry) that can only access the chat endpoint.
+**Production-ready secure LLM proxy** - Your AI provider API keys stay on the server. Frontend gets short-lived JWT tokens (10 min expiry) with cryptographic signature verification.
 
 **How the security works**:
 
-1. Frontend requests a JWT token from `/api/tokens` endpoint
-2. Token is signed with a secret key (HS256 algorithm) only the server knows
-3. Frontend includes token in `Authorization: Bearer <token>` header
-4. Backend verifies the JWT signature on every request
-5. Invalid/expired tokens are rejected with 401 Unauthorized
+1. Frontend provides auth token from your provider (Clerk, Auth0, etc.)
+2. Backend validates token signature using JWKS public keys
+3. Issues short-lived session token (10 min expiry) for chat access
+4. All requests verified with cryptographic JWT signature validation
+5. Rate limiting and audit logging prevent abuse
 
 **Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Token-based rate limiting prevents runaway usage:
 
@@ -103,9 +103,9 @@ This is an MVP to validate the core concept. We're learning what the "Stripe for
 
 Use your existing authentication provider with Airbolt. **Zero configuration required!**
 
-### 🎉 Automatic Authentication (NEW!)
+### 🎉 Zero-Config Authentication
 
-The React SDK now automatically detects and uses your auth provider - no configuration needed:
+The React SDK automatically detects and uses your auth provider - no configuration needed:
 
 ```jsx
 // Clerk - Automatically detected!
@@ -205,13 +205,13 @@ See the [Clerk example](examples/clerk-authenticated) for a complete implementat
 
 ### Supported Auth Providers
 
-| Provider | Auto-Detection     | Example                                      |
-| -------- | ------------------ | -------------------------------------------- |
-| Clerk    | ✅ Automatic       | [View Example](examples/clerk-authenticated) |
-| Auth0    | ✅ Automatic       | [View Example](examples/auth0-authenticated) |
-| Supabase | ✅ Automatic       | Coming Soon                                  |
-| Firebase | ✅ Automatic       | Coming Soon                                  |
-| Custom   | Via `getAuthToken` | See below                                    |
+| Provider | Auto-Detection      | Example                                      |
+| -------- | ------------------- | -------------------------------------------- |
+| Clerk    | ✅ Production Ready | [View Example](examples/clerk-authenticated) |
+| Auth0    | ✅ Production Ready | [View Example](examples/auth0-authenticated) |
+| Supabase | ✅ Production Ready | Coming Soon                                  |
+| Firebase | ✅ Production Ready | Coming Soon                                  |
+| Custom   | Via `getAuthToken`  | See below                                    |
 
 ### Custom Auth Providers
 

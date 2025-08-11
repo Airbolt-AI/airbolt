@@ -60,6 +60,8 @@ describe('Chat Route Unit Tests', () => {
       TOKEN_LIMIT_TIME_WINDOW: 3600000,
       REQUEST_LIMIT_MAX: 100,
       REQUEST_LIMIT_TIME_WINDOW: 3600000,
+      AUTH_RATE_LIMIT_MAX: 10,
+      AUTH_RATE_LIMIT_WINDOW_MS: 900000,
     });
 
     // Mock AI Provider service
