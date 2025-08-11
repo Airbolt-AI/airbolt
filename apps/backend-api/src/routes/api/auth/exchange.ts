@@ -217,9 +217,10 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
           registeredProviders.push(customOIDCProvider);
           break;
         default:
+          // This should never happen with current provider types, but added for safety
           fastify.log.warn(
-            { provider: providerConfig.provider },
-            'Provider not yet imported in exchange endpoint, skipping registration'
+            { provider: (providerConfig as any).provider },
+            'Unknown provider type, skipping registration'
           );
       }
     }
