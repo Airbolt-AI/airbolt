@@ -570,19 +570,40 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
             });
           }
 
-          // Check if no configured provider found
-          if (errorMessage.includes('No configured provider')) {
-            errorType = 'NO_PROVIDER_CONFIGURED';
-            auditLogger.logTokenExchangeFailure(
+          // Check for various authentication failures that should return 401
+          if (
+            errorMessage.includes('No authentication providers configured') ||
+            errorMessage.includes('No configured provider') ||
+            errorMessage.includes(
+              'Unable to detect auth provider from token'
+            ) ||
+            errorMessage.includes('Token missing issuer claim') ||
+            errorMessage.includes('Invalid JWT format') ||
+            errorMessage.includes('Token is required')
+          ) {
+            errorType = errorMessage.includes(
+              'No authentication providers configured'
+            )
+              ? 'NO_PROVIDER_CONFIGURED'
+              : errorMessage.includes('Unable to detect auth provider')
+                ? 'NO_PROVIDER_CONFIGURED'
+                : errorMessage.includes('Token missing issuer')
+                  ? 'MISSING_ISSUER'
+                  : errorMessage.includes('Invalid JWT format')
+                    ? 'INVALID_FORMAT'
+                    : errorMessage.includes('Token is required')
+                      ? 'MISSING_TOKEN'
+                      : 'NO_PROVIDER_CONFIGURED';
+            auditLogger.logJWTVerificationFailure(
               request,
-              errorMessage,
               errorType,
+              errorMessage,
               detectedProvider
             );
-            return reply.code(400).send({
-              error: 'BadRequest',
-              message: 'Unable to detect authentication provider from token',
-              statusCode: 400,
+            return reply.code(401).send({
+              error: 'Unauthorized',
+              message: 'Token validation failed',
+              statusCode: 401,
             });
           }
 

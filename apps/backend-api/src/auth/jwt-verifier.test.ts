@@ -270,7 +270,7 @@ describe('JWT Verification Property Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockJwksCache.getOrCreate.mockReturnValue(mockCreateRemoteJWKSet as any);
-    mockValidateIssuer.mockImplementation(() => {}); // No-op by default
+    mockValidateIssuer.mockImplementation(async () => {}); // No-op by default
   });
 
   describe('Token format validation', () => {
@@ -430,7 +430,7 @@ describe('JWT Verification Property Tests', () => {
               Buffer.from('fake-signature').toString('base64url');
             const token = `${header}.${payloadB64}.${signature}`;
 
-            mockValidateIssuer.mockImplementation(() => {
+            mockValidateIssuer.mockImplementation(async () => {
               throw new Error(errorMessage);
             });
 
@@ -469,7 +469,7 @@ describe('JWT Verification Property Tests', () => {
               Buffer.from('fake-signature').toString('base64url');
             const token = `${header}.${payloadB64}.${signature}`;
 
-            mockValidateIssuer.mockImplementation(() => {
+            mockValidateIssuer.mockImplementation(async () => {
               throw new Error('Validation failed for custom issuer test');
             });
 

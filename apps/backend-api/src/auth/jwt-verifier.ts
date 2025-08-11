@@ -4,6 +4,48 @@ import { jwksCache } from './jwks-cache.js';
 import { validateIssuerBeforeNetwork } from './issuer-validator.js';
 import { type JWTClaims } from '../types/auth.js';
 import { jwtSingleFlight, createHashKey } from './single-flight.js';
+import { timingSafeEqual } from 'node:crypto';
+
+/**
+ * Minimum response time in milliseconds to prevent timing attacks.
+ * All verification operations will take at least this amount of time.
+ */
+const MIN_VERIFICATION_TIME_MS = 50;
+
+/**
+ * Creates a consistent delay to prevent timing attacks.
+ * Ensures all verification paths take at least MIN_VERIFICATION_TIME_MS.
+ */
+async function enforceMinimumTiming(startTime: number): Promise<void> {
+  const elapsed = Date.now() - startTime;
+  const remaining = MIN_VERIFICATION_TIME_MS - elapsed;
+
+  if (remaining > 0) {
+    await new Promise(resolve => setTimeout(resolve, remaining));
+  }
+}
+
+/**
+ * Performs constant-time string comparison to prevent timing attacks.
+ * Uses Node.js timingSafeEqual with length normalization.
+ */
+function constantTimeStringCompare(a: string, b: string): boolean {
+  // Normalize lengths to prevent length-based timing attacks
+  const maxLength = Math.max(a.length, b.length);
+  const normalizedA = a.padEnd(maxLength, '\0');
+  const normalizedB = b.padEnd(maxLength, '\0');
+
+  const bufferA = Buffer.from(normalizedA, 'utf8');
+  const bufferB = Buffer.from(normalizedB, 'utf8');
+
+  try {
+    return timingSafeEqual(bufferA, bufferB);
+  } catch {
+    // timingSafeEqual throws if lengths differ, which shouldn't happen after normalization
+    // but we handle it defensively
+    return false;
+  }
+}
 
 /**
  * Determines if the application is running in development mode.
@@ -75,13 +117,25 @@ export async function verifyJWT(
   token: string,
   externalJwtIssuer?: string
 ): Promise<JWTClaims> {
-  // Use single-flight to coalesce concurrent verifications of the same token
-  // Hash the token for privacy - don't store actual tokens in memory
-  const tokenKey = createHashKey(token + (externalJwtIssuer ?? ''));
+  const startTime = Date.now();
 
-  return jwtSingleFlight.do(tokenKey, async () => {
-    return verifyJWTInternal(token, externalJwtIssuer);
-  });
+  try {
+    // Use single-flight to coalesce concurrent verifications of the same token
+    // Hash the token for privacy - don't store actual tokens in memory
+    const tokenKey = createHashKey(token + (externalJwtIssuer ?? ''));
+
+    const result = await jwtSingleFlight.do(tokenKey, async () => {
+      return verifyJWTInternal(token, externalJwtIssuer);
+    });
+
+    // Enforce minimum timing to prevent timing attacks
+    await enforceMinimumTiming(startTime);
+    return result;
+  } catch (error) {
+    // Ensure failed verifications also take minimum time
+    await enforceMinimumTiming(startTime);
+    throw error;
+  }
 }
 
 /**
@@ -124,8 +178,13 @@ async function verifyJWTInternal(
   }
 
   // Validate issuer before making any network calls
+  // Use constant-time comparison for external JWT issuer to prevent timing attacks
   try {
-    validateIssuerBeforeNetwork(issuer, externalJwtIssuer);
+    await validateIssuerBeforeNetwork(
+      issuer,
+      externalJwtIssuer,
+      constantTimeStringCompare
+    );
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';

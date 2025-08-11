@@ -8,7 +8,8 @@ describe('POST /api/auth/exchange - Rate Limiting', () => {
   beforeEach(async () => {
     // Build app with very low rate limits for testing
     app = await build({
-      // Default NODE_ENV will be 'development' (doesn't need to be set)
+      NODE_ENV: 'test', // Explicitly set NODE_ENV (not production)
+      AUTH_REQUIRED: '', // Explicitly unset to enable development mode
       VALIDATE_JWT: 'false', // Disable JWT validation for simpler testing
       AUTH_RATE_LIMIT_MAX: '2', // Very low limit for testing
       AUTH_RATE_LIMIT_WINDOW_MS: '60000', // 1 minute minimum

@@ -35,7 +35,7 @@ describe('JWT Verification Single-Flight Integration', () => {
     jwtSingleFlight.clear();
 
     // Setup default successful mocks
-    vi.mocked(validateIssuerBeforeNetwork).mockImplementation(() => {});
+    vi.mocked(validateIssuerBeforeNetwork).mockImplementation(async () => {});
     vi.mocked(jwksCache.getOrCreate).mockReturnValue(mockGetKey);
     vi.mocked(jwtVerify).mockResolvedValue({
       payload: {
@@ -141,7 +141,8 @@ describe('JWT Verification Single-Flight Integration', () => {
       expect(validateIssuerBeforeNetwork).toHaveBeenCalledTimes(1);
       expect(validateIssuerBeforeNetwork).toHaveBeenCalledWith(
         'https://example.com',
-        externalIssuer
+        externalIssuer,
+        expect.any(Function) // constantTimeStringCompare function
       );
     });
 
@@ -193,7 +194,7 @@ describe('JWT Verification Single-Flight Integration', () => {
       const token =
         'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiaXNzIjoiaHR0cHM6Ly9tYWxpY2lvdXMuY29tIn0.signature';
 
-      vi.mocked(validateIssuerBeforeNetwork).mockImplementation(() => {
+      vi.mocked(validateIssuerBeforeNetwork).mockImplementation(async () => {
         throw new Error('Untrusted issuer');
       });
 

@@ -29,27 +29,40 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function generate() {
-  // Set up minimal environment for OpenAPI generation
-  process.env.NODE_ENV = 'development';
-  process.env.PORT = '3000';
-  process.env.LOG_LEVEL = 'info';
-  process.env.OPENAI_API_KEY = 'sk-openapi-generation-placeholder';
-  process.env.ALLOWED_ORIGIN = '*';
-  process.env.SYSTEM_PROMPT = '';
-  process.env.RATE_LIMIT_MAX = '100';
-  process.env.RATE_LIMIT_TIME_WINDOW = '60000';
-  process.env.TRUST_PROXY = 'false';
-  process.env.JWT_SECRET = 'openapi-generation-only-jwt-secret-placeholder';
-  
-  const app = await build({ logger: false, skipEnvValidation: true });
-  await app.ready();
-  
-  const spec = app.swagger();
-  const outputPath = join(__dirname, '..', 'openapi.json');
-  writeFileSync(outputPath, JSON.stringify(spec, null, 2), 'utf8');
-  console.log(\`✅ OpenAPI specification generated at: \${outputPath}\`);
-  console.log(\`📊 Found \${Object.keys(spec.paths || {}).length} endpoints\`);
-  await app.close();
+  try {
+    // Set up minimal environment for OpenAPI generation
+    process.env.NODE_ENV = 'development';
+    process.env.PORT = '3000';
+    process.env.LOG_LEVEL = 'info';
+    process.env.OPENAI_API_KEY = 'sk-openapi-generation-placeholder';
+    process.env.ALLOWED_ORIGIN = '*';
+    process.env.SYSTEM_PROMPT = '';
+    process.env.RATE_LIMIT_MAX = '100';
+    process.env.RATE_LIMIT_TIME_WINDOW = '60000';
+    process.env.TRUST_PROXY = 'false';
+    process.env.JWT_SECRET = 'openapi-generation-only-jwt-secret-placeholder';
+    
+    const app = await build({ logger: false, skipEnvValidation: true });
+    await app.ready();
+    
+    // Small delay to ensure all plugins are fully loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const spec = app.swagger();
+    const outputPath = join(__dirname, '..', 'openapi.json');
+    writeFileSync(outputPath, JSON.stringify(spec, null, 2), 'utf8');
+    console.log(\`✅ OpenAPI specification generated at: \${outputPath}\`);
+    console.log(\`📊 Found \${Object.keys(spec.paths || {}).length} endpoints\`);
+    
+    // Properly close the app
+    await app.close();
+    
+    // Force exit to prevent hanging
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error in generation:', error);
+    process.exit(1);
+  }
 }
 
 generate().catch(error => {
@@ -62,10 +75,11 @@ generate().catch(error => {
     writeFileSync(scriptPath, tsScript, 'utf8');
 
     try {
-      // Run with tsx
+      // Run with tsx with timeout
       execSync(`npx tsx ${scriptPath}`, {
         stdio: 'inherit',
         cwd: join(__dirname, '..'),
+        timeout: 30000, // 30 second timeout
       });
     } finally {
       // Clean up temporary file

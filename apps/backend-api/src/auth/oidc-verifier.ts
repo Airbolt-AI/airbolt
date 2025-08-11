@@ -475,7 +475,7 @@ export async function verifyOIDCToken(
   const { payload } = decodeJWT(token);
   if (payload.iss) {
     try {
-      validateIssuerBeforeNetwork(payload.iss);
+      await validateIssuerBeforeNetwork(payload.iss);
     } catch (error) {
       // Only validate if we can, don't fail for custom issuers
       if (

@@ -29,6 +29,212 @@ pnpm test
 
 The API will be available at [http://localhost:3000](http://localhost:3000)
 
+## Authentication
+
+Airbolt supports multiple authentication providers with zero-config auto-detection and BYOA (Bring Your Own Auth) flexibility.
+
+### Supported Providers
+
+- **Clerk** - Zero-config authentication for development
+- **Auth0** - Enterprise identity platform
+- **Supabase** - Open-source Firebase alternative
+- **Firebase** - Google's authentication service
+- **Custom OIDC** - Any OpenID Connect provider
+
+### Zero-Config Clerk Authentication
+
+In development mode, Clerk tokens are automatically accepted without configuration:
+
+```typescript
+// Frontend: Use any Clerk token
+const { getToken } = useAuth();
+const token = await getToken();
+
+// API automatically detects and validates Clerk tokens
+const response = await fetch('/api/chat', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+**Production**: Requires explicit configuration for security.
+
+### BYOA (Bring Your Own Auth) Configuration
+
+#### Development Mode (Zero-Config)
+
+```bash
+# No configuration needed - all major providers work automatically
+NODE_ENV=development
+```
+
+#### Production Mode (Explicit Configuration)
+
+```bash
+# Choose your authentication provider(s)
+NODE_ENV=production
+
+# Clerk
+CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Auth0
+AUTH0_DOMAIN=your-domain.auth0.com
+AUTH0_AUDIENCE=https://your-api.com
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_JWT_SECRET=your-jwt-secret
+
+# Firebase
+FIREBASE_PROJECT_ID=your-project-id
+
+# Custom OIDC
+EXTERNAL_JWT_ISSUER=https://your-provider.com/
+EXTERNAL_JWT_AUDIENCE=your-api-identifier
+```
+
+### Authentication Flow
+
+1. **Frontend**: Obtain JWT from your auth provider (Clerk, Auth0, etc.)
+2. **API Exchange**: Send provider JWT to `/api/auth/exchange`
+3. **Session Token**: Receive short-lived Airbolt session token
+4. **API Calls**: Use session token for protected endpoints
+
+```typescript
+// Step 1: Get provider token (example with Clerk)
+const providerToken = await getToken();
+
+// Step 2: Exchange for session token
+const response = await fetch('/api/auth/exchange', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token: providerToken }),
+});
+
+const { sessionToken } = await response.json();
+
+// Step 3: Use session token for API calls
+const chatResponse = await fetch('/api/chat', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${sessionToken}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello!' }] }),
+});
+```
+
+### Security Features
+
+#### JWT Verification
+
+- **JWKS Caching**: Public keys cached with TTL for performance
+- **Single-Flight Coalescing**: Prevents duplicate JWKS requests
+- **Issuer Validation**: Strict issuer matching for security
+- **Algorithm Verification**: Only approved algorithms accepted
+
+#### Rate Limiting
+
+Authentication endpoints have dedicated rate limits:
+
+```bash
+# Auth-specific rate limiting
+AUTH_RATE_LIMIT_MAX=10              # 10 exchanges per window
+AUTH_RATE_LIMIT_WINDOW_MS=900000    # 15-minute window
+```
+
+#### Audit Logging
+
+All authentication events are logged with:
+
+- Provider detection
+- Token validation results
+- Rate limiting decisions
+- Security violations
+
+### Provider-Specific Configuration
+
+#### Clerk Configuration
+
+```bash
+# Minimum for production
+CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+
+# Optional: Restrict authorized parties
+CLERK_AUTHORIZED_PARTIES=https://your-app.com,https://admin.your-app.com
+```
+
+#### Auth0 Configuration
+
+```bash
+# Required
+AUTH0_DOMAIN=your-tenant.auth0.com
+
+# Recommended for API security
+AUTH0_AUDIENCE=https://your-api-identifier
+
+# Optional: Override auto-computed issuer
+AUTH0_ISSUER=https://your-tenant.auth0.com/
+```
+
+#### Supabase Configuration
+
+```bash
+# Required
+SUPABASE_URL=https://xyz.supabase.co
+SUPABASE_JWT_SECRET=your-anon-or-service-role-key
+
+# Note: Uses HS256 algorithm with shared secret
+```
+
+#### Firebase Configuration
+
+```bash
+# Required
+FIREBASE_PROJECT_ID=your-project-id
+
+# Note: Uses Google's public keys for RS256 verification
+```
+
+#### Custom OIDC Configuration
+
+```bash
+# Required
+EXTERNAL_JWT_ISSUER=https://your-oidc-provider.com/
+
+# Optional: Override JWKS discovery
+EXTERNAL_JWT_JWKS_URI=https://your-provider.com/.well-known/jwks.json
+
+# Optional: For audience validation
+EXTERNAL_JWT_AUDIENCE=your-api-identifier
+
+# For HMAC-based providers (rare)
+EXTERNAL_JWT_SECRET=your-shared-secret
+
+# For RSA without JWKS (rare)
+EXTERNAL_JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----...
+```
+
+### Authentication Modes
+
+The API operates in three authentication modes:
+
+1. **Development Mode** (`NODE_ENV=development`)
+   - Zero-config: All major providers accepted
+   - Automatic token generation for testing
+   - Relaxed security for rapid development
+
+2. **Managed Mode** (Configured providers like Clerk, Auth0)
+   - Provider-specific validation
+   - Production security controls
+   - Automatic provider detection
+
+3. **Custom Mode** (Custom OIDC providers)
+   - Full control over JWT validation
+   - Custom issuer and audience validation
+   - Support for non-standard providers
+
 ## Environment Configuration
 
 All environment variables are validated using Zod schemas for type safety and runtime validation.
@@ -198,9 +404,38 @@ backend-api/
 
 ### Authentication
 
-#### POST `/api/tokens`
+#### POST `/api/auth/exchange`
 
-Generate a JWT token for API access.
+Exchange your authentication provider's JWT for an Airbolt session token.
+
+**Request Body:**
+
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiIs..." // JWT from Clerk, Auth0, Supabase, etc.
+}
+```
+
+**Response:**
+
+```json
+{
+  "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresIn": "10m",
+  "tokenType": "Bearer",
+  "provider": "clerk",
+  "userId": "user_2abc123def456"
+}
+```
+
+**Rate Limits:**
+
+- 10 requests per 15-minute window (configurable)
+- Applied per IP address
+
+#### POST `/api/tokens` (Legacy)
+
+Generate a JWT token for API access (development only).
 
 **Request Body:**
 

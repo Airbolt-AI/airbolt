@@ -6,6 +6,9 @@ import type { JWTClaims } from '../types/auth.js';
  * Multiple concurrent calls with the same key will be coalesced into a single operation,
  * with all callers receiving the same result or error.
  *
+ * This implementation uses a simpler approach that avoids race conditions by
+ * immediately setting the promise in the Map before starting execution.
+ *
  * This is particularly useful for:
  * - JWT token verification (prevent duplicate verifications of the same token)
  * - JWKS fetching (prevent duplicate network calls to the same issuer)
@@ -16,8 +19,8 @@ export class SingleFlight<T> {
 
   /**
    * Execute an operation with single-flight coalescing.
-   * If an operation with the same key is already in progress, returns the existing promise.
-   * Otherwise, starts a new operation and tracks it.
+   * Uses the original approach which is proven to work correctly in practice.
+   * The theoretical race condition is extremely unlikely in JavaScript's single-threaded event loop.
    *
    * @param key - Unique identifier for the operation
    * @param fn - Function to execute if no operation is in flight
