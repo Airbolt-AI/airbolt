@@ -134,7 +134,6 @@ function decodeJWT(token: string): {
 async function getVerificationKey(
   config: AuthProviderConfig,
   _token: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   // Handle providers that use shared secrets (HS256)
   if (config.provider === 'supabase') {
@@ -224,9 +223,9 @@ async function verifyAuth0Token(
     verifyOptions.audience = auth0Config.audience;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(
     token,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     getKey,
     verifyOptions
   );
@@ -429,9 +428,9 @@ async function verifyCustomToken(
   }
 
   // Verify token
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { payload: verifiedPayload } = await jwtVerify(
     token,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     key,
     verifyOptions
   );
