@@ -19,7 +19,9 @@
     "/health": {
       "get": {
         "summary": "Application health check",
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "description": "Returns detailed health information about the application and its dependencies",
         "responses": {
           "200": {
@@ -32,7 +34,10 @@
                   "properties": {
                     "status": {
                       "type": "string",
-                      "enum": ["healthy", "unhealthy"],
+                      "enum": [
+                        "healthy",
+                        "unhealthy"
+                      ],
                       "description": "Overall system health status"
                     },
                     "timestamp": {
@@ -49,15 +54,27 @@
                       "properties": {
                         "authGateway": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "sessionCache": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "aiProvider": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "memory": {
                           "type": "object",
@@ -72,7 +89,11 @@
                               "type": "number"
                             }
                           },
-                          "required": ["used", "available", "percentage"]
+                          "required": [
+                            "used",
+                            "available",
+                            "percentage"
+                          ]
                         }
                       },
                       "required": [
@@ -108,7 +129,10 @@
                   "properties": {
                     "status": {
                       "type": "string",
-                      "enum": ["healthy", "unhealthy"]
+                      "enum": [
+                        "healthy",
+                        "unhealthy"
+                      ]
                     },
                     "timestamp": {
                       "type": "string",
@@ -122,15 +146,27 @@
                       "properties": {
                         "authGateway": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "sessionCache": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "aiProvider": {
                           "type": "string",
-                          "enum": ["ok", "error", "not_configured"]
+                          "enum": [
+                            "ok",
+                            "error",
+                            "not_configured"
+                          ]
                         },
                         "memory": {
                           "type": "object",
@@ -145,7 +181,11 @@
                               "type": "number"
                             }
                           },
-                          "required": ["used", "available", "percentage"]
+                          "required": [
+                            "used",
+                            "available",
+                            "percentage"
+                          ]
                         }
                       },
                       "required": [
@@ -176,7 +216,9 @@
     "/": {
       "get": {
         "summary": "Root endpoint redirect",
-        "tags": ["Root"],
+        "tags": [
+          "Root"
+        ],
         "description": "Redirects to the comprehensive health check endpoint",
         "responses": {
           "302": {
@@ -206,14 +248,18 @@
     "/api/chat": {
       "post": {
         "summary": "Send chat messages to AI",
-        "tags": ["Chat"],
+        "tags": [
+          "Chat"
+        ],
         "description": "Proxies chat messages to configured AI provider and returns the assistant response",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["messages"],
+                "required": [
+                  "messages"
+                ],
                 "properties": {
                   "messages": {
                     "type": "array",
@@ -221,11 +267,18 @@
                     "maxItems": 50,
                     "items": {
                       "type": "object",
-                      "required": ["role", "content"],
+                      "required": [
+                        "role",
+                        "content"
+                      ],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": ["user", "assistant", "system"],
+                          "enum": [
+                            "user",
+                            "assistant",
+                            "system"
+                          ],
                           "description": "The role of the message sender"
                         },
                         "content": {
@@ -242,7 +295,10 @@
                   },
                   "provider": {
                     "type": "string",
-                    "enum": ["openai", "anthropic"],
+                    "enum": [
+                      "openai",
+                      "anthropic"
+                    ],
                     "description": "AI provider to use (defaults to environment setting)"
                   },
                   "model": {
@@ -268,7 +324,9 @@
                 "schema": {
                   "description": "Successful chat response",
                   "type": "object",
-                  "required": ["content"],
+                  "required": [
+                    "content"
+                  ],
                   "properties": {
                     "content": {
                       "type": "string",
@@ -459,7 +517,9 @@
     "/api/tokens": {
       "post": {
         "summary": "Generate JWT token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Generate a JWT token for API authentication (development endpoint)",
         "requestBody": {
           "content": {
@@ -485,7 +545,11 @@
                 "schema": {
                   "description": "Token generated successfully",
                   "type": "object",
-                  "required": ["token", "expiresIn", "tokenType"],
+                  "required": [
+                    "token",
+                    "expiresIn",
+                    "tokenType"
+                  ],
                   "properties": {
                     "token": {
                       "type": "string",
@@ -532,7 +596,9 @@
     "/api/auth/exchange/v2": {
       "post": {
         "summary": "Exchange provider token for session token (v2 - Infrastructure Manager)",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Enhanced token exchange using centralized infrastructure management. Provides improved rate limiting, audit logging, and provider registry integration.",
         "security": [
           {
@@ -684,7 +750,10 @@
     "/api/auth/exchange/v2/health": {
       "get": {
         "summary": "Health check for auth infrastructure",
-        "tags": ["Authentication", "Health"],
+        "tags": [
+          "Authentication",
+          "Health"
+        ],
         "description": "Returns status and statistics of auth infrastructure components",
         "responses": {
           "200": {
@@ -718,7 +787,9 @@
     "/api/auth/exchange": {
       "post": {
         "summary": "Exchange provider token for session token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Exchange a valid provider token for an internal session token",
         "security": [
           {
@@ -733,7 +804,11 @@
                 "schema": {
                   "description": "Token exchange successful",
                   "type": "object",
-                  "required": ["sessionToken", "expiresAt", "provider"],
+                  "required": [
+                    "sessionToken",
+                    "expiresAt",
+                    "provider"
+                  ],
                   "properties": {
                     "sessionToken": {
                       "type": "string",

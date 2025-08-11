@@ -19,9 +19,9 @@ import type {
 } from '../../../auth/types/provider.js';
 import { clerkProvider } from '../../../auth/providers/clerk-provider.js';
 import { auth0Provider } from '../../../auth/providers/auth0-provider.js';
-// Import other simplified providers
-// Note: These need to be imported from the files, not the factory
-// TODO: Import other providers as they are converted
+import { supabaseProvider } from '../../../auth/providers/supabase-provider.js';
+import { firebaseProvider } from '../../../auth/providers/firebase-provider.js';
+import { customOIDCProvider } from '../../../auth/providers/custom-oidc-provider.js';
 
 /**
  * Detect provider from verified JWT claims
@@ -204,19 +204,18 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
           providerRegistry.register(auth0Provider);
           registeredProviders.push(auth0Provider);
           break;
-        // TODO: Import and add other providers (supabase, firebase, custom)
-        // case 'supabase':
-        //   providerRegistry.register(supabaseProvider);
-        //   registeredProviders.push(supabaseProvider);
-        //   break;
-        // case 'firebase':
-        //   providerRegistry.register(firebaseProvider);
-        //   registeredProviders.push(firebaseProvider);
-        //   break;
-        // case 'custom':
-        //   providerRegistry.register(customOIDCProvider);
-        //   registeredProviders.push(customOIDCProvider);
-        //   break;
+        case 'supabase':
+          providerRegistry.register(supabaseProvider);
+          registeredProviders.push(supabaseProvider);
+          break;
+        case 'firebase':
+          providerRegistry.register(firebaseProvider);
+          registeredProviders.push(firebaseProvider);
+          break;
+        case 'custom':
+          providerRegistry.register(customOIDCProvider);
+          registeredProviders.push(customOIDCProvider);
+          break;
         default:
           fastify.log.warn(
             { provider: providerConfig.provider },

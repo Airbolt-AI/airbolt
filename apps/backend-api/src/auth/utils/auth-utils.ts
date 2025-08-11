@@ -70,8 +70,22 @@ export function extractIssuerSafely(token: string): string {
 
 /**
  * Validates basic JWT token format without cryptographic verification
+ * Returns true if valid, false otherwise (for testing purposes)
  */
-export function validateTokenFormat(token: string): void {
+export function validateTokenFormat(token: string): boolean {
+  try {
+    validateTokenFormatStrict(token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates basic JWT token format without cryptographic verification (strict version)
+ * Throws on invalid format
+ */
+export function validateTokenFormatStrict(token: string): void {
   if (!token || typeof token !== 'string' || token.trim() === '') {
     throw createProviderError(
       'Invalid token: must be a non-empty string',
@@ -377,8 +391,14 @@ export function createHashKey(input: string, prefix?: string): string {
 
 /**
  * Sanitizes user ID for logging (truncates for privacy)
+ * Preserves valid user IDs up to 20 characters
  */
 export function sanitizeUserId(userId: string): string {
+  // Keep valid user IDs up to 20 chars unchanged
+  if (userId.length <= 20 && /^[a-zA-Z0-9._-]+$/.test(userId)) {
+    return userId;
+  }
+  // Truncate long or invalid IDs for privacy
   if (userId.length <= 8) return userId;
   return userId.substring(0, 8) + '...';
 }
