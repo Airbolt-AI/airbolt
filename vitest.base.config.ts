@@ -24,12 +24,7 @@ export const baseConfig: InlineConfig = {
     setupFiles: ['./apps/backend-api/test/setup.ts'],
 
     // Pool configuration for test execution
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    pool: 'threads',
 
     // Test file patterns - these are the defaults, can be overridden
     include: [
