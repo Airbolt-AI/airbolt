@@ -6,6 +6,7 @@ import { InternalJWTValidator } from './validators/internal.js';
 import { ExternalJWTValidator } from './validators/external.js';
 import { JWKSValidator } from './validators/jwks.js';
 import { AutoDiscoveryValidator } from './validators/auto-discovery.js';
+import { ClerkValidator } from './validators/clerk.js';
 
 export class AuthValidatorFactory {
   static create(config: AuthConfig, fastify: FastifyInstance): JWTValidator[] {
@@ -24,8 +25,10 @@ export class AuthValidatorFactory {
         return [new ExternalJWTValidator(config)];
 
       case AuthMode.AUTO_DISCOVERY:
-        // In auto-discovery mode, support both external and internal tokens
+        // In auto-discovery mode, support Clerk, other external tokens, and internal tokens
+        // ClerkValidator goes first since it's more specific than AutoDiscovery
         return [
+          new ClerkValidator(config),
           new AutoDiscoveryValidator(config),
           new InternalJWTValidator(fastify),
         ];

@@ -1,6 +1,6 @@
 {
   "name": "@airbolt/sdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Type-safe TypeScript SDK for the Airbolt API with automatic token management",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

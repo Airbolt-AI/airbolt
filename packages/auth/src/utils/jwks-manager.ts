@@ -1,5 +1,19 @@
 import type { JWKS, JWKSKey } from '../types.js';
 import { AuthError } from '../types.js';
+// @ts-expect-error - no types available for jwk-to-pem
+import jwkToPemModule from 'jwk-to-pem';
+
+// Type for jwkToPem function since it has no types
+interface JWKToPemInput {
+  kty: string;
+  n?: string | undefined;
+  e?: string | undefined;
+  alg?: string | undefined;
+  use?: string | undefined;
+}
+
+// Properly typed wrapper for jwk-to-pem
+const jwkToPem = jwkToPemModule as (input: JWKToPemInput) => string;
 
 interface CacheEntry {
   jwks: JWKS;
@@ -121,20 +135,33 @@ export class JWKSManager {
       return `-----BEGIN CERTIFICATE-----\n${key.x5c[0]}\n-----END CERTIFICATE-----`;
     }
 
-    // For RSA keys, construction from n/e requires additional library
+    // For RSA keys with n/e parameters (common with Clerk, Auth0, etc.)
     if (key.kty === 'RSA' && key.n && key.e) {
-      throw new AuthError(
-        'RSA key construction from n/e not implemented',
-        undefined,
-        'Use x5c certificate or provide PEM fallback key',
-        'Most providers support x5c format in JWKS'
-      );
+      try {
+        // Convert JWK to PEM format
+        const jwkInput: JWKToPemInput = {
+          kty: key.kty,
+          n: key.n,
+          e: key.e,
+          alg: key.alg,
+          use: key.use,
+        };
+        const pem = jwkToPem(jwkInput);
+        return pem;
+      } catch (error: unknown) {
+        throw new AuthError(
+          `Failed to convert RSA key: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          undefined,
+          'Invalid RSA key parameters in JWKS',
+          'Contact your auth provider about key format'
+        );
+      }
     }
 
     throw new AuthError(
       'Unsupported key format in JWKS',
       undefined,
-      'Key must have x5c certificate or pem field',
+      'Key must have x5c certificate, RSA n/e parameters, or pem field',
       'Contact your auth provider about key format'
     );
   }

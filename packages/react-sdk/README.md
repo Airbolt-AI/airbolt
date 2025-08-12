@@ -231,26 +231,6 @@ This will open an interactive environment where you can:
 
 Visit http://localhost:61000 after running the command to start exploring!
 
-## Interactive Demo
-
-The best way to explore all SDK features is through our interactive Ladle demo:
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start the interactive demo
-pnpm run ladle
-```
-
-This will open an interactive environment at http://localhost:61000 where you can:
-
-- 🎮 Try all ChatWidget configurations with live controls
-- 🌊 See streaming responses in action (now the default!)
-- 🎨 Experiment with themes and positioning
-- 🪝 Explore useChat hook patterns
-- 📝 Copy production-ready code snippets
-
 ## Examples
 
 ### Basic Chat Interface

@@ -5,6 +5,7 @@ import { InternalJWTValidator } from '../src/validators/internal.js';
 import { ExternalJWTValidator } from '../src/validators/external.js';
 import { JWKSValidator } from '../src/validators/jwks.js';
 import { AutoDiscoveryValidator } from '../src/validators/auto-discovery.js';
+import { ClerkValidator } from '../src/validators/clerk.js';
 
 describe('AuthValidatorFactory', () => {
   let mockFastify: FastifyInstance;
@@ -47,9 +48,10 @@ describe('AuthValidatorFactory', () => {
 
       const validators = AuthValidatorFactory.create(config, mockFastify);
 
-      expect(validators).toHaveLength(2);
-      expect(validators[0]).toBeInstanceOf(AutoDiscoveryValidator);
-      expect(validators[1]).toBeInstanceOf(InternalJWTValidator);
+      expect(validators).toHaveLength(3);
+      expect(validators[0]).toBeInstanceOf(ClerkValidator);
+      expect(validators[1]).toBeInstanceOf(AutoDiscoveryValidator);
+      expect(validators[2]).toBeInstanceOf(InternalJWTValidator);
     });
 
     it('should create InternalJWTValidator for ANONYMOUS mode', () => {

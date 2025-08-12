@@ -27,6 +27,7 @@ export interface JWKSKey {
   e?: string;
   x5c?: string[];
   pem?: string;
+  alg?: string;
   [key: string]: unknown;
 }
 

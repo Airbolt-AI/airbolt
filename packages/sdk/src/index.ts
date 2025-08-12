@@ -38,5 +38,9 @@ export type {
   StreamChunk,
 } from './api/index.js';
 
+// Export auth utilities for debugging
+export { detectAuthProvider } from './auth-providers.js';
+export type { AuthProvider } from './auth-providers.js';
+
 // Default export for convenience
 export { AirboltClient as default } from './core/fern-client.js';

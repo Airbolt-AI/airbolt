@@ -8,26 +8,52 @@ export interface AuthProvider {
   getToken(): Promise<string> | string;
 }
 
+interface WindowWithAuth extends Window {
+  Clerk?: {
+    session?: {
+      getToken: () => Promise<string>;
+    };
+  };
+}
+
 class ClerkAuthProvider implements AuthProvider {
   name = 'clerk';
 
   detect(): boolean {
+    // Just check if Clerk exists, not if session is ready
+    // Session might not be available immediately
     return (
       typeof window !== 'undefined' &&
-      (window as any).Clerk?.session?.getToken !== undefined &&
-      typeof (window as any).Clerk.session.getToken === 'function'
+      (window as WindowWithAuth).Clerk !== undefined
     );
   }
 
   async getToken(): Promise<string> {
-    if (!this.detect()) {
-      throw new Error('Clerk not ready or session unavailable');
+    // Wait for Clerk to be fully initialized
+    const maxAttempts = 20; // 2 seconds total
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const clerk = (window as WindowWithAuth).Clerk;
+
+      // Check if Clerk and session are available
+      if (clerk?.session?.getToken) {
+        try {
+          const token = await clerk.session.getToken();
+          if (token) {
+            return token;
+          }
+        } catch (error) {
+          // Session might not be ready yet, continue waiting silently
+        }
+      }
+
+      // Wait 100ms before next attempt
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
     }
-    const token = (await (window as any).Clerk.session.getToken()) as string;
-    if (!token) {
-      throw new Error('Clerk returned empty token');
-    }
-    return token;
+
+    throw new Error('Clerk session not available after 2 seconds');
   }
 }
 
