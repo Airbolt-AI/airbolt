@@ -9,6 +9,7 @@ export abstract class BaseValidator {
   constructor(config: AuthConfig) {
     // Use 'production' string comparison for validation policy
     // This is intentional as validation policy needs exact environment matching
+    // eslint-disable-next-line runtime-safety/prefer-environment-utils
     const isProduction = config.NODE_ENV === 'production';
     const validationConfig: {
       issuer?: string;

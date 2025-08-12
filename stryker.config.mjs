@@ -21,7 +21,7 @@ const config = {
   timeoutFactor: 1.5,
   concurrency: process.env.CI ? 2 : 12, // Increase for local development
   disableTypeChecks: true, // Skip TypeScript checking on mutants for speed
-  
+
   // Coverage analysis to only run relevant tests
   coverageAnalysis: 'perTest',
 
@@ -55,7 +55,7 @@ const config = {
 
   // Disable warnings about slow static mutants since we're ignoring them
   warnings: {
-    slow: false
+    slow: false,
   },
 
   thresholds: {

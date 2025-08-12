@@ -398,6 +398,100 @@
           }
         }
       }
+    },
+    "/api/auth/exchange": {
+      "post": {
+        "summary": "Exchange external JWT for session token",
+        "tags": ["Authentication"],
+        "description": "Exchange an external JWT token (e.g., from Clerk, Firebase Auth) for an internal session token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "External JWT token to verify and exchange (optional in development)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token exchange successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Token exchange successful",
+                  "type": "object",
+                  "required": ["sessionToken", "expiresIn", "tokenType"],
+                  "properties": {
+                    "sessionToken": {
+                      "type": "string",
+                      "description": "Internal session token"
+                    },
+                    "expiresIn": {
+                      "type": "string",
+                      "description": "Token expiration time"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token type (Bearer)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Bad Request",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Authentication failed",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "statusCode": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [

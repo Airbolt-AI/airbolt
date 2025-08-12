@@ -12,6 +12,15 @@ Working examples showing how to integrate Airbolt into your apps.
 - Start chatting immediately
 - Perfect for prototypes
 
+### ⚡ [Clerk Minimal](./clerk-minimal)
+
+**Zero-config authentication with Clerk** - the easiest way to get started
+
+- Just add your Clerk keys and go!
+- Automatic JWT detection and validation
+- Under 80 lines of React code
+- Perfect balance of simple + secure
+
 ### 🔐 [Auth0 Authenticated](./auth0-authenticated)
 
 **Production-ready with Auth0** - bring your own auth
@@ -32,20 +41,21 @@ Working examples showing how to integrate Airbolt into your apps.
 
 2. **Run an example**:
    ```bash
-   cd examples/anonymous-chat  # or auth0-authenticated
+   cd examples/clerk-minimal     # or anonymous-chat, auth0-authenticated
    pnpm install
    pnpm dev
    ```
 
 ## Which Example Should I Use?
 
-|                    | Anonymous Chat | Auth0 Authenticated    |
-| ------------------ | -------------- | ---------------------- |
-| **Setup**          | None           | Auth0 account + API    |
-| **Backend config** | None           | None (auto-discovery!) |
-| **Best for**       | Prototypes     | Production             |
-| **User tracking**  | Per session    | Per user               |
-| **Rate limits**    | Basic          | Per-user customizable  |
+|                     | Anonymous Chat | Clerk Minimal       | Auth0 Authenticated    |
+| ------------------- | -------------- | ------------------- | ---------------------- |
+| **Setup**           | None           | Clerk account       | Auth0 account + API    |
+| **Backend config**  | None           | None (zero-config!) | None (auto-discovery!) |
+| **Best for**        | Prototypes     | Getting started     | Production             |
+| **User tracking**   | Per session    | Per user            | Per user               |
+| **Rate limits**     | Basic          | Per-user            | Per-user customizable  |
+| **Code complexity** | Minimal        | Minimal (~80 lines) | Advanced               |
 
 ## Troubleshooting
 
@@ -57,4 +67,5 @@ Working examples showing how to integrate Airbolt into your apps.
 **Port conflicts?**
 
 - Anonymous: http://localhost:5173
+- Clerk Minimal: http://localhost:3001
 - Auth0: http://localhost:5174
