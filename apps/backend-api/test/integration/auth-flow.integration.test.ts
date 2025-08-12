@@ -205,7 +205,7 @@ describe('Authentication Flow Integration', () => {
       const responses = await Promise.all(concurrentRequests);
 
       // All should fail with same error (expired token)
-      responses.forEach((response, index) => {
+      responses.forEach(response => {
         expect(response.statusCode).toBe(401);
         expect(JSON.parse(response.payload)).toMatchObject({
           error: 'Unauthorized',
@@ -316,7 +316,8 @@ describe('Authentication Flow Integration', () => {
       });
 
       expect(loginResponse.statusCode).toBe(201);
-      const initialToken = JSON.parse(loginResponse.payload).token;
+      // Token exists but not used for this test
+      // const initialToken = JSON.parse(loginResponse.payload).token;
 
       // Try to refresh token (should fail)
       const refreshResponse = await app.inject({
@@ -542,7 +543,7 @@ describe('Authentication Flow Integration', () => {
       // Track response times and headers
       const conversationResponses = [];
 
-      for (const [index, messages] of conversationMessages.entries()) {
+      for (const messages of conversationMessages) {
         const startTime = Date.now();
 
         const response = await app.inject({
@@ -578,11 +579,11 @@ describe('Authentication Flow Integration', () => {
       expect(conversationResponses).toHaveLength(3);
 
       // Rate limit should decrease with each request
-      expect(conversationResponses[1].rateLimitRemaining).toBeLessThan(
-        conversationResponses[0].rateLimitRemaining
+      expect(conversationResponses[1]?.rateLimitRemaining).toBeLessThan(
+        conversationResponses[0]?.rateLimitRemaining ?? Infinity
       );
-      expect(conversationResponses[2].rateLimitRemaining).toBeLessThan(
-        conversationResponses[1].rateLimitRemaining
+      expect(conversationResponses[2]?.rateLimitRemaining).toBeLessThan(
+        conversationResponses[1]?.rateLimitRemaining ?? Infinity
       );
 
       // All responses should be consistent
