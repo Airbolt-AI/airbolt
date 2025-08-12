@@ -14,11 +14,12 @@ A production-ready backend for calling LLMs from your frontend securely. Built w
 ## Quick Start
 
 ```bash
-# Copy environment configuration
-cp .env.example .env
-
 # Install dependencies
 pnpm install
+
+# Copy environment configuration
+cp .env.example .env
+# Edit .env with your API keys
 
 # Start development server
 pnpm dev
@@ -53,6 +54,8 @@ Provide your AI provider's API key:
 | `AI_PROVIDER`               | AI provider to use                             | `openai`                | `openai`, `anthropic`                              |
 | `AI_MODEL`                  | Specific model to use                          | Provider default        | Any valid model for the selected provider          |
 | `JWT_SECRET`                | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
+| `EXTERNAL_JWT_ISSUER`       | External JWT issuer URL (for BYOA mode)        | None                    | Valid HTTPS URL                                    |
+| `EXTERNAL_JWT_AUDIENCE`     | Expected audience claim for external JWTs      | None                    | Any string                                         |
 | `ALLOWED_ORIGIN`            | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
 | `SYSTEM_PROMPT`             | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
 | `RATE_LIMIT_MAX`            | Max requests per window (IP-based)             | `60`                    | Positive integer                                   |
@@ -153,7 +156,6 @@ REQUEST_LIMIT_TIME_WINDOW=3600000 # 1 hour window
 ```bash
 # Development
 pnpm dev              # Start with hot reload
-pnpm dev:debug        # Start with Node.js inspector
 
 # Production
 pnpm start            # Start production server
@@ -161,7 +163,6 @@ pnpm build            # Build for production
 
 # Testing
 pnpm test             # Run all tests
-pnpm test:unit        # Run unit tests only
 pnpm test:watch       # Run tests in watch mode
 pnpm test:coverage    # Generate coverage report
 
@@ -198,9 +199,14 @@ backend-api/
 
 ### Authentication
 
+The API supports two authentication modes:
+
+1. **Internal JWT** (Development/Default): Generate tokens using the `/api/tokens` endpoint
+2. **External JWT** (Production/BYOA): Use tokens from external providers like Clerk, Auth0, Firebase
+
 #### POST `/api/tokens`
 
-Generate a JWT token for API access.
+Generate a JWT token for API access (only available when external auth is not configured).
 
 **Request Body:**
 
@@ -215,6 +221,28 @@ Generate a JWT token for API access.
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresIn": "15m",
+  "tokenType": "Bearer"
+}
+```
+
+#### POST `/api/auth/exchange`
+
+Exchange an external JWT token (from Clerk, Auth0, etc.) for an internal session token.
+
+**Request Body:**
+
+```json
+{
+  "token": "external-jwt-token-from-your-auth-provider"
+}
+```
+
+**Response:**
+
+```json
+{
+  "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
   "expiresIn": "15m",
   "tokenType": "Bearer"
 }
@@ -261,11 +289,11 @@ Authorization: Bearer <token>
 
 When running in development, Swagger UI is available at:
 
-- http://localhost:3000/documentation
+- http://localhost:3000/docs
 
 OpenAPI specification is automatically generated and available at:
 
-- http://localhost:3000/documentation/json
+- http://localhost:3000/docs/json
 
 ## Error Handling
 
@@ -307,12 +335,11 @@ The API uses Fastify's built-in error handling with custom error messages:
 ## Health Check
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3000/
 
 # Response
 {
-  "status": "ok",
-  "timestamp": "2024-01-01T00:00:00.000Z"
+  "message": "Hello World!"
 }
 ```
 
