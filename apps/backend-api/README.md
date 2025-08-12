@@ -5,8 +5,9 @@ A production-ready backend for calling LLMs from your frontend securely. Built w
 ## Features
 
 - **Multi-Provider Support**: Call multiple AI providers (OpenAI, Anthropic, and more) from your frontend without exposing API keys
-- **JWT Authentication**: 15-minute access tokens for secure API access
-- **Rate Limiting**: Configurable per-minute request limits (default: 100 req/min)
+- **Zero-Config Authentication**: Automatic detection of Clerk, Auth0, Firebase, and Supabase tokens - no configuration needed
+- **JWT Authentication**: Secure 15-minute session tokens with automatic provider detection
+- **Rate Limiting**: Dual-layer protection with IP-based and user-based limits
 - **CORS Support**: Configure allowed origins for your frontend
 - **One-Click Deploy**: Deploy to Render with a single click
 - **Type Safety**: Full TypeScript with strict validation using Zod
@@ -45,25 +46,25 @@ Provide your AI provider's API key:
 
 ### Optional Variables with Defaults
 
-| Variable                    | Description                                    | Default                 | Valid Values                                       |
-| --------------------------- | ---------------------------------------------- | ----------------------- | -------------------------------------------------- |
-| `NODE_ENV`                  | Application environment                        | `development`           | `development`, `production`, `test`                |
-| `PORT`                      | Server port                                    | `3000`                  | 1-65535                                            |
-| `HOST`                      | Server host                                    | `localhost`             | Any valid hostname                                 |
-| `LOG_LEVEL`                 | Logging verbosity                              | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
-| `AI_PROVIDER`               | AI provider to use                             | `openai`                | `openai`, `anthropic`                              |
-| `AI_MODEL`                  | Specific model to use                          | Provider default        | Any valid model for the selected provider          |
-| `JWT_SECRET`                | Secret for JWT signing (auto-generated in dev) | Auto-generated          | Min 32 characters                                  |
-| `EXTERNAL_JWT_ISSUER`       | External JWT issuer URL (for BYOA mode)        | None                    | Valid HTTPS URL                                    |
-| `EXTERNAL_JWT_AUDIENCE`     | Expected audience claim for external JWTs      | None                    | Any string                                         |
-| `ALLOWED_ORIGIN`            | CORS allowed origins (comma-separated)         | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
-| `SYSTEM_PROMPT`             | Custom AI system prompt                        | `""` (empty)            | Any string                                         |
-| `RATE_LIMIT_MAX`            | Max requests per window (IP-based)             | `60`                    | Positive integer                                   |
-| `RATE_LIMIT_TIME_WINDOW`    | Rate limit window (ms)                         | `60000` (1 minute)      | Positive integer (milliseconds)                    |
-| `TOKEN_LIMIT_MAX`           | Max tokens per window (user-based)             | `100000` (100k)         | Min 1000                                           |
-| `TOKEN_LIMIT_TIME_WINDOW`   | Token limit window (ms)                        | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
-| `REQUEST_LIMIT_MAX`         | Max requests per window (user-based)           | `100`                   | Positive integer                                   |
-| `REQUEST_LIMIT_TIME_WINDOW` | Request limit window (ms)                      | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
+| Variable                    | Description                                            | Default                 | Valid Values                                       |
+| --------------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------- |
+| `NODE_ENV`                  | Application environment                                | `development`           | `development`, `production`, `test`                |
+| `PORT`                      | Server port                                            | `3000`                  | 1-65535                                            |
+| `HOST`                      | Server host                                            | `localhost`             | Any valid hostname                                 |
+| `LOG_LEVEL`                 | Logging verbosity                                      | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
+| `AI_PROVIDER`               | AI provider to use                                     | `openai`                | `openai`, `anthropic`                              |
+| `AI_MODEL`                  | Specific model to use                                  | Provider default        | Any valid model for the selected provider          |
+| `JWT_SECRET`                | Secret for JWT signing (auto-generated in dev)         | Auto-generated          | Min 32 characters                                  |
+| `EXTERNAL_JWT_ISSUER`       | External JWT issuer URL (optional with auto-discovery) | None                    | Valid HTTPS URL                                    |
+| `EXTERNAL_JWT_AUDIENCE`     | Expected audience claim for external JWTs              | None                    | Any string                                         |
+| `ALLOWED_ORIGIN`            | CORS allowed origins (comma-separated)                 | `*` (dev), test origins | Valid HTTP(S) URLs or `*` for all origins          |
+| `SYSTEM_PROMPT`             | Custom AI system prompt                                | `""` (empty)            | Any string                                         |
+| `RATE_LIMIT_MAX`            | Max requests per window (IP-based)                     | `60`                    | Positive integer                                   |
+| `RATE_LIMIT_TIME_WINDOW`    | Rate limit window (ms)                                 | `60000` (1 minute)      | Positive integer (milliseconds)                    |
+| `TOKEN_LIMIT_MAX`           | Max tokens per window (user-based)                     | `100000` (100k)         | Min 1000                                           |
+| `TOKEN_LIMIT_TIME_WINDOW`   | Token limit window (ms)                                | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
+| `REQUEST_LIMIT_MAX`         | Max requests per window (user-based)                   | `100`                   | Positive integer                                   |
+| `REQUEST_LIMIT_TIME_WINDOW` | Request limit window (ms)                              | `3600000` (1 hour)      | Min 60000 (1 minute)                               |
 
 ### Security Notes
 
@@ -71,6 +72,14 @@ Provide your AI provider's API key:
   - Automatically generated in development mode if not provided
   - **REQUIRED** in production - generate with: `openssl rand -hex 32`
   - Must be at least 32 characters for security
+- **External JWT Validation**:
+  - Tokens are validated using JWKS fetched from provider's OIDC endpoint
+  - Public keys are cached for 5 minutes to reduce latency
+  - Validates: signature, issuer, audience (if configured), expiry, and not-before claims
+- **Zero-Config Security**:
+  - Auto-discovery uses OIDC standard `.well-known/openid-configuration`
+  - Only trusted providers (Clerk, Auth0, Firebase, Supabase) are auto-detected
+  - Falls back to explicit validation if `EXTERNAL_JWT_ISSUER` is set
 - **Sensitive Values**:
   - All sensitive environment variables (API keys, secrets) are automatically redacted in logs
   - Never commit `.env` files to version control
@@ -199,20 +208,27 @@ backend-api/
 
 ### Authentication
 
-The API supports two authentication modes:
+The API provides flexible authentication with automatic provider detection:
 
-1. **Internal JWT** (Development/Default): Generate tokens using the `/api/tokens` endpoint
-2. **External JWT** (Production/BYOA): Use tokens from external providers like Clerk, Auth0, Firebase
+#### Authentication Modes
+
+1. **Zero-Config Mode** (Recommended): Automatically detects and validates tokens from:
+   - Clerk (clerk.accounts.dev, clerk.com)
+   - Auth0 (_.auth0.com, _.us.auth0.com)
+   - Firebase (securetoken.google.com)
+   - Supabase (_.supabase.co, _.supabase.io)
+2. **Explicit Configuration**: Set `EXTERNAL_JWT_ISSUER` for specific issuer validation
+3. **Development Mode**: Use `/api/tokens` for quick testing without external auth
 
 #### POST `/api/tokens`
 
-Generate a JWT token for API access (only available when external auth is not configured).
+Generate a JWT token for API access. Only available when `EXTERNAL_JWT_ISSUER` is not configured.
 
 **Request Body:**
 
 ```json
 {
-  "userId": "user-123" // Optional in development
+  "userId": "user-123" // Optional in development, required in production
 }
 ```
 
@@ -226,15 +242,17 @@ Generate a JWT token for API access (only available when external auth is not co
 }
 ```
 
+**Note**: This endpoint is disabled when using external authentication providers.
+
 #### POST `/api/auth/exchange`
 
-Exchange an external JWT token (from Clerk, Auth0, etc.) for an internal session token.
+Exchange an external JWT token for an internal session token. Supports automatic provider detection.
 
 **Request Body:**
 
 ```json
 {
-  "token": "external-jwt-token-from-your-auth-provider"
+  "token": "external-jwt-token" // Optional in development mode
 }
 ```
 
@@ -245,6 +263,31 @@ Exchange an external JWT token (from Clerk, Auth0, etc.) for an internal session
   "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
   "expiresIn": "15m",
   "tokenType": "Bearer"
+}
+```
+
+**Features:**
+
+- **Auto-Detection**: Automatically identifies Clerk, Auth0, Firebase, and Supabase tokens
+- **JWKS Validation**: Fetches public keys via OIDC discovery
+- **Development Mode**: Token optional - generates dev session if omitted
+- **Security**: Validates issuer, audience, expiry, and signature
+
+**Error Responses:**
+
+```json
+// 401 Unauthorized - Invalid or expired token
+{
+  "error": "Unauthorized",
+  "message": "Invalid token: Token expired",
+  "statusCode": 401
+}
+
+// 400 Bad Request - Missing token in production
+{
+  "error": "BadRequest",
+  "message": "Token is required for authentication",
+  "statusCode": 400
 }
 ```
 

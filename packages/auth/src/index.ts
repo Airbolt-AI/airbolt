@@ -1,13 +1,18 @@
 // Clean public API - only expose what's needed
 export { AuthValidatorFactory } from './factory.js';
 export { createAuthMiddleware, type AuthUser } from './middleware.js';
-export type { JWTPayload, AuthConfig, AuthMode } from './types.js';
+export type {
+  JWTPayload,
+  JWTValidator,
+  AuthConfig,
+  AuthMode,
+} from './types.js';
 export { AuthError } from './types.js';
 
 // Export utilities for external token verification
 export { TokenValidator } from './utils/token-validator.js';
-export { JWKSManager } from './utils/jwks-manager.js';
-export { AutoDiscoveryValidator } from './validators/auto-discovery.js';
+export { JWKSUtils } from './utils/jwks-utils.js';
+export { ExternalJWTValidator } from './validators/external.js';
 
 // Utility functions for external token verification
 export {

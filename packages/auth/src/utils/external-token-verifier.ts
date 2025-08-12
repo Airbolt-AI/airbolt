@@ -4,7 +4,7 @@
 
 import type { JWTPayload, AuthConfig } from '../types.js';
 import { TokenValidator } from './token-validator.js';
-import { AutoDiscoveryValidator } from '../validators/auto-discovery.js';
+import { ExternalJWTValidator } from '../validators/external.js';
 
 /**
  * Utility function for verifying external tokens and returning the payload.
@@ -30,8 +30,8 @@ export async function verifyExternalToken(
   token: string,
   config: AuthConfig = {}
 ): Promise<JWTPayload> {
-  // Use AutoDiscoveryValidator for comprehensive token verification
-  const validator = new AutoDiscoveryValidator(config);
+  // Use ExternalJWTValidator for comprehensive token verification
+  const validator = new ExternalJWTValidator(config);
 
   // Verify the token and return the payload
   return await validator.verify(token);

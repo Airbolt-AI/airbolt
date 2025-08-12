@@ -27,6 +27,7 @@
     "jwk-to-pem": "^2.0.7"
   },
   "devDependencies": {
+    "@airbolt/test-utils": "workspace:*",
     "@fast-check/vitest": "^0.2.2",
     "@types/node": "^22.10.6",
     "fast-check": "^4.1.1",

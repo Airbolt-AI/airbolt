@@ -20,24 +20,15 @@ interface CacheEntry {
   expiry: number;
 }
 
-export class JWKSManager {
-  private jwksCache = new Map<string, CacheEntry>();
-  private readonly cacheTTL = 3600000; // 1 hour
-  private readonly fetchTimeout = 5000; // 5 seconds
+// Simplified JWKS utilities - focused on core functionality
+export class JWKSUtils {
+  private static cache = new Map<string, CacheEntry>();
+  private static readonly CACHE_TTL = 3600000; // 1 hour
+  private static readonly FETCH_TIMEOUT = 5000; // 5 seconds
 
-  async getJWKS(issuer: string, fallbackKey?: string): Promise<JWKS> {
-    // Enhanced validation with actionable error
-    if (!issuer || typeof issuer !== 'string') {
-      throw new AuthError(
-        'JWKS issuer must be a valid string',
-        undefined,
-        'Provide a valid HTTPS issuer URL',
-        'Example: https://your-tenant.auth0.com/'
-      );
-    }
-
+  static async fetchJWKS(issuer: string): Promise<JWKS> {
     // Check cache first
-    const cached = this.jwksCache.get(issuer);
+    const cached = this.cache.get(issuer);
     if (cached && cached.expiry > Date.now()) {
       return cached.jwks;
     }
@@ -47,16 +38,15 @@ export class JWKSManager {
       ? `${issuer}.well-known/jwks.json`
       : `${issuer}/.well-known/jwks.json`;
 
-    try {
-      // Fetch JWKS with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.fetchTimeout);
+    // Fetch with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.FETCH_TIMEOUT);
 
+    try {
       const response = await fetch(jwksUrl, {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
       });
-
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -64,13 +54,12 @@ export class JWKSManager {
           `JWKS endpoint returned HTTP ${response.status}`,
           undefined,
           'Verify the issuer URL is correct and accessible',
-          `Check if ${jwksUrl} is accessible in your browser`
+          `Check if ${jwksUrl} is accessible`
         );
       }
 
       const data = (await response.json()) as JWKS;
 
-      // Validate JWKS format
       if (!data.keys || !Array.isArray(data.keys)) {
         throw new AuthError(
           'Invalid JWKS format: missing keys array',
@@ -81,29 +70,25 @@ export class JWKSManager {
       }
 
       // Cache the result
-      this.jwksCache.set(issuer, {
+      this.cache.set(issuer, {
         jwks: data,
-        expiry: Date.now() + this.cacheTTL,
+        expiry: Date.now() + this.CACHE_TTL,
       });
 
       return data;
     } catch (error) {
-      // If fetch fails and we have fallback key, use it
-      if (fallbackKey) {
-        return this.createJWKSFromKey(fallbackKey);
-      }
-
+      clearTimeout(timeoutId);
       const message = error instanceof Error ? error.message : String(error);
       throw new AuthError(
-        `Failed to fetch JWKS from ${issuer}`,
+        `Failed to fetch JWKS from ${issuer}: ${message}`,
         undefined,
         'Check network connectivity and issuer URL',
-        `Verify ${jwksUrl} is accessible: ${message}`
+        'Verify issuer URL and JWKS endpoint accessibility'
       );
     }
   }
 
-  findKey(jwks: JWKS, kid?: string): JWKSKey | null {
+  static findKey(jwks: JWKS, kid?: string): JWKSKey | null {
     if (!jwks.keys || !Array.isArray(jwks.keys)) {
       return null;
     }
@@ -124,61 +109,32 @@ export class JWKSManager {
     );
   }
 
-  extractPublicKey(key: JWKSKey): string {
-    // If we have a PEM key directly (from fallback), use it
-    if (key.pem) {
-      return key.pem;
-    }
-
+  static extractPublicKey(key: JWKSKey): string {
     // If we have x5c (certificate chain), use first cert
     if (key.x5c && key.x5c.length > 0) {
       return `-----BEGIN CERTIFICATE-----\n${key.x5c[0]}\n-----END CERTIFICATE-----`;
     }
 
-    // For RSA keys with n/e parameters (common with Clerk, Auth0, etc.)
+    // For RSA keys with n/e parameters
     if (key.kty === 'RSA' && key.n && key.e) {
-      try {
-        // Convert JWK to PEM format
-        const jwkInput: JWKToPemInput = {
-          kty: key.kty,
-          n: key.n,
-          e: key.e,
-          alg: key.alg,
-          use: key.use,
-        };
-        const pem = jwkToPem(jwkInput);
-        return pem;
-      } catch (error: unknown) {
-        throw new AuthError(
-          `Failed to convert RSA key: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          undefined,
-          'Invalid RSA key parameters in JWKS',
-          'Contact your auth provider about key format'
-        );
-      }
+      return jwkToPem({
+        kty: key.kty,
+        n: key.n,
+        e: key.e,
+        alg: key.alg,
+        use: key.use,
+      });
     }
 
     throw new AuthError(
       'Unsupported key format in JWKS',
       undefined,
-      'Key must have x5c certificate, RSA n/e parameters, or pem field',
+      'Key must have x5c certificate or RSA n/e parameters',
       'Contact your auth provider about key format'
     );
   }
 
-  private createJWKSFromKey(publicKey: string): JWKS {
-    return {
-      keys: [
-        {
-          kty: 'RSA',
-          use: 'sig',
-          pem: publicKey,
-        },
-      ],
-    };
-  }
-
-  clearCache(): void {
-    this.jwksCache.clear();
+  static clearCache(): void {
+    this.cache.clear();
   }
 }

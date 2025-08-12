@@ -51,6 +51,7 @@ console.log(
 
 - Your AI provider API keys stay on your backend
 - JWT tokens automatically handled
+- Automatic detection of Clerk, Auth0, Firebase, and Supabase auth
 - No API keys in frontend code
 
 ### 🚀 Developer Experience
@@ -58,12 +59,14 @@ console.log(
 - Simple `chat()` function with streaming by default
 - Full TypeScript support with type safety
 - Works in Node.js, browsers, and edge runtimes
+- Automatic auth provider detection - no configuration needed
 
 ### 🔄 Zero Configuration
 
 - No environment variables needed
 - Pass `baseURL` when you need a custom backend
-- Handles authentication automatically
+- Automatically detects and uses your auth provider (Clerk, Auth0, Firebase, Supabase)
+- Handles token exchange and refresh automatically
 
 ### 📊 Rate Limiting & Usage Tracking
 
@@ -222,9 +225,32 @@ const response2 = await session.send('Show me a simple example');
 // response2 remembers the context from response1
 ```
 
-### Token Management
+### Authentication
 
-The SDK handles JWT tokens automatically, but you can also manage them:
+The SDK automatically detects and uses your authentication provider:
+
+#### Automatic Provider Detection
+
+The SDK detects these providers automatically:
+
+- **Clerk**: Detects `window.Clerk` and retrieves session tokens
+- **Supabase**: Detects `window.supabase` and gets access tokens
+- **Auth0**: Detects `window.auth0` and fetches tokens silently
+- **Firebase**: Detects `window.firebase` and retrieves ID tokens
+
+```typescript
+import { chat } from '@airbolt/sdk';
+
+// If you're using Clerk, Auth0, Firebase, or Supabase,
+// the SDK automatically detects and uses their tokens
+for await (const chunk of chat([{ role: 'user', content: 'Hello!' }])) {
+  process.stdout.write(chunk.content);
+}
+```
+
+#### Manual Token Management
+
+For custom auth providers or manual control:
 
 ```typescript
 import { clearAuthToken, hasValidToken, getTokenInfo } from '@airbolt/sdk';
@@ -238,6 +264,26 @@ if (hasValidToken()) {
 // Clear token (logout)
 clearAuthToken();
 ```
+
+#### Custom Auth Provider
+
+If using a custom auth provider, exchange your JWT for a session token:
+
+````typescript
+import { exchangeToken, chat } from '@airbolt/sdk';
+
+// Get your JWT from your custom provider
+const jwt = await yourAuthProvider.getToken();
+
+// Exchange for Airbolt session token (happens automatically for known providers)
+const sessionToken = await exchangeToken(jwt, {
+  baseURL: 'https://your-backend.onrender.com'
+});
+
+// Now you can use the chat functions
+for await (const chunk of chat([{ role: 'user', content: 'Hello!' }])) {
+  process.stdout.write(chunk.content);
+}
 
 ## TypeScript Support
 
@@ -258,7 +304,7 @@ const options: ChatOptions = {
   baseURL: 'https://api.example.com',
   system: 'Be concise and friendly',
 };
-```
+````
 
 ## Examples
 
@@ -294,6 +340,42 @@ for await (const chunk of chat([{ role: 'user', content: 'Hello!' }], {
   baseURL: 'https://your-app.onrender.com',
 })) {
   process.stdout.write(chunk.content);
+}
+```
+
+### With Authentication Providers
+
+```javascript
+// Clerk example - SDK auto-detects and handles auth
+import { SignedIn } from '@clerk/clerk-react';
+import { chat } from '@airbolt/sdk';
+
+function ChatComponent() {
+  const sendMessage = async () => {
+    // SDK automatically uses Clerk's session token
+    for await (const chunk of chat([{ role: 'user', content: 'Hello!' }])) {
+      console.log(chunk.content);
+    }
+  };
+
+  return (
+    <SignedIn>
+      <button onClick={sendMessage}>Chat</button>
+    </SignedIn>
+  );
+}
+
+// Auth0 example - SDK auto-detects and handles auth
+import { useAuth0 } from '@auth0/auth0-react';
+import { chat } from '@airbolt/sdk';
+
+function ChatComponent() {
+  const { isAuthenticated } = useAuth0();
+
+  if (isAuthenticated) {
+    // SDK automatically uses Auth0's access token
+    chat([{ role: 'user', content: 'Hello!' }]);
+  }
 }
 ```
 

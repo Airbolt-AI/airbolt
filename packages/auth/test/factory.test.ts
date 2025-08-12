@@ -5,8 +5,6 @@ import type { FastifyInstance } from 'fastify';
 import { AuthValidatorFactory } from '../src/factory.js';
 import { InternalJWTValidator } from '../src/validators/internal.js';
 import { ExternalJWTValidator } from '../src/validators/external.js';
-import { JWKSValidator } from '../src/validators/jwks.js';
-import { AutoDiscoveryValidator } from '../src/validators/auto-discovery.js';
 import { ClerkValidator } from '../src/validators/clerk.js';
 
 describe('AuthValidatorFactory', () => {
@@ -25,7 +23,7 @@ describe('AuthValidatorFactory', () => {
       fc.webUrl().filter(url => url.startsWith('https://')),
       fc.option(fc.constantFrom('development', 'production', 'test')),
     ])(
-      'should create JWKSValidator for any CONFIGURED_ISSUER mode',
+      'should create ExternalJWTValidator for any CONFIGURED_ISSUER mode',
       (issuer, nodeEnv) => {
         const config: any = {
           EXTERNAL_JWT_ISSUER: issuer,
@@ -35,7 +33,7 @@ describe('AuthValidatorFactory', () => {
         const validators = AuthValidatorFactory.create(config, mockFastify);
 
         expect(validators).toHaveLength(1);
-        expect(validators[0]).toBeInstanceOf(JWKSValidator);
+        expect(validators[0]).toBeInstanceOf(ExternalJWTValidator);
       }
     );
 
@@ -66,7 +64,7 @@ describe('AuthValidatorFactory', () => {
 
       expect(validators).toHaveLength(3);
       expect(validators[0]).toBeInstanceOf(ClerkValidator);
-      expect(validators[1]).toBeInstanceOf(AutoDiscoveryValidator);
+      expect(validators[1]).toBeInstanceOf(ExternalJWTValidator);
       expect(validators[2]).toBeInstanceOf(InternalJWTValidator);
     });
 
@@ -108,9 +106,10 @@ describe('AuthValidatorFactory', () => {
       const validators = AuthValidatorFactory.create(cleanConfig, mockFastify);
 
       // Verify correct priority: ISSUER > PUBLIC_KEY > AUTO_DISCOVERY > ANONYMOUS
-      if (cleanConfig.EXTERNAL_JWT_ISSUER) {
-        expect(validators[0]).toBeInstanceOf(JWKSValidator);
-      } else if (cleanConfig.EXTERNAL_JWT_PUBLIC_KEY) {
+      if (
+        cleanConfig.EXTERNAL_JWT_ISSUER ||
+        cleanConfig.EXTERNAL_JWT_PUBLIC_KEY
+      ) {
         expect(validators[0]).toBeInstanceOf(ExternalJWTValidator);
       } else if (cleanConfig.NODE_ENV === 'development') {
         expect(validators).toHaveLength(3);
