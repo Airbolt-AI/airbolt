@@ -107,18 +107,19 @@ Use your existing authentication provider (Auth0, Clerk, Firebase, Supabase) wit
 
 **Development (Zero-Config)**
 
-In development, Airbolt automatically validates tokens from common providers - no backend configuration needed!
+In development, Airbolt automatically validates tokens from common providers - no configuration needed!
 
 ```javascript
-// Frontend - SDK auto-detects your auth provider
+// Frontend - Pass your auth provider's token
 import { chat } from '@airbolt/sdk';
 
 const response = await chat([{ role: 'user', content: 'Hello!' }]);
 ```
 
 ```bash
-# Backend - Auto-discovers JWKS in development mode
+# Backend - Automatically validates tokens from known providers
 # Just start the server and it works!
+NODE_ENV=development
 ```
 
 **Production (Secure by Default)**
@@ -127,16 +128,17 @@ Production requires explicit configuration for security:
 
 ```bash
 NODE_ENV=production
+JWT_SECRET=your-32-char-minimum-secret  # Required in production
 EXTERNAL_JWT_ISSUER=https://your-auth-provider.com/
 EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
 ```
 
 ### How It Works
 
-1. **Frontend**: SDK detects Auth0/Clerk/Firebase/Supabase automatically
+1. **Frontend**: Pass your auth provider's token to the SDK
 2. **Backend**:
-   - Development: Auto-discovers JWKS from any HTTPS issuer
-   - Production: Validates against configured issuer only
+   - Development: Auto-discovers JWKS from recognized providers (Auth0, Clerk, Firebase, Supabase)
+   - Production: Only validates tokens from your configured issuer
 3. **Security**: Rate limiting by issuer + user ID prevents abuse
 
 ### Migration Guide
@@ -146,7 +148,7 @@ EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
 **New Users**:
 
 - Development: No configuration needed
-- Production: Set `EXTERNAL_JWT_ISSUER` and optionally `EXTERNAL_JWT_AUDIENCE`
+- Production: Set `JWT_SECRET`, `EXTERNAL_JWT_ISSUER`, and optionally `EXTERNAL_JWT_AUDIENCE`
 
 ### Auth0 Setup Example
 
@@ -167,16 +169,17 @@ EXTERNAL_JWT_AUDIENCE=your-api-identifier  # Recommended
    </Auth0Provider>;
    ```
 
-2. **Backend Configuration**: None required! Airbolt automatically discovers Auth0's JWKS endpoint.
-
-3. **Optional Security**: For production, you can restrict to specific auth providers:
+2. **Backend Configuration**:
+   - **Development**: Automatically validates Auth0 tokens (no config needed)
+   - **Production**: Configure your specific Auth0 tenant:
    ```bash
-   # Production: Only accept your Auth0 tenant
    NODE_ENV=production
+   JWT_SECRET=your-32-char-minimum-secret  # Required
    EXTERNAL_JWT_ISSUER=https://your-tenant.auth0.com/
+   EXTERNAL_JWT_AUDIENCE=https://airbolt-api  # Should match frontend
    ```
 
-The Airbolt SDK automatically detects Auth0 - no additional configuration needed! See the [Auth0 example](examples/auth0-authenticated) for a complete implementation.
+See the [Auth0 example](examples/auth0-authenticated) for a complete implementation.
 
 ### Custom Auth Providers
 
@@ -187,6 +190,8 @@ const response = await chat(messages, {
   getAuthToken: () => myAuth.getToken(),
 });
 ```
+
+> **Note**: Legacy configuration using `EXTERNAL_JWT_PUBLIC_KEY` or `EXTERNAL_JWT_SECRET` is still supported for manual key management, but we recommend using JWKS auto-discovery with `EXTERNAL_JWT_ISSUER` for better security and key rotation support.
 
 ## What's coming soon
 

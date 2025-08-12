@@ -3,8 +3,9 @@
 // Property testing would not add value as the core logic is tested elsewhere
 
 import type { JWTPayload, AuthConfig } from '../types.js';
+import { AuthError } from '../types.js';
 import { TokenValidator } from './token-validator.js';
-import { ExternalJWTValidator } from '../validators/external.js';
+import { JWKSUtils } from './jwks-utils.js';
 
 /**
  * Utility function for verifying external tokens and returning the payload.
@@ -30,11 +31,61 @@ export async function verifyExternalToken(
   token: string,
   config: AuthConfig = {}
 ): Promise<JWTPayload> {
-  // Use ExternalJWTValidator for comprehensive token verification
-  const validator = new ExternalJWTValidator(config);
+  // Reimplemented without importing ExternalJWTValidator to avoid circular dependency
+  const tokenValidator = new TokenValidator();
+  const decoded = tokenValidator.decode(token);
+  const issuer = decoded.payload.iss;
 
-  // Verify the token and return the payload
-  return await validator.verify(token);
+  let payload: JWTPayload;
+
+  // Try secret-based validation first (HS256)
+  if (config.EXTERNAL_JWT_SECRET) {
+    payload = await tokenValidator.verify(token, config.EXTERNAL_JWT_SECRET);
+  }
+  // Try configured public key
+  else if (config.EXTERNAL_JWT_PUBLIC_KEY) {
+    payload = await tokenValidator.verify(
+      token,
+      config.EXTERNAL_JWT_PUBLIC_KEY
+    );
+  }
+  // Try JWKS auto-discovery
+  else if (issuer) {
+    const jwks = await JWKSUtils.fetchJWKS(issuer);
+    const key = JWKSUtils.findKey(jwks, decoded.header?.kid);
+    if (!key) {
+      throw new AuthError(
+        'No matching key found in JWKS',
+        undefined,
+        'Token key ID (kid) not found in provider JWKS',
+        'Verify token is from the correct auth provider'
+      );
+    }
+    const publicKey = JWKSUtils.extractPublicKey(key);
+    payload = await tokenValidator.verify(token, publicKey);
+  } else {
+    throw new AuthError(
+      'No external JWT validation method configured',
+      undefined,
+      'Configure EXTERNAL_JWT_SECRET, EXTERNAL_JWT_PUBLIC_KEY, or enable auto-discovery',
+      'Set one of: EXTERNAL_JWT_SECRET (for HS256) or EXTERNAL_JWT_PUBLIC_KEY (for RS256)'
+    );
+  }
+
+  // Basic validation
+  if (
+    config.EXTERNAL_JWT_AUDIENCE &&
+    payload.aud !== config.EXTERNAL_JWT_AUDIENCE
+  ) {
+    throw new AuthError(
+      'JWT audience mismatch',
+      undefined,
+      `Expected: ${config.EXTERNAL_JWT_AUDIENCE}, Got: ${payload.aud}`,
+      'Check JWT audience configuration'
+    );
+  }
+
+  return payload;
 }
 
 /**
