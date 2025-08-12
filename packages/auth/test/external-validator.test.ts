@@ -50,6 +50,7 @@ describe('ExternalJWTValidator - Secret Key Validation', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.clearAllTimers();
   });
 
   describe('canHandle - Token Compatibility Detection', () => {
@@ -716,11 +717,8 @@ ${Buffer.from('test-secret-key-for-testing-purposes').toString('base64')}
 
         const token = jwt.sign(payload, secret);
 
-        // Mock successful verification with small delay to simulate real processing
-        mockTokenValidator.verify.mockImplementation(async () => {
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 5));
-          return payload;
-        });
+        // Mock successful verification
+        mockTokenValidator.verify.mockResolvedValue(payload);
 
         // Fire concurrent verification requests
         const promises = Array(concurrentCount)
