@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect } from 'vitest';
 import { test } from '@fast-check/vitest';
 import fc from 'fast-check';
 import { ValidationPolicy } from '../src/utils/validation-policy.js';
@@ -6,39 +6,51 @@ import { AuthError } from '../src/types.js';
 
 describe('ValidationPolicy', () => {
   describe('validateIssuer', () => {
-    it('should reject non-HTTPS issuers', () => {
+    test.prop([
+      fc.oneof(
+        fc.webUrl().filter(url => !url.startsWith('https://')),
+        fc.string().filter(s => !s.startsWith('https://')),
+        fc.constantFrom(
+          'http://auth.example.com',
+          'auth.example.com',
+          'ftp://auth.com'
+        ),
+        fc.constant(undefined),
+        fc.constant(null)
+      ),
+    ])('should reject any non-HTTPS issuer', nonHttpsIssuer => {
       const policy = new ValidationPolicy({ isProduction: false });
-
-      expect(() => policy.validateIssuer('http://auth.example.com')).toThrow(
-        AuthError
-      );
-      expect(() => policy.validateIssuer('auth.example.com')).toThrow(
-        AuthError
-      );
-      expect(() => policy.validateIssuer(undefined)).toThrow(AuthError);
-    });
-
-    it('should accept HTTPS issuers', () => {
-      const policy = new ValidationPolicy({ isProduction: false });
-
-      expect(() =>
-        policy.validateIssuer('https://auth.example.com')
-      ).not.toThrow();
-    });
-
-    it('should enforce configured issuer when set', () => {
-      const policy = new ValidationPolicy({
-        issuer: 'https://auth.example.com',
-        isProduction: true,
-      });
-
-      expect(() =>
-        policy.validateIssuer('https://auth.example.com')
-      ).not.toThrow();
-      expect(() => policy.validateIssuer('https://other.example.com')).toThrow(
+      expect(() => policy.validateIssuer(nonHttpsIssuer as any)).toThrow(
         AuthError
       );
     });
+
+    test.prop([fc.webUrl().filter(url => url.startsWith('https://'))])(
+      'should accept any HTTPS issuer in development',
+      httpsIssuer => {
+        const policy = new ValidationPolicy({ isProduction: false });
+        expect(() => policy.validateIssuer(httpsIssuer)).not.toThrow();
+      }
+    );
+
+    test.prop([
+      fc.webUrl().filter(url => url.startsWith('https://')), // configured issuer
+      fc.webUrl().filter(url => url.startsWith('https://')), // token issuer
+    ])(
+      'should enforce exact issuer match when configured',
+      (configuredIssuer, tokenIssuer) => {
+        const policy = new ValidationPolicy({
+          issuer: configuredIssuer,
+          isProduction: true,
+        });
+
+        if (configuredIssuer === tokenIssuer) {
+          expect(() => policy.validateIssuer(tokenIssuer)).not.toThrow();
+        } else {
+          expect(() => policy.validateIssuer(tokenIssuer)).toThrow(AuthError);
+        }
+      }
+    );
   });
 
   describe('canHandleIssuer', () => {
@@ -76,125 +88,145 @@ describe('ValidationPolicy', () => {
   });
 
   describe('validateAudience', () => {
-    it('should skip validation when no audience configured', () => {
+    test.prop([
+      fc.oneof(
+        fc.string(),
+        fc.array(fc.string(), { minLength: 1, maxLength: 5 }),
+        fc.constant(undefined)
+      ),
+    ])('should skip validation when no audience configured', tokenAudience => {
       const policy = new ValidationPolicy({ isProduction: false });
-      const payload = { aud: 'any-audience' };
-
+      const payload = tokenAudience !== undefined ? { aud: tokenAudience } : {};
       expect(() => policy.validateAudience(payload as any)).not.toThrow();
     });
 
-    it('should validate string audience', () => {
-      const policy = new ValidationPolicy({
-        audience: 'my-api',
-        isProduction: false,
-      });
+    test.prop([
+      fc.string({ minLength: 1, maxLength: 50 }), // configured audience
+      fc.oneof(
+        fc.string({ minLength: 1, maxLength: 50 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 50 }), {
+          minLength: 1,
+          maxLength: 5,
+        })
+      ), // token audience
+    ])(
+      'should validate audience match correctly',
+      (configuredAudience, tokenAudience) => {
+        const policy = new ValidationPolicy({
+          audience: configuredAudience,
+          isProduction: false,
+        });
 
-      expect(() =>
-        policy.validateAudience({ aud: 'my-api' } as any)
-      ).not.toThrow();
-      expect(() =>
-        policy.validateAudience({ aud: 'other-api' } as any)
-      ).toThrow(AuthError);
-    });
+        const payload = { aud: tokenAudience };
+        const shouldPass =
+          typeof tokenAudience === 'string'
+            ? tokenAudience === configuredAudience
+            : Array.isArray(tokenAudience) &&
+              tokenAudience.includes(configuredAudience);
 
-    it('should validate array audience', () => {
-      const policy = new ValidationPolicy({
-        audience: 'my-api',
-        isProduction: false,
-      });
-
-      expect(() =>
-        policy.validateAudience({ aud: ['my-api', 'other'] } as any)
-      ).not.toThrow();
-      expect(() =>
-        policy.validateAudience({ aud: ['other', 'another'] } as any)
-      ).toThrow(AuthError);
-    });
+        if (shouldPass) {
+          expect(() => policy.validateAudience(payload as any)).not.toThrow();
+        } else {
+          expect(() => policy.validateAudience(payload as any)).toThrow(
+            AuthError
+          );
+        }
+      }
+    );
   });
 
   describe('isOpaqueToken', () => {
-    it('should detect Auth0 opaque tokens', () => {
-      const policy = new ValidationPolicy({ isProduction: false });
+    test.prop([
+      fc.string({ minLength: 1, maxLength: 50 }), // tenant name
+      fc.option(fc.string({ minLength: 1, maxLength: 50 })), // audience
+      fc.string({ minLength: 1, maxLength: 50 }), // azp/client id
+    ])(
+      'should detect Auth0 opaque tokens correctly',
+      (tenant, audience, clientId) => {
+        const policy = new ValidationPolicy({ isProduction: false });
+        const auth0Issuer = `https://${tenant}.auth0.com/`;
 
-      // Opaque token: Auth0 issuer with no audience
-      expect(
-        policy.isOpaqueToken({
-          iss: 'https://tenant.auth0.com/',
-          azp: 'client-id',
-        } as any)
-      ).toBe(true);
+        const payload: any = {
+          iss: auth0Issuer,
+          azp: clientId,
+        };
+        if (audience !== null) {
+          payload.aud = audience;
+        }
 
-      // Opaque token: Auth0 issuer with audience matching azp
-      expect(
-        policy.isOpaqueToken({
-          iss: 'https://tenant.auth0.com/',
-          aud: 'client-id',
-          azp: 'client-id',
-        } as any)
-      ).toBe(true);
+        const isOpaque = policy.isOpaqueToken(payload);
+        const expectedOpaque = !audience || audience === clientId;
+        expect(isOpaque).toBe(expectedOpaque);
+      }
+    );
 
-      // Valid token: Auth0 issuer with different audience
-      expect(
-        policy.isOpaqueToken({
-          iss: 'https://tenant.auth0.com/',
-          aud: 'https://api.example.com',
-          azp: 'client-id',
-        } as any)
-      ).toBe(false);
+    test.prop([
+      fc.webUrl().filter(url => !url.includes('auth0.com')), // non-Auth0 issuer
+      fc.option(fc.string()), // audience
+      fc.option(fc.string()), // azp
+    ])(
+      'should never detect non-Auth0 tokens as opaque',
+      (issuer, audience, azp) => {
+        const policy = new ValidationPolicy({ isProduction: false });
+        const payload: any = { iss: issuer };
+        if (audience !== null) payload.aud = audience;
+        if (azp !== null) payload.azp = azp;
 
-      // Non-Auth0 token
-      expect(
-        policy.isOpaqueToken({
-          iss: 'https://accounts.google.com',
-          aud: 'client-id',
-          azp: 'client-id',
-        } as any)
-      ).toBe(false);
-    });
+        expect(policy.isOpaqueToken(payload)).toBe(false);
+      }
+    );
   });
 
   describe('validateClaims', () => {
-    it('should require user identification claims', () => {
-      const policy = new ValidationPolicy({ isProduction: false });
-
-      // Valid: has sub
-      expect(() =>
-        policy.validateClaims({ sub: 'user-123' } as any)
-      ).not.toThrow();
-
-      // Valid: has email
-      expect(() =>
-        policy.validateClaims({ email: 'user@example.com' } as any)
-      ).not.toThrow();
-
-      // Valid: has user_id
-      expect(() =>
-        policy.validateClaims({ user_id: 'user-123' } as any)
-      ).not.toThrow();
-
-      // Invalid: no user identification
-      expect(() => policy.validateClaims({} as any)).toThrow(AuthError);
-    });
-
-    it('should validate token expiry', () => {
+    test.prop([
+      fc.record({
+        sub: fc.option(fc.string({ minLength: 1, maxLength: 100 })),
+        email: fc.option(fc.string().filter(s => s.includes('@'))),
+        user_id: fc.option(fc.string({ minLength: 1, maxLength: 100 })),
+        exp: fc.option(fc.integer()),
+        iat: fc.option(fc.integer()),
+        // Additional arbitrary claims
+        other: fc.option(fc.string()),
+      }),
+    ])('should validate user identification and expiry correctly', claims => {
       const policy = new ValidationPolicy({ isProduction: false });
       const now = Math.floor(Date.now() / 1000);
 
-      // Valid: future expiry
-      expect(() =>
-        policy.validateClaims({
-          sub: 'user-123',
-          exp: now + 3600,
-        } as any)
-      ).not.toThrow();
+      const hasUserClaim = !!(claims.sub || claims.email || claims.user_id);
+      const isExpired =
+        claims.exp !== null && claims.exp !== undefined && claims.exp < now;
 
-      // Invalid: past expiry
-      expect(() =>
-        policy.validateClaims({
-          sub: 'user-123',
-          exp: now - 3600,
-        } as any)
-      ).toThrow(AuthError);
+      if (!hasUserClaim || isExpired) {
+        expect(() => policy.validateClaims(claims as any)).toThrow(AuthError);
+      } else {
+        expect(() => policy.validateClaims(claims as any)).not.toThrow();
+      }
     });
+
+    test.prop([
+      fc.constantFrom('sub', 'email', 'user_id'),
+      fc
+        .string({ minLength: 1, maxLength: 100 })
+        .filter(s => s.trim().length > 0),
+      fc.integer({ min: -86400, max: 86400 }), // +/- 1 day from now
+    ])(
+      'should accept any token with valid user identification and future expiry',
+      (userClaimType, userClaimValue, expiryOffset) => {
+        const policy = new ValidationPolicy({ isProduction: false });
+        const now = Math.floor(Date.now() / 1000);
+        const exp = now + expiryOffset;
+
+        const claims: any = { exp };
+        claims[userClaimType] = userClaimValue;
+
+        // Tokens expired in the past (offset < 0) should be rejected
+        // Tokens expiring exactly now (offset == 0) are still valid
+        if (expiryOffset >= 0) {
+          expect(() => policy.validateClaims(claims)).not.toThrow();
+        } else {
+          expect(() => policy.validateClaims(claims)).toThrow(AuthError);
+        }
+      }
+    );
   });
 });

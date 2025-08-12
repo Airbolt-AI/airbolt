@@ -2,13 +2,11 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { isDevelopment } from '@airbolt/config';
 import {
-  verifyToken,
-  detectProvider,
-  extractIssuerFromToken,
-  createCachedJWKSFetcher,
-  JWTVerificationError,
-  ProviderDetectionError,
-} from '../../../auth/index.js';
+  verifyExternalToken,
+  extractUserIdFromPayload,
+  AuthError,
+  type JWTPayload,
+} from '@airbolt/auth';
 
 // Request schema for the exchange endpoint
 const ExchangeRequestSchema = z.object({
@@ -30,9 +28,6 @@ const ErrorResponseSchema = z.object({
 });
 
 const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
-  // Create a cached JWKS fetcher for efficient token verification
-  const cachedJWKSFetcher = createCachedJWKSFetcher();
-
   fastify.post(
     '/exchange',
     {
@@ -99,7 +94,7 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         let userId = 'dev-user';
         let userEmail: string | undefined;
-        let verifiedClaims: Record<string, unknown> = {};
+        let verifiedClaims: JWTPayload = {};
 
         // Development mode: If no token provided, generate dev session
         if (!token && isDevelopment()) {
@@ -114,68 +109,30 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
         } else {
           // Verify the external JWT token
           try {
-            // Extract issuer from token for provider detection
-            const issuer = extractIssuerFromToken(token);
-            request.log.info({ issuer }, 'Detected token issuer');
+            // Use the new verifyExternalToken utility
+            verifiedClaims = await verifyExternalToken(token);
 
-            // Detect provider configuration
-            const provider = detectProvider(issuer);
-            request.log.info(
-              {
-                provider: provider.type,
-                jwksUrl: provider.jwksUrl,
-                audience: provider.audience,
-              },
-              'Detected JWT provider'
-            );
-
-            // Verify token with provider configuration
-            const verificationResult = await verifyToken(
-              {
-                token,
-                jwksUrl: provider.jwksUrl,
-                issuer: provider.issuer,
-                audience: provider.audience,
-              },
-              cachedJWKSFetcher
-            );
-
-            // If we get here, verification succeeded
             // Extract user information from verified claims
-            verifiedClaims = verificationResult.payload;
-            userId =
-              (verificationResult.payload.sub as string) ||
-              (verificationResult.payload['user_id'] as string) ||
-              'unknown-user';
-            userEmail = verificationResult.payload['email'] as
-              | string
-              | undefined;
+            userId = extractUserIdFromPayload(verifiedClaims);
+            userEmail = verifiedClaims.email;
 
             request.log.info(
               {
                 userId,
                 userEmail,
-                issuer: verificationResult.payload['iss'],
-                audience: verificationResult.payload['aud'],
+                issuer: verifiedClaims.iss,
+                audience: verifiedClaims.aud,
               },
               'Token verification successful'
             );
-          } catch (error) {
-            if (error instanceof JWTVerificationError) {
+          } catch (error: unknown) {
+            if (error instanceof AuthError) {
               request.log.warn(
                 { error: error.message, token: token.substring(0, 20) + '...' },
-                'JWT verification failed'
+                'Token verification failed'
               );
               throw fastify.httpErrors.unauthorized(
                 `Invalid token: ${error.message}`
-              );
-            } else if (error instanceof ProviderDetectionError) {
-              request.log.warn(
-                { error: error.message },
-                'Provider detection failed'
-              );
-              throw fastify.httpErrors.unauthorized(
-                `Provider detection failed: ${error.message}`
               );
             } else {
               request.log.error(
@@ -198,9 +155,9 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
             // Include relevant claims from the external token
             ...(Object.keys(verifiedClaims).length > 0 && {
               externalClaims: {
-                issuer: verifiedClaims['iss'],
-                audience: verifiedClaims['aud'],
-                subject: verifiedClaims['sub'],
+                issuer: verifiedClaims.iss,
+                audience: verifiedClaims.aud,
+                subject: verifiedClaims.sub,
               },
             }),
           },

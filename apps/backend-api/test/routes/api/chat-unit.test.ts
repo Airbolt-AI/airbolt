@@ -264,6 +264,73 @@ describe('Chat Route Unit Tests', () => {
         expect(responseBody.error).toBe('Bad Request');
       });
 
+      it('should reject messages with empty content', async () => {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: '' }],
+          },
+        });
+
+        expect(response.statusCode).toBe(400);
+        const responseBody = JSON.parse(response.payload);
+        expect(responseBody.error).toBe('ValidationError');
+        expect(responseBody.message).toContain(
+          'Message content cannot be empty or contain only whitespace'
+        );
+      });
+
+      it('should reject messages with whitespace-only content', async () => {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: '   \n\t  ' }],
+          },
+        });
+
+        expect(response.statusCode).toBe(400);
+        const responseBody = JSON.parse(response.payload);
+        expect(responseBody.error).toBe('ValidationError');
+        expect(responseBody.message).toContain(
+          'Message content cannot be empty or contain only whitespace'
+        );
+      });
+
+      it('should accept messages with content that has leading/trailing whitespace', async () => {
+        mockAIProviderService.createChatCompletion.mockResolvedValue({
+          content: 'Response',
+          usage: { total_tokens: 10 },
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/chat',
+          headers: {
+            authorization: `Bearer ${validToken}`,
+          },
+          payload: {
+            messages: [{ role: 'user', content: '  Hello world  ' }],
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        // The service should receive trimmed content
+        expect(mockAIProviderService.createChatCompletion).toHaveBeenCalledWith(
+          [{ role: 'user', content: 'Hello world' }],
+          undefined,
+          undefined,
+          undefined
+        );
+      });
+
       it('should accept valid messages', async () => {
         mockAIProviderService.createChatCompletion.mockResolvedValue({
           content: 'Response',
