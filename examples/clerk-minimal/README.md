@@ -114,7 +114,7 @@ That's it! The SDK handles everything else automatically.
 A: No! In development, the backend auto-accepts valid Clerk tokens. In production, just set your `EXTERNAL_JWT_ISSUER`.
 
 **Q: What if I want to customize the authentication?**  
-A: Check out the full `clerk-authenticated` example for advanced patterns.
+A: Check out the `auth0-authenticated` example to see advanced patterns like debug panels and production configuration.
 
 **Q: Does this work with Clerk's organizations/teams?**  
 A: Yes! The JWT includes all Clerk claims automatically.
