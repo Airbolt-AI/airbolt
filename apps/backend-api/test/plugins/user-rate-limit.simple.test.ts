@@ -127,7 +127,7 @@ describe('Rate Limiter Behavior Test', () => {
       }
     }
 
-    const usage = await app.getUserUsage(userId);
+    await app.getUserUsage(userId);
     // Final usage check
   });
 });
