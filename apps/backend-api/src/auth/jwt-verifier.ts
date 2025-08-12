@@ -1,4 +1,4 @@
-import { jwtVerify, type JWTPayload } from 'jose';
+import { jwtVerify, type JWTPayload, decodeProtectedHeader, importJWK, type JWK } from 'jose';
 import { z } from 'zod';
 
 /**
@@ -113,35 +113,35 @@ export async function verifyToken(
     // Fetch JWKS
     const jwks = await jwksFetcher(jwksUrl);
 
-    // jose will use the JWKS directly in the callback
+    // Decode the JWT header to get the key ID
+    const protectedHeader = decodeProtectedHeader(token);
+    const { kid } = protectedHeader;
+
+    if (!kid) {
+      throw new Error('JWT header missing kid (key ID)');
+    }
+
+    // Find the matching key in the JWKS
+    const jwkKey = jwks.keys.find((k: unknown) => {
+      return (
+        typeof k === 'object' &&
+        k !== null &&
+        'kid' in k &&
+        (k as { kid: unknown }).kid === kid
+      );
+    });
+
+    if (!jwkKey) {
+      throw new Error(`No key found for kid: ${kid}`);
+    }
+
+    // Import the JWK key for verification
+    const key = await importJWK(jwkKey as JWK, protectedHeader.alg);
 
     // Verify the JWT
     const result = await jwtVerify(
       token,
-      protectedHeader => {
-        // Extract the key ID from the JWT header
-        const { kid } = protectedHeader;
-
-        if (!kid) {
-          throw new Error('JWT header missing kid (key ID)');
-        }
-
-        // Find the matching key in the JWKS
-        const key = jwks.keys.find((k: unknown) => {
-          return (
-            typeof k === 'object' &&
-            k !== null &&
-            'kid' in k &&
-            (k as { kid: unknown }).kid === kid
-          );
-        });
-
-        if (!key) {
-          throw new Error(`No key found for kid: ${kid}`);
-        }
-
-        return key;
-      },
+      key,
       {
         issuer,
         audience,
