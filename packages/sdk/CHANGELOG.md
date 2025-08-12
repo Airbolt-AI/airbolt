@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- feat(auth): enhanced JWT verification with zero-config Clerk support
+  - Implement unified authentication for streaming and non-streaming chat endpoints
+  - Add automatic Clerk JWT verification without requiring explicit configuration
+  - Improved auth provider detection for consistent behavior across all endpoints
+  - Better error handling with structured authentication error responses
+
+- feat(rate-limiting): improved rate limiting with comprehensive header parsing
+  - Enhanced rate limit header parsing for better client-side rate limit handling
+  - Add structured rate limit information in error responses
+  - Improved retry logic with rate limit awareness
+  - Better visibility into rate limit status and reset times
+
 ## 0.6.0
 
 ### Minor Changes

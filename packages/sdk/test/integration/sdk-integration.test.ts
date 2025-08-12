@@ -305,7 +305,7 @@ maybeDescribe('SDK Integration Tests', () => {
         },
       ]);
       expect(followUp.content).toBeDefined();
-    });
+    }, 30000); // 30 second timeout for multiple API calls
 
     it('should recover from temporary network issues', async () => {
       // This test simulates recovery - in real scenario, network might fail temporarily

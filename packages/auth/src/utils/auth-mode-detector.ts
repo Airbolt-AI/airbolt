@@ -13,6 +13,7 @@ export class AuthModeDetector {
 
     // Use 'development' string comparison for auth mode detection
     // This is intentional as auth mode needs to match exact NODE_ENV value
+    // eslint-disable-next-line runtime-safety/prefer-environment-utils
     const isDevelopment = config.NODE_ENV === 'development';
     return isDevelopment ? AuthMode.AUTO_DISCOVERY : AuthMode.ANONYMOUS;
   }

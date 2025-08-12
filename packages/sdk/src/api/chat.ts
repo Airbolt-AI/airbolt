@@ -124,13 +124,16 @@ export async function* chatStream(
   const baseURL = options?.baseURL || 'http://localhost:3000';
 
   try {
+    // Use unified auth - same as non-streaming!
+    const token = await getAuthToken(baseURL, options);
+
     // Create EventSource-like connection for SSE
     const response = await fetch(joinUrl(baseURL, 'api/chat'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-        Authorization: `Bearer ${await getOrCreateToken(baseURL)}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         messages,
@@ -277,25 +280,25 @@ export async function* chatStream(
   }
 }
 
-// Helper function to get or create token
-async function getOrCreateToken(baseURL: string): Promise<string> {
-  const response = await fetch(joinUrl(baseURL, 'api/tokens'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ userId: 'streaming-user' }),
-  });
+// Unified auth helper - ensures both streaming and non-streaming use same auth
+async function getAuthToken(
+  baseURL: string | undefined,
+  options?: ChatOptions
+): Promise<string> {
+  // CRITICAL: This ensures auth provider detection happens for ALL chat paths
+  const client = getClientInstance(baseURL, options);
 
-  if (!response.ok) {
-    throw new AirboltError(
-      `Failed to get token: ${response.status}`,
-      response.status
-    );
+  // The client has a private tokenManager, but we can access it via type assertion
+  // This is safe because we control both the client and this code
+  const tokenManager = (
+    client as unknown as { tokenManager?: { getToken(): Promise<string> } }
+  ).tokenManager;
+
+  if (!tokenManager) {
+    throw new AirboltError('Client does not have a token manager', 500);
   }
 
-  const data = (await response.json()) as { token: string };
-  return data.token;
+  return await tokenManager.getToken();
 }
 
 // Export aliases for renamed functions

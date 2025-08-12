@@ -23,6 +23,7 @@ export default tseslint.config(
       'packages/sdk/vitest.config.ts', // SDK config not in project service
       '.sdk-cache/**', // SDK generation cache
       '.claude/**', // Claude Code commands/tools
+      'vitest.setup.global.ts', // Global test setup file
     ],
   },
   {
@@ -64,9 +65,20 @@ export default tseslint.config(
       'runtime-safety/require-zod-validation': 'error',
       'runtime-safety/require-property-tests': 'error',
       'runtime-safety/prefer-environment-utils': 'warn',
+      'runtime-safety/no-dynamic-imports': 'error',
 
       // 4. Module boundaries
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+
+      // 5. Prevent inline import types that can cause TypeScript resolution issues
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports',
+          disallowTypeAnnotations: true, // This prevents import('...').Type syntax
+        },
+      ],
 
       // Everything else: Let TypeScript handle it!
       // These are now redundant with @tsconfig/strictest:

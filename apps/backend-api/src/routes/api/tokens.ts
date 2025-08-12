@@ -101,6 +101,7 @@ const tokens: FastifyPluginAsync = async (fastify): Promise<void> => {
           {
             userId,
             role: 'user',
+            jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           },
           {
             expiresIn: '15m',

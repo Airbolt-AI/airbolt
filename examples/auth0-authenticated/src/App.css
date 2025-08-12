@@ -30,12 +30,14 @@ header p {
   height: 40px;
   border: 3px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #635BFF;
+  border-top-color: #635bff;
   animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container {
@@ -60,7 +62,7 @@ header p {
 }
 
 .auth-button {
-  background: #635BFF;
+  background: #635bff;
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -165,7 +167,7 @@ header p {
 }
 
 .config-mode:first-of-type {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   background: #f8fdf8;
 }
 
@@ -240,7 +242,7 @@ header p {
 }
 
 .debug-item strong {
-  color: #635BFF;
+  color: #635bff;
 }
 
 .debug-item pre {

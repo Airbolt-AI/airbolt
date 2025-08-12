@@ -1,28 +1,17 @@
 import { beforeAll } from 'vitest';
 
-// Polyfill fetch for Node.js test environment
-// Note: Node.js 18+ includes fetch globally, but it may not be available in test environments
-if (typeof globalThis.fetch === 'undefined') {
-  // Provide a basic fetch implementation for tests
-  // Most tests use vitest mocks anyway, so this is mainly for AI provider service initialization
-  globalThis.fetch = async (_input: any, _init?: any) => {
-    return {
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: new Map(),
-      json: async () => ({}),
-      text: async () => '{}',
-      blob: async () => new Blob([]),
-      arrayBuffer: async () => new ArrayBuffer(0),
-    } as any;
-  };
+// Note: Network blocking is handled globally in vitest.setup.global.ts
 
-  globalThis.Request = class MockRequest {
+// Ensure Request/Response/Headers are available for tests that need them
+globalThis.Request =
+  globalThis.Request ||
+  (class MockRequest {
     constructor(_input: any, _init?: any) {}
-  } as any;
+  } as any);
 
-  globalThis.Response = class MockResponse {
+globalThis.Response =
+  globalThis.Response ||
+  (class MockResponse {
     ok = true;
     status = 200;
     statusText = 'OK';
@@ -45,14 +34,15 @@ if (typeof globalThis.fetch === 'undefined') {
     async arrayBuffer() {
       return new ArrayBuffer(0);
     }
-  } as any;
+  } as any);
 
-  globalThis.Headers = class MockHeaders extends Map {
+globalThis.Headers =
+  globalThis.Headers ||
+  (class MockHeaders extends Map {
     constructor(_init?: any) {
       super();
     }
-  } as any;
-}
+  } as any);
 
 // Set up test environment variables
 beforeAll(() => {

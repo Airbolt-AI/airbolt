@@ -56,7 +56,12 @@ function createMiddleware(
 
     // Try each validator in order
     for (const validator of validators) {
-      if (validator.canHandle(token)) {
+      const canHandle = validator.canHandle(token);
+      fastify.log.debug(
+        { validator: validator.name, canHandle },
+        'Checking validator'
+      );
+      if (canHandle) {
         try {
           const payload = await validator.verify(token);
           // Type assertion needed because Fastify request typing doesn't include custom properties

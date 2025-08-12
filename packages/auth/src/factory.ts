@@ -4,8 +4,7 @@ import { AuthMode, AuthError } from './types.js';
 import { AuthModeDetector } from './utils/auth-mode-detector.js';
 import { InternalJWTValidator } from './validators/internal.js';
 import { ExternalJWTValidator } from './validators/external.js';
-import { JWKSValidator } from './validators/jwks.js';
-import { AutoDiscoveryValidator } from './validators/auto-discovery.js';
+import { ClerkValidator } from './validators/clerk.js';
 
 export class AuthValidatorFactory {
   static create(config: AuthConfig, fastify: FastifyInstance): JWTValidator[] {
@@ -18,15 +17,17 @@ export class AuthValidatorFactory {
 
     switch (mode) {
       case AuthMode.CONFIGURED_ISSUER:
-        return [new JWKSValidator(config)];
-
       case AuthMode.LEGACY_KEY:
+        // Both configured issuer and legacy key modes use the unified external validator
+        // The ExternalJWTValidator handles both secret-based and JWKS validation
         return [new ExternalJWTValidator(config)];
 
       case AuthMode.AUTO_DISCOVERY:
-        // In auto-discovery mode, support both external and internal tokens
+        // In auto-discovery mode, support Clerk, other external tokens, and internal tokens
+        // ClerkValidator goes first since it's more specific than general external validation
         return [
-          new AutoDiscoveryValidator(config),
+          new ClerkValidator(config),
+          new ExternalJWTValidator(config),
           new InternalJWTValidator(fastify),
         ];
 

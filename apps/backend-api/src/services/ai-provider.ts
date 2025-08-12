@@ -16,7 +16,12 @@ import {
 // Message schemas matching AI provider types
 export const MessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
-  content: z.string(),
+  content: z
+    .string()
+    .transform(val => val.trim())
+    .refine(val => val.length > 0, {
+      message: 'Message content cannot be empty or contain only whitespace',
+    }),
 });
 
 export type Message = z.infer<typeof MessageSchema>;

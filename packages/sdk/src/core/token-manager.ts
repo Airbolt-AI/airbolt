@@ -100,7 +100,10 @@ export class TokenManager {
           throw new TokenError('No token returned from auth provider');
         return token;
       } catch (error) {
-        console.warn('External auth failed, falling back to internal', error);
+        console.warn(
+          'External auth failed, falling back to internal tokens',
+          error
+        );
         this.authMethod = 'internal'; // Fallback
       }
     }

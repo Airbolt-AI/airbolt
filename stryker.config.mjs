@@ -21,7 +21,7 @@ const config = {
   timeoutFactor: 1.5,
   concurrency: process.env.CI ? 2 : 12, // Increase for local development
   disableTypeChecks: true, // Skip TypeScript checking on mutants for speed
-  
+
   // Coverage analysis to only run relevant tests
   coverageAnalysis: 'perTest',
 
@@ -38,6 +38,10 @@ const config = {
     'apps/backend-api/src/services/ai-provider.ts', // Retry logic, error handling, provider switching
     'packages/sdk/src/core/token-manager.ts', // Token expiration, refresh logic
     'apps/backend-api/src/plugins/rate-limit.ts', // Rate limit calculations
+    'packages/auth/src/utils/validation-policy.ts', // Auth validation policy logic
+    'packages/auth/src/validators/jwks.ts', // JWT key validation
+    'packages/auth/src/validators/auto-discovery.ts', // Authentication discovery logic
+    'packages/auth/src/utils/token-validator.ts', // Token validation critical paths
   ],
 
   // FOCUS ON LOGIC MUTATIONS ONLY
@@ -55,7 +59,7 @@ const config = {
 
   // Disable warnings about slow static mutants since we're ignoring them
   warnings: {
-    slow: false
+    slow: false,
   },
 
   thresholds: {
