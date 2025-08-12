@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { Message } from './ai-provider.js';
+import type { UsageInfo } from '../plugins/user-rate-limit.js';
 import { AIProviderError } from './ai-provider.js';
 
 export interface ChatRequest {
@@ -104,9 +105,7 @@ export class ChatService {
   /**
    * Get current usage info for the user
    */
-  async getUserUsage(): Promise<
-    import('../plugins/user-rate-limit.js').UsageInfo
-  > {
+  async getUserUsage(): Promise<UsageInfo> {
     const { fastify, userId } = this.options;
     return fastify.getUserUsage(userId);
   }

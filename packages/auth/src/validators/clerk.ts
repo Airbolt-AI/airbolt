@@ -1,4 +1,4 @@
-import type { JWTValidator, AuthConfig } from '../types.js';
+import type { JWTValidator, AuthConfig, JWTPayload } from '../types.js';
 import { ExternalJWTValidator } from './external.js';
 import { TokenValidator } from '../utils/token-validator.js';
 
@@ -40,11 +40,11 @@ export class ClerkValidator implements JWTValidator {
     }
   }
 
-  async verify(token: string): Promise<import('../types.js').JWTPayload> {
+  async verify(token: string): Promise<JWTPayload> {
     return this.externalValidator.verify(token);
   }
 
-  extractUserId(payload: import('../types.js').JWTPayload): string {
+  extractUserId(payload: JWTPayload): string {
     return this.externalValidator.extractUserId(payload);
   }
 }

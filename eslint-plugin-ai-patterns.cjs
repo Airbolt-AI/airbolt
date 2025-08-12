@@ -168,7 +168,51 @@ module.exports = {
       },
     },
 
-    // Rule 4: Require property tests for business logic functions
+    // Rule 4: No dynamic imports in source code
+    'no-dynamic-imports': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow dynamic imports in source code for type safety and bundle optimization',
+          category: 'Best Practices',
+          recommended: true,
+        },
+        messages: {
+          noDynamicImports:
+            'Dynamic imports break type safety and prevent bundle optimization. Use static imports for all dependencies.',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          ImportExpression(node) {
+            const filename = context.getFilename();
+            
+            // Allow in test files, scripts, and config files
+            if (
+              filename.includes('.test.') ||
+              filename.includes('.spec.') ||
+              filename.includes('/test/') ||
+              filename.includes('/scripts/') ||
+              filename.includes('.config.') ||
+              filename.endsWith('.config.ts') ||
+              filename.endsWith('.config.js') ||
+              filename.endsWith('.config.mjs')
+            ) {
+              return;
+            }
+            
+            context.report({
+              node,
+              messageId: 'noDynamicImports',
+            });
+          },
+        };
+      },
+    },
+
+    // Rule 5: Require property tests for business logic functions
     'require-property-tests': {
       meta: {
         type: 'problem',

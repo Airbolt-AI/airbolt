@@ -10,11 +10,16 @@ import type {
 } from 'fastify';
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { isDevelopment } from '@airbolt/config';
 
 import envPlugin, { type Env } from './plugins/env.js';
 import corsPlugin from './plugins/cors.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
+import userRateLimitPlugin from './plugins/user-rate-limit.js';
+import sensiblePlugin from './plugins/sensible.js';
+import supportPlugin from './plugins/support.js';
 import fastifyJwt from '@fastify/jwt';
 import aiProviderService from './services/ai-provider.js';
 import fastifySse from 'fastify-sse-v2';
@@ -58,7 +63,6 @@ export async function buildApp(
   });
 
   // Register swagger plugin for all environments (needed for tests and OpenAPI generation)
-  const { default: swagger } = await import('@fastify/swagger');
   await fastify.register(swagger, {
     openapi: {
       openapi: '3.0.0',
@@ -105,7 +109,6 @@ export async function buildApp(
   // In tests, logger is false and skipEnvValidation is not set
   const isTestEnv = opts.logger === false;
   if (isDev || isTestEnv) {
-    const { default: swaggerUi } = await import('@fastify/swagger-ui');
     await fastify.register(swaggerUi, {
       routePrefix: '/docs',
       uiConfig: {
@@ -169,7 +172,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   await fastify.register(rateLimitPlugin);
 
   // Register user rate limit plugin after env (for token/request tracking)
-  await fastify.register(import('./plugins/user-rate-limit.js'));
+  await fastify.register(userRateLimitPlugin);
 
   // Register SSE plugin for streaming support
   await fastify.register(fastifySse);
@@ -221,8 +224,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
 
   // Register support plugins explicitly
   // No autoload = no stale cached files breaking builds
-  await fastify.register(import('./plugins/sensible.js'));
-  await fastify.register(import('./plugins/support.js'));
+  await fastify.register(sensiblePlugin);
+  await fastify.register(supportPlugin);
 
   // This loads all plugins defined in routes
   // define your routes in one of these
