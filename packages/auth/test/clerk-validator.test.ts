@@ -6,20 +6,12 @@ import { ClerkValidator } from '../src/validators/clerk.js';
 import type { AuthConfig, JWTPayload, JWKS } from '../src/types.js';
 import { AuthError } from '../src/types.js';
 
-// Mock the JWKS manager and its dependencies
-vi.mock('../src/utils/jwks-manager.js', () => ({
-  JWKSManager: vi.fn().mockImplementation(() => ({
-    getJWKS: vi.fn(),
+// Mock the JWKS utils
+vi.mock('../src/utils/jwks-utils.js', () => ({
+  JWKSUtils: {
+    fetchJWKS: vi.fn(),
     findKey: vi.fn(),
     extractPublicKey: vi.fn(),
-  })),
-}));
-
-vi.mock('../src/utils/provider-detector.js', () => ({
-  ProviderDetector: {
-    getErrorMessage: vi.fn().mockImplementation((message: string) => {
-      throw new AuthError(`Provider error: ${message}`);
-    }),
   },
 }));
 
@@ -469,8 +461,8 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       );
     });
 
-    // Test validator name and inheritance
-    it('should have correct validator name and inherit from AutoDiscoveryValidator', () => {
+    // Test validator name and interface
+    it('should have correct validator name and implement JWTValidator interface', () => {
       expect(validator.name).toBe('clerk');
       expect(validator).toHaveProperty('canHandle');
       expect(validator).toHaveProperty('verify');
