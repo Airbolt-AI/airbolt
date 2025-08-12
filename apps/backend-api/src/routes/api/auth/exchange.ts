@@ -6,6 +6,7 @@ import {
   extractUserIdFromPayload,
   AuthError,
   type JWTPayload,
+  type AuthConfig,
 } from '@airbolt/auth';
 
 // Request schema for the exchange endpoint
@@ -109,8 +110,26 @@ const exchange: FastifyPluginAsync = async (fastify): Promise<void> => {
         } else {
           // Verify the external JWT token
           try {
-            // Use the new verifyExternalToken utility
-            verifiedClaims = await verifyExternalToken(token);
+            // Use the verifyExternalToken utility with auth config
+            const authConfig: AuthConfig = {
+              NODE_ENV: fastify.config?.NODE_ENV || 'development',
+            };
+
+            // Only add optional config if present
+            if (fastify.config?.EXTERNAL_JWT_SECRET) {
+              authConfig.EXTERNAL_JWT_SECRET =
+                fastify.config.EXTERNAL_JWT_SECRET;
+            }
+            if (fastify.config?.EXTERNAL_JWT_PUBLIC_KEY) {
+              authConfig.EXTERNAL_JWT_PUBLIC_KEY =
+                fastify.config.EXTERNAL_JWT_PUBLIC_KEY;
+            }
+            if (fastify.config?.EXTERNAL_JWT_AUDIENCE) {
+              authConfig.EXTERNAL_JWT_AUDIENCE =
+                fastify.config.EXTERNAL_JWT_AUDIENCE;
+            }
+
+            verifiedClaims = await verifyExternalToken(token, authConfig);
 
             // Extract user information from verified claims
             userId = extractUserIdFromPayload(verifiedClaims);

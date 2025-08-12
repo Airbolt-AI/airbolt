@@ -15,7 +15,8 @@ export default defineConfig({
     ...baseConfig.test,
     // Register tsx loader in every worker process (in addition to base setup)
     setupFiles: [
-      ...(baseConfig.test?.setupFiles || []),
+      './vitest.setup.global.ts', // Global network blocking for ALL tests
+      './apps/backend-api/test/setup.ts',
       './vitest.setup.mutation.ts',
     ],
 

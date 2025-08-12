@@ -21,7 +21,10 @@ export const baseConfig: InlineConfig = {
     hookTimeout: 10000,
 
     // Setup files to run before tests
-    setupFiles: ['./apps/backend-api/test/setup.ts'],
+    setupFiles: [
+      './vitest.setup.global.ts', // Global network blocking for ALL tests
+      './apps/backend-api/test/setup.ts',
+    ],
 
     // Pool configuration for test execution
     pool: 'threads',

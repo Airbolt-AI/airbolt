@@ -5,7 +5,6 @@
 import type { JWTPayload, AuthConfig } from '../types.js';
 import { AuthError } from '../types.js';
 import { TokenValidator } from './token-validator.js';
-import { JWKSUtils } from './jwks-utils.js';
 
 /**
  * Utility function for verifying external tokens and returning the payload.
@@ -33,8 +32,6 @@ export async function verifyExternalToken(
 ): Promise<JWTPayload> {
   // Reimplemented without importing ExternalJWTValidator to avoid circular dependency
   const tokenValidator = new TokenValidator();
-  const decoded = tokenValidator.decode(token);
-  const issuer = decoded.payload.iss;
 
   let payload: JWTPayload;
 
@@ -49,25 +46,12 @@ export async function verifyExternalToken(
       config.EXTERNAL_JWT_PUBLIC_KEY
     );
   }
-  // Try JWKS auto-discovery
-  else if (issuer) {
-    const jwks = await JWKSUtils.fetchJWKS(issuer);
-    const key = JWKSUtils.findKey(jwks, decoded.header?.kid);
-    if (!key) {
-      throw new AuthError(
-        'No matching key found in JWKS',
-        undefined,
-        'Token key ID (kid) not found in provider JWKS',
-        'Verify token is from the correct auth provider'
-      );
-    }
-    const publicKey = JWKSUtils.extractPublicKey(key);
-    payload = await tokenValidator.verify(token, publicKey);
-  } else {
+  // No validation method provided
+  else {
     throw new AuthError(
       'No external JWT validation method configured',
       undefined,
-      'Configure EXTERNAL_JWT_SECRET, EXTERNAL_JWT_PUBLIC_KEY, or enable auto-discovery',
+      'Must provide EXTERNAL_JWT_SECRET or EXTERNAL_JWT_PUBLIC_KEY in config',
       'Set one of: EXTERNAL_JWT_SECRET (for HS256) or EXTERNAL_JWT_PUBLIC_KEY (for RS256)'
     );
   }

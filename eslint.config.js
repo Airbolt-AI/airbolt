@@ -23,6 +23,7 @@ export default tseslint.config(
       'packages/sdk/vitest.config.ts', // SDK config not in project service
       '.sdk-cache/**', // SDK generation cache
       '.claude/**', // Claude Code commands/tools
+      'vitest.setup.global.ts', // Global test setup file
     ],
   },
   {
