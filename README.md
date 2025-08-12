@@ -78,11 +78,12 @@ That's it! Your app now has secure AI chat that can't be abused by random users.
 
 **How the security works**:
 
-1. Frontend requests a JWT token from `/api/tokens` endpoint
-2. Token is signed with a secret key (HS256 algorithm) only the server knows
-3. Frontend includes token in `Authorization: Bearer <token>` header
-4. Backend verifies the JWT signature on every request
-5. Invalid/expired tokens are rejected with 401 Unauthorized
+1. Frontend either requests an internal JWT from `/api/tokens` OR uses an external auth provider token
+2. Internal tokens are signed with server's JWT_SECRET (HS256 algorithm)
+3. External tokens are validated via JWKS, public key, or shared secret
+4. Frontend includes token in `Authorization: Bearer <token>` header
+5. Backend verifies token signature and claims on every request
+6. Invalid/expired tokens are rejected with 401 Unauthorized
 
 **Abuse prevention built-in** - Even if someone gets a token, they can only use it for 15 minutes. Token-based rate limiting prevents runaway usage:
 
@@ -328,9 +329,10 @@ npm install
 npm run build
 
 # Set environment variables
+export NODE_ENV=production
+export JWT_SECRET=your-32-char-minimum-secret # Required in production
 export AI_PROVIDER=openai # or anthropic
 export OPENAI_API_KEY=sk-... # or ANTHROPIC_API_KEY for Anthropic
-export NODE_ENV=production
 
 npm start
 ```

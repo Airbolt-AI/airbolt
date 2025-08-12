@@ -80,7 +80,7 @@ export async function verifyExternalToken(
     throw new AuthError(
       'JWT audience mismatch',
       undefined,
-      `Expected: ${config.EXTERNAL_JWT_AUDIENCE}, Got: ${payload.aud}`,
+      `Expected: ${config.EXTERNAL_JWT_AUDIENCE}, Got: ${String(payload.aud)}`,
       'Check JWT audience configuration'
     );
   }
