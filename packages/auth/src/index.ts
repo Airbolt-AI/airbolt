@@ -12,7 +12,8 @@ export { AuthError } from './types.js';
 // Export utilities for external token verification
 export { TokenValidator } from './utils/token-validator.js';
 export { JWKSUtils } from './utils/jwks-utils.js';
-export { ExternalJWTValidator } from './validators/external.js';
+// Note: ExternalJWTValidator removed to break circular dependency
+// Users should use AuthValidatorFactory.create() instead
 
 // Utility functions for external token verification
 export {
