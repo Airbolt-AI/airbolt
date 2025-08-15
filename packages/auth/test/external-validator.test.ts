@@ -3,12 +3,42 @@ import { test } from '@fast-check/vitest';
 import fc from 'fast-check';
 import jwt from 'jsonwebtoken';
 
-// Mock the JWKS utils BEFORE importing anything that uses them
+// Mock JWKSUtils to avoid network calls and vi.fn() hoisting issues
+// Use plain class with simple functions to avoid vi.fn() hoisting issues
 vi.mock('../src/utils/jwks-utils.js', () => ({
-  JWKSUtils: {
-    fetchJWKS: vi.fn(),
-    findKey: vi.fn(),
-    extractPublicKey: vi.fn(),
+  JWKSUtils: class MockJWKSUtils {
+    static fetchJWKS = async () => ({
+      keys: [{ kty: 'RSA', kid: 'test', n: 'test', e: 'AQAB' }],
+    });
+    static findKey = () => ({ kty: 'RSA', kid: 'test', n: 'test', e: 'AQAB' });
+    static extractPublicKey = () =>
+      '-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----';
+  },
+}));
+
+// Also mock TokenValidator to avoid any hoisting issues
+vi.mock('../src/utils/token-validator.js', () => ({
+  TokenValidator: class MockTokenValidator {
+    decode = (token: string) => {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        throw new Error('Invalid token format');
+      }
+      try {
+        const payload = JSON.parse(
+          Buffer.from(parts[1] || '', 'base64url').toString()
+        );
+        return {
+          header: { kid: 'test-kid' },
+          payload: payload,
+          signature: 'mock-signature',
+        };
+      } catch {
+        throw new Error('Invalid token format');
+      }
+    };
+    verify = async () => ({ sub: 'mock-user' });
+    extractUserId = () => 'mock-user-id';
   },
 }));
 
