@@ -1,5 +1,8 @@
 # Airbolt
 
+> [!IMPORTANT]
+> **New version launching soon** - Airbolt 2.0 is in final development with major improvements. Current version remains fully supported.
+
 **Never put API keys in frontend code. Airbolt is the secure backend for calling LLMs from your apps.**
 
 ## Why You Need This
