@@ -1,7 +1,7 @@
 # Airbolt
 
 > [!IMPORTANT]
-> **New version launching soon** - Airbolt 2.0 is in final development with major improvements. Current version remains fully supported.
+> **Platform evolution** - This open-source version is no longer supported (SDKs unpublished from npm). For immediate use, try [www.airbolt.ai](https://www.airbolt.ai). A new open-source version based on our hosted platform is coming soon.
 
 **Never put API keys in frontend code. Airbolt is the secure backend for calling LLMs from your apps.**
 
