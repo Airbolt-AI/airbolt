@@ -41,8 +41,8 @@ Deploy our production-ready LLM proxy to Render. You'll get your own private API
 
 - Service name (this becomes your URL, e.g., `my-ai-backend` → `https://my-ai-backend.onrender.com`)
 - AI provider API key:
-  - OpenAI ([get one here](https://platform.openai.com/api-keys))
-  - Anthropic ([get one here](https://console.anthropic.com/))
+  - OpenAI API key
+  - Anthropic API key
 
 After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
 
@@ -73,7 +73,7 @@ function App() {
 
 That's it! Your app now has secure AI chat that can't be abused by random users.
 
-> **Coming soon**: Skip deployment entirely with our hosted solution. [Sign up for the closed beta](https://forms.gle/2yWKszvJBZReN6kf7)
+> **Coming soon**: Skip deployment entirely with our hosted solution.
 
 ## What you get today
 
@@ -199,7 +199,7 @@ const response = await chat(messages, {
 
 ## What's coming soon
 
-**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. [Currently in private beta](https://forms.gle/2yWKszvJBZReN6kf7).
+**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building.
 
 **Streaming responses (Available Now!)** - Real-time message streaming for better user experience.
 
@@ -351,7 +351,7 @@ npm start
 
 **Phase 2: Developer Experience**
 
-- 🚧 Hosted solution ([private beta](https://forms.gle/2yWKszvJBZReN6kf7))
+- 🚧 Hosted solution
 - ✅ Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
 - ✅ Response streaming for real-time chat
 - 🚧 Function calling and tool use
@@ -387,7 +387,6 @@ The monorepo structure makes it easy to contribute and understand how everything
 
 ## Documentation
 
-- **[SDK Documentation](https://airbolt-ai.github.io/airbolt/)** - Complete API reference for both Core and React SDKs
 - **[React SDK Guide](packages/react-sdk/README.md)** - Getting started with React components and hooks
 - **[Core SDK Guide](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
 - **[Example Apps](examples/)** - Working examples including anonymous chat and Auth0 integration
