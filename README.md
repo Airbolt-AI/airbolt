@@ -41,8 +41,8 @@ Deploy our production-ready LLM proxy to Render. You'll get your own private API
 
 - Service name (this becomes your URL, e.g., `my-ai-backend` → `https://my-ai-backend.onrender.com`)
 - AI provider API key:
-  - OpenAI ([get one here](https://platform.openai.com/api-keys))
-  - Anthropic ([get one here](https://console.anthropic.com/))
+  - OpenAI API key
+  - Anthropic API key
 
 After deployment, Render will show your API URL (e.g., `https://my-ai-backend.onrender.com`). Copy this URL - you'll use it in the SDK below.
 
@@ -387,7 +387,6 @@ The monorepo structure makes it easy to contribute and understand how everything
 
 ## Documentation
 
-- **[SDK Documentation](https://airbolt-ai.github.io/airbolt/)** - Complete API reference for both Core and React SDKs
 - **[React SDK Guide](packages/react-sdk/README.md)** - Getting started with React components and hooks
 - **[Core SDK Guide](packages/sdk/README.md)** - TypeScript client for any JavaScript environment
 - **[Example Apps](examples/)** - Working examples including anonymous chat and Auth0 integration
