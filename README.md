@@ -73,7 +73,7 @@ function App() {
 
 That's it! Your app now has secure AI chat that can't be abused by random users.
 
-> **Coming soon**: Skip deployment entirely with our hosted solution. [Sign up for the closed beta](https://forms.gle/2yWKszvJBZReN6kf7)
+> **Coming soon**: Skip deployment entirely with our hosted solution.
 
 ## What you get today
 
@@ -199,7 +199,7 @@ const response = await chat(messages, {
 
 ## What's coming soon
 
-**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building. [Currently in private beta](https://forms.gle/2yWKszvJBZReN6kf7).
+**Hosted solution** - Skip the deployment step entirely. Import the SDK, configure your API key, start building.
 
 **Streaming responses (Available Now!)** - Real-time message streaming for better user experience.
 
@@ -351,7 +351,7 @@ npm start
 
 **Phase 2: Developer Experience**
 
-- 🚧 Hosted solution ([private beta](https://forms.gle/2yWKszvJBZReN6kf7))
+- 🚧 Hosted solution
 - ✅ Auth provider integrations (Auth0, Clerk, Supabase, Firebase Auth)
 - ✅ Response streaming for real-time chat
 - 🚧 Function calling and tool use
