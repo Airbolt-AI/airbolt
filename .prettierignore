@@ -1,9 +1,0 @@
-node_modules/
-dist/
-build/
-.turbo/
-coverage/
-*.min.js
-pnpm-lock.yaml
-.stryker-tmp/
-reports/

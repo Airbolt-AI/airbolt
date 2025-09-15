@@ -1,8 +1,0 @@
-# Ignore everything to prevent accidental publishing
-# This is a private internal package that should never be published
-*
-**/*
-.*
-!package.json
-# Explicitly ignore README to override npm defaults
-README.md

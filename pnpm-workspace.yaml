@@ -1,8 +1,0 @@
-packages:
-  [
-    'apps/*',
-    'packages/*',
-    'packages/react-sdk/examples/*',
-    'packages/sdk/examples/*',
-    'examples/*',
-  ]
