@@ -1,3 +1,0 @@
-name: airbolt-api
-imports:
-  openapi: ../apps/backend-api/openapi.json

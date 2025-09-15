@@ -1,9 +1,0 @@
-node_modules/
-dist/
-build/
-.turbo/
-coverage/
-*.min.js
-.stryker-tmp/
-reports/
-openapi.json

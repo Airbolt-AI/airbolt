@@ -1,5 +1,0 @@
-# GitLeaks ignore file for legitimate test patterns and documentation
-# Using fingerprint format for GitLeaks 8.x
-
-# Installation script test API key (harmless test pattern)
-scripts/install-gitleaks.sh:generic-api-key:251
